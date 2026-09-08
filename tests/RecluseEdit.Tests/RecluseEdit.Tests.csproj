@@ -18,7 +18,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\RecluseEdit.Sdk\RecluseEdit.Sdk.csproj" />
+    <ProjectReference Include="..\..\RecluseEdit.csproj" />
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.React\RecluseEdit.Extensions.React.csproj" />
+    <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Angular\RecluseEdit.Extensions.Angular.csproj" />
+    <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Flutter\RecluseEdit.Extensions.Flutter.csproj" />
+    <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Php\RecluseEdit.Extensions.Php.csproj" />
   </ItemGroup>
 
 </Project>

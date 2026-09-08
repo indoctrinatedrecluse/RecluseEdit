@@ -14,7 +14,7 @@
 
 - 🗂️ **Web Workspace Explorer**: Open entire project directories (`Ctrl+Shift+O`), browse files via a collapsible tree sidebar (`Ctrl+B`), and double-click to open.
 - 📑 **Multi-File Tabbed Workspace**: Seamlessly open, edit, and switch between multiple tabs. Middle-click tab to close, and right-click for tab context actions (*Close Others*, *Close to Right*, *Copy Path*, *Reveal in Explorer*).
-- 🎨 **Code & Syntax Highlighting**: Comprehensive syntax coloring for web languages (HTML, CSS, JavaScript, TypeScript, JSON, XML, Markdown, C#).
+- 🎨 **Enhanced Code & Syntax Highlighting**: Comprehensive syntax coloring for web and application languages (HTML, CSS, JavaScript, TypeScript, JSON, XML/XAML, Markdown, C#, PHP, and Dart), beautifully tuned with a modern VS Code Dark+ color palette for maximum readability.
 - ⚡ **Dual Autocomplete System**:
   - **Inline Ghost Text**: Intelligent suggestions inline at the caret in faded italic text (<kbd>Tab</kbd> to accept, <kbd>Esc</kbd> to dismiss).
   - **IntelliSense Popup**: Rich completion list with tags, CSS properties, and JS APIs (<kbd>Ctrl+Space</kbd>).
@@ -22,7 +22,7 @@
 - 🔍 **Built-In Find & Replace Overlay**: Floating top-right search panel with Next (<kbd>Enter</kbd>), Previous (<kbd>Shift+Enter</kbd>), Match Case, and Replace All (<kbd>Ctrl+F</kbd>, <kbd>Ctrl+H</kbd>).
 - 📐 **Code Folding & Bracket Matching**: Expand/collapse blocks and sections for HTML/XML and highlight matching brackets.
 - 🔢 **Visual Line Numbers & Formatting**: Customizable line-number gutter, word wrapping toggle, and font scaling with <kbd>Ctrl</kbd> + <kbd>MouseWheel</kbd>.
-- 🔌 **Pluggable Extension Architecture**: Dynamic plugin discovery from the `Extensions/` directory and dedicated UI manager (`Extensions -> Manage Extensions...`).
+- 🔌 **Pluggable Extension Architecture**: Dynamic plugin discovery from the `Extensions/` directory with separate project build targets and a dedicated UI manager (`Extensions -> Manage Extensions...`).
 - 🌙 **Modern Dark UI**: VS Code-inspired sleek dark theme (`#1E1E1E`), complete with menu bar, quick-action toolbar, and informative status bar.
 
 ---
@@ -79,39 +79,44 @@
    cd RecluseEdit
    ```
 2. **Open the Solution**:
-   - Double-click `RecluseEdit.slnx` or `RecluseEdit.csproj` to launch in **Visual Studio 2026 Enterprise**.
+   - Double-click `RecluseEdit.slnx` to launch the multi-project solution in **Visual Studio 2026 Enterprise**.
 3. **Restore NuGet Packages**:
    - Visual Studio restores NuGet packages automatically upon solution load.
    - Alternatively, right-click the solution in **Solution Explorer** &rarr; select **Restore NuGet Packages**.
 4. **Build the Solution**:
    - Select **Build &rarr; Build Solution** from the top menu, or press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>.
+   - All projects (Host, SDK, React, Angular, Flutter, PHP, and Tests) build as independent targets.
    - Verify the Output window reports `Build succeeded: 0 Warning(s), 0 Error(s)`.
 5. **Run & Test**:
    - Set active configuration to `Debug` or `Release` with target `x64` or `Any CPU`.
-   - Press <kbd>F5</kbd> (Start Debugging) or <kbd>Ctrl</kbd> + <kbd>F5</kbd> (Start Without Debugging).
+   - Run tests via **Test &rarr; Run All Tests** (<kbd>Ctrl</kbd> + <kbd>R</kbd>, <kbd>A</kbd>).
+   - Press <kbd>F5</kbd> (Start Debugging) or <kbd>Ctrl</kbd> + <kbd>F5</kbd> (Start Without Debugging) to launch the editor.
 
 ---
 
 ### ⌨️ Building from the Command Line (`dotnet CLI`)
 
-You can also compile and run directly using the .NET 10 SDK:
+You can also compile and test directly using the .NET 10 SDK:
 
 ```powershell
-# Restore dependencies
-dotnet restore
+# Restore all dependencies across solution
+dotnet restore RecluseEdit.slnx
 
-# Build debug configuration
-dotnet build
+# Build the entire solution (host + all extensions)
+dotnet build RecluseEdit.slnx
+
+# Run all unit and integration tests (27+ tests)
+dotnet test RecluseEdit.slnx
 
 # Launch the editor
-dotnet run
+dotnet run --project RecluseEdit.csproj
 ```
 
 ---
 
 ## 🧩 Building Language Extensions
 
-RecluseEdit features a decoupled extension mechanism. To write an extension:
+RecluseEdit features a modular, decoupled extension architecture. Each extension is built as an independent project target that compiles into its own assembly:
 
 1. Create a C# class library targeting `net10.0-windows`.
 2. Reference the lightweight `RecluseEdit.Sdk` library:
@@ -120,7 +125,7 @@ RecluseEdit features a decoupled extension mechanism. To write an extension:
      <ProjectReference Include="..\..\RecluseEdit.Sdk\RecluseEdit.Sdk.csproj" />
    </ItemGroup>
    ```
-3. Implement `IExtension` and optional `IToolchainCheck`:
+3. Implement `IExtension`, `IInlineCompletionProvider`, and optional `IToolchainCheck`:
    ```csharp
    using RecluseEdit.Sdk;
    using RecluseEdit.Sdk.Models;
@@ -136,7 +141,7 @@ RecluseEdit features a decoupled extension mechanism. To write an extension:
 
        public Task InitializeAsync(IExtensionHost host, CancellationToken ct = default)
        {
-           // 1. Register Language
+           // 1. Register Language Definition
            host.RegisterLanguage(new LanguageDefinition
            {
                Id = "mylang",
@@ -156,19 +161,39 @@ RecluseEdit features a decoupled extension mechanism. To write an extension:
        public Task DeinitializeAsync(CancellationToken ct = default) => Task.CompletedTask;
    }
    ```
-4. Place your compiled `.dll` into the `Extensions/<YourExtensionName>/` folder (open quickly from **Extensions &rarr; Open Extensions Folder** in the app menu).
+4. Configure an MSBuild post-build target to output the `.dll` directly to `bin/$(Configuration)/net10.0-windows/Extensions/<Name>/`.
 
 ---
 
-## ⚛️ Built-In & Official Extensions
+## 📦 Official Extensions (Separate Build Targets)
 
-### React, Redux & GraphQL Language Pack (`RecluseEdit.Extensions.React`)
-- Built as a separate target in `RecluseEdit.slnx`.
+RecluseEdit comes with four modular language extensions built as dedicated targets in `RecluseEdit.slnx`:
+
+### ⚛️ React, Redux & GraphQL Pack (`RecluseEdit.Extensions.React`)
 - Supports **React JSX** (`.jsx`), **React TSX** (`.tsx`), and **GraphQL** (`.graphql`, `.gql`).
 - **React Hooks**: `useState`, `useEffect`, `useCallback`, `useMemo`, `useRef`, `useContext`, `useReducer`, `useId`.
 - **Redux Toolkit**: `createSlice`, `createAsyncThunk`, `configureStore`, `useSelector`, `useDispatch`.
-- **GraphQL**: `query`, `mutation`, `subscription`, `fragment`, `schema`, `type`, and Apollo Client hooks (`useQuery`, `useMutation`).
-- **Toolchain Diagnostics**: Actively verifies Node.js (`node`), npm (`npm`), and TypeScript compiler (`tsc`) on the system `PATH`.
+- **GraphQL**: `query`, `mutation`, `subscription`, `fragment`, `schema`, `type`, and Apollo Client hooks.
+- **Toolchain Diagnostics**: Actively verifies Node.js (`node`), npm (`npm`), and TypeScript compiler (`tsc`) on system `PATH`.
+
+### 🅰️ Angular Language & Framework Pack (`RecluseEdit.Extensions.Angular`)
+- Supports **Angular Templates** (`.component.html`) and **Angular TypeScript** (`.component.ts`, `.service.ts`, `.directive.ts`, etc.).
+- **Angular Signals**: `signal()`, `computed()`, `effect()`, `input()`, `output()`, `model()`.
+- **Modern Control Flow**: `@if (...)`, `@for (... track ...)`, `@switch (...)`, and `@defer (...)`.
+- **Standalone Decorators**: `@Component`, `@Injectable`, `@Directive`, `@Pipe`, and modern `inject()` DI.
+- **Toolchain Diagnostics**: Verifies Angular CLI (`ng`) with actionable global install instructions.
+
+### 🐦 Flutter & Dart Language Pack (`RecluseEdit.Extensions.Flutter`)
+- Supports **Dart** (`.dart`) with dedicated Dart 3 XSHD syntax highlighting and Dark+ colorization.
+- **Flutter Widget Snippets**: `stless` (StatelessWidget), `stful` (StatefulWidget), `setState()`, and lifecycle methods.
+- **Common Layouts**: `Scaffold`, `Column`, `Row`, `Container`, `ListView.builder`, `ElevatedButton`, `Navigator`.
+- **Toolchain Diagnostics**: Actively detects both the **Flutter SDK** (`flutter`) and **Dart SDK** (`dart`).
+
+### 🐘 PHP Language Pack (`RecluseEdit.Extensions.Php`)
+- Supports **PHP** (`.php`, `.phtml`, etc.) with modern PHP 8+ features.
+- **Modern PHP Constructs**: `match (...)`, `enum`, constructor property promotion, typed properties, arrow functions (`fn()`).
+- **Class & Error Handling**: `try ... catch (Throwable)`, `declare(strict_types=1);`, and JSON helpers.
+- **Toolchain Diagnostics**: Verifies **PHP CLI** (`php`) and **Composer** (`composer`) package manager.
 
 ---
 

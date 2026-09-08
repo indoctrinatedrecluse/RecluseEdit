@@ -14,6 +14,7 @@ public class ToolchainManager
     private readonly List<ToolchainReport> _reports = [];
 
     public IReadOnlyList<ToolchainReport> Reports => _reports.AsReadOnly();
+    public IReadOnlyList<IToolchainCheck> RegisteredChecks => _checks.AsReadOnly();
     public bool HasIssues => _reports.Any(r => r.Status is ToolchainStatus.Missing or ToolchainStatus.Warning);
 
     public event Action? ToolchainStatusChanged;

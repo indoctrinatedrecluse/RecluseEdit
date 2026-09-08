@@ -2,5 +2,8 @@
   <Project Path="RecluseEdit.Sdk/RecluseEdit.Sdk.csproj" />
   <Project Path="RecluseEdit.csproj" />
   <Project Path="extensions/RecluseEdit.Extensions.React/RecluseEdit.Extensions.React.csproj" />
+  <Project Path="extensions/RecluseEdit.Extensions.Angular/RecluseEdit.Extensions.Angular.csproj" />
+  <Project Path="extensions/RecluseEdit.Extensions.Flutter/RecluseEdit.Extensions.Flutter.csproj" />
+  <Project Path="extensions/RecluseEdit.Extensions.Php/RecluseEdit.Extensions.Php.csproj" />
   <Project Path="tests/RecluseEdit.Tests/RecluseEdit.Tests.csproj" />
 </Solution>

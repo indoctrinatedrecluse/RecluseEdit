@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>RecluseEdit.Extensions.Php</RootNamespace>
+    <AssemblyName>RecluseEdit.Extensions.Php</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\RecluseEdit.Sdk\RecluseEdit.Sdk.csproj" />
+  </ItemGroup>
+
+  <Target Name="CopyExtensionToHost" AfterTargets="Build">
+    <PropertyGroup>
+      <ExtensionOutputDir Condition="'$(SolutionDir)' != '' and '$(SolutionDir)' != '*Undefined*'">$(SolutionDir)bin\$(Configuration)\net10.0-windows\Extensions\Php\</ExtensionOutputDir>
+      <ExtensionOutputDir Condition="'$(ExtensionOutputDir)' == ''">$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\net10.0-windows\Extensions\Php\</ExtensionOutputDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <ExtensionFiles Include="$(TargetDir)$(TargetName).dll" />
+      <ExtensionFiles Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    </ItemGroup>
+    <MakeDir Directories="$(ExtensionOutputDir)" />
+    <Copy SourceFiles="@(ExtensionFiles)" DestinationFolder="$(ExtensionOutputDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>
