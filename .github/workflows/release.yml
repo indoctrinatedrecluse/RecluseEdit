@@ -88,3 +88,4 @@ jobs:
           gh release create ${{ env.RELEASE_TAG }} ${{ env.ZIP_FILE }} `
             --title "RecluseEdit ${{ env.RELEASE_TAG }}" `
             --generate-notes
+
