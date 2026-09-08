@@ -149,5 +149,11 @@ RecluseEdit features a decoupled extension mechanism. To write an extension:
 
 ## 📜 License
 
-Created by **indoctrinatedrecluse**. All rights reserved.
+Copyright © 2026 **indoctrinatedrecluse**. All rights reserved.
+
+This project is licensed under the **RecluseEdit Software License**. 
+- ✅ **Free to Use**: You may freely download, install, and run this editor for personal, educational, and commercial projects.
+- ✉️ **Modification & Redistribution**: Modifying, creating derivative works, or redistributing the software (in source or binary form) requires prior explicit written permission. Please contact [indoctrinatedrecluse](https://github.com/indoctrinatedrecluse/RecluseEdit) for permission requests.
+
+See the [LICENSE](LICENSE) file for complete legal terms.
 
