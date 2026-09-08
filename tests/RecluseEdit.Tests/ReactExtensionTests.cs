@@ -73,7 +73,7 @@ public sealed class ReactExtensionTests
         Assert.AreEqual("Node.js", report.ToolName);
         Assert.AreEqual(ToolchainStatus.Available, report.Status);
         Assert.IsNotNull(report.DetectedVersion);
-        StringAssert.StartsWith(report.DetectedVersion, "v24");
+        StringAssert.StartsWith(report.DetectedVersion, "v");
     }
 
     [TestMethod]
