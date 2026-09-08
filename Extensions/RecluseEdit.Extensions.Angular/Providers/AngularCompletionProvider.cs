@@ -78,3 +78,4 @@ public class AngularCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+

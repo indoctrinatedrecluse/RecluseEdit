@@ -206,3 +206,4 @@ public static class DartSyntaxDefinition
         return HighlightingLoader.Load(reader, HighlightingManager.Instance);
     }
 }
+

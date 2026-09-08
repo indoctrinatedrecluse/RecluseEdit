@@ -197,6 +197,21 @@ RecluseEdit comes with four modular language extensions built as dedicated targe
 
 ---
 
+## 🤖 Automated CI/CD & GitHub Releases
+
+RecluseEdit includes a fully automated GitHub Actions workflow (`.github/workflows/release.yml`) configured for continuous delivery:
+
+- 🏷️ **Triggered on Tag Push**: Pushing a new version tag (e.g. `git tag v1.0.0 && git push origin v1.0.0`) triggers an automated build pipeline on `windows-latest`.
+- 🧪 **Full Verification**: Executes the complete test suite (`dotnet test RecluseEdit.slnx -c Release`) across all projects before packaging.
+- 📦 **Bundle & Package**:
+  - Compiles the host editor and all extensions in `Release` configuration.
+  - Bundles the main application executable, dependencies, and all four language extensions (`React`, `Angular`, `Flutter`, `Php`) under `Extensions/`.
+  - Packages the entire distribution into a portable archive: `RecluseEdit-windows-<tag>.zip`.
+- 🚀 **GitHub Release**: Automatically creates a new GitHub Release with the bundled `.zip` asset attached and generates release notes.
+- 🕹️ **Manual Trigger**: Can also be executed manually via the **Actions** tab with custom version tags (`workflow_dispatch`).
+
+---
+
 ## 📜 License
 
 Copyright © 2026 **indoctrinatedrecluse**. All rights reserved.

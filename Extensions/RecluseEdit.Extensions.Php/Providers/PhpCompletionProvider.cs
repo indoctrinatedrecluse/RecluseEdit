@@ -80,3 +80,4 @@ public class PhpCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+

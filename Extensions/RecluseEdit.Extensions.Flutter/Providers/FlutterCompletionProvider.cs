@@ -79,3 +79,4 @@ public class FlutterCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+

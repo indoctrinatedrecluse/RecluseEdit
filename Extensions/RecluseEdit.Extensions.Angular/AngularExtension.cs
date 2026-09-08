@@ -51,3 +51,4 @@ public class AngularExtension : IExtension
         return Task.CompletedTask;
     }
 }
+
