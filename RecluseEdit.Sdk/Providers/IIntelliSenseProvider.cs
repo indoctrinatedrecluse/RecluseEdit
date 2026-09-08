@@ -13,3 +13,4 @@ public interface IIntelliSenseProvider
 
     Task<IReadOnlyList<CompletionItem>> GetCompletionsAsync(string languageId, string wordPrefix, CancellationToken cancellationToken = default);
 }
+

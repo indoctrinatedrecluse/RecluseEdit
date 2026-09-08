@@ -63,3 +63,4 @@ public class ReduxCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+

@@ -17,3 +17,4 @@ public interface IExtensionHost
     IReadOnlyList<LanguageDefinition> GetRegisteredLanguages();
     void Log(string message);
 }
+

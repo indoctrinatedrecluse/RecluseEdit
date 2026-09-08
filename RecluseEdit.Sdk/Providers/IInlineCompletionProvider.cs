@@ -13,3 +13,4 @@ public interface IInlineCompletionProvider
 
     Task<string?> GetInlineSuggestionAsync(InlineCompletionContext context, CancellationToken cancellationToken = default);
 }
+

@@ -14,3 +14,4 @@ public interface IToolchainCheck
 
     Task<ToolchainReport> CheckAsync(CancellationToken cancellationToken = default);
 }
+

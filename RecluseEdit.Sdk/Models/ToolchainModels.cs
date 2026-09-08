@@ -26,3 +26,4 @@ public class ToolchainReport
     public string? InstallHelp { get; init; }
     public string? Path { get; set; }
 }
+

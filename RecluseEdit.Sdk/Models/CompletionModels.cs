@@ -26,3 +26,4 @@ public class CompletionItem
     public double Priority { get; init; }
     public string? Category { get; init; }
 }
+

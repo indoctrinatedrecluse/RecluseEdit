@@ -12,3 +12,4 @@ public class LanguageDefinition
 
     public override string ToString() => DisplayName;
 }
+

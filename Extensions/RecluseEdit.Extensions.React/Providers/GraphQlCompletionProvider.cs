@@ -64,3 +64,4 @@ public class GraphQlCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+

@@ -14,3 +14,4 @@ public interface IExtension
     Task InitializeAsync(IExtensionHost host, CancellationToken cancellationToken = default);
     Task DeinitializeAsync(CancellationToken cancellationToken = default);
 }
+

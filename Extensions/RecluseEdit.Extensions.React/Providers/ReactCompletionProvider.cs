@@ -76,3 +76,4 @@ public class ReactCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+
