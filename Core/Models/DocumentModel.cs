@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using ICSharpCode.AvalonEdit.Document;
+using RecluseEdit.Sdk.Models;
 
 namespace RecluseEdit.Core.Models;
 

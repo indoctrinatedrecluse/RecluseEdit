@@ -1,3 +1,6 @@
 <Solution>
+  <Project Path="RecluseEdit.Sdk/RecluseEdit.Sdk.csproj" />
   <Project Path="RecluseEdit.csproj" />
+  <Project Path="extensions/RecluseEdit.Extensions.React/RecluseEdit.Extensions.React.csproj" />
+  <Project Path="tests/RecluseEdit.Tests/RecluseEdit.Tests.csproj" />
 </Solution>

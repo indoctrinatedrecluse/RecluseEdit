@@ -3,9 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:models="clr-namespace:RecluseEdit.Sdk.Models;assembly=RecluseEdit.Sdk"
         mc:Ignorable="d"
-        Title="Extension Manager - RecluseEdit" 
-        Height="500" Width="680"
+        Title="Extension &amp; Toolchain Manager - RecluseEdit" 
+        Height="540" Width="720"
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource BgPrimary}"
         Foreground="{StaticResource FgPrimary}">
@@ -19,49 +20,133 @@
 
         <!-- Header -->
         <StackPanel Grid.Row="0" Margin="0,0,0,12">
-            <TextBlock Text="Installed Extensions" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource FgAccent}" />
-            <TextBlock Text="Manage, inspect, and install modular language and editor plugins." FontSize="12" Foreground="{StaticResource FgSecondary}" Margin="0,4,0,0" />
+            <TextBlock Text="Extension &amp; Toolchain Diagnostics" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource FgAccent}" />
+            <TextBlock Text="Inspect loaded language extensions, compilers, and development runtimes." FontSize="12" Foreground="{StaticResource FgSecondary}" Margin="0,4,0,0" />
         </StackPanel>
 
-        <!-- Extensions List -->
-        <Border Grid.Row="1" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4">
-            <ListView x:Name="ListExtensions" Background="Transparent" BorderThickness="0" Foreground="{StaticResource FgPrimary}">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <Border Padding="12,8" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+        <!-- Content Tabs -->
+        <TabControl Grid.Row="1" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}">
+            <!-- Tab 1: Installed Extensions -->
+            <TabItem Header="Installed Extensions" Foreground="{StaticResource FgPrimary}" FontSize="12" Padding="12,6">
+                <Border Background="{StaticResource BgSecondary}" BorderThickness="0">
+                    <ListView x:Name="ListExtensions" Background="Transparent" BorderThickness="0" Foreground="{StaticResource FgPrimary}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="12,8" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
 
-                                <StackPanel Grid.Column="0">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource FgAccent}" />
-                                        <Border Background="{StaticResource BgHover}" CornerRadius="3" Margin="8,0,0,0" Padding="6,1">
-                                            <TextBlock Text="{Binding Version, StringFormat='v{0}'}" FontSize="11" Foreground="{StaticResource FgSecondary}" />
+                                        <StackPanel Grid.Column="0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource FgAccent}" />
+                                                <Border Background="{StaticResource BgHover}" CornerRadius="3" Margin="8,0,0,0" Padding="6,1">
+                                                    <TextBlock Text="{Binding Version, StringFormat='v{0}'}" FontSize="11" Foreground="{StaticResource FgSecondary}" />
+                                                </Border>
+                                            </StackPanel>
+
+                                            <TextBlock Text="{Binding Description}" FontSize="12" Foreground="{StaticResource FgPrimary}" Margin="0,4,0,0" TextWrapping="Wrap" />
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                <TextBlock Text="By " FontSize="11" Foreground="{StaticResource FgMuted}" />
+                                                <TextBlock Text="{Binding Author}" FontSize="11" Foreground="{StaticResource FgSecondary}" />
+                                                <TextBlock Text=" • ID: " FontSize="11" Foreground="{StaticResource FgMuted}" Margin="6,0,0,0" />
+                                                <TextBlock Text="{Binding Id}" FontSize="11" Foreground="{StaticResource FgMuted}" />
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <Border Grid.Column="1" VerticalAlignment="Center" Background="#1B5E20" CornerRadius="3" Padding="8,3">
+                                            <TextBlock Text="Active" FontSize="11" Foreground="#81C784" FontWeight="SemiBold" />
                                         </Border>
-                                    </StackPanel>
-
-                                    <TextBlock Text="{Binding Description}" FontSize="12" Foreground="{StaticResource FgPrimary}" Margin="0,4,0,0" TextWrapping="Wrap" />
-
-                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                        <TextBlock Text="By " FontSize="11" Foreground="{StaticResource FgMuted}" />
-                                        <TextBlock Text="{Binding Author}" FontSize="11" Foreground="{StaticResource FgSecondary}" />
-                                        <TextBlock Text=" • ID: " FontSize="11" Foreground="{StaticResource FgMuted}" Margin="6,0,0,0" />
-                                        <TextBlock Text="{Binding Id}" FontSize="11" Foreground="{StaticResource FgMuted}" />
-                                    </StackPanel>
-                                </StackPanel>
-
-                                <Border Grid.Column="1" VerticalAlignment="Center" Background="#1B5E20" CornerRadius="3" Padding="8,3">
-                                    <TextBlock Text="Active" FontSize="11" Foreground="#81C784" FontWeight="SemiBold" />
+                                    </Grid>
                                 </Border>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Border>
+            </TabItem>
+
+            <!-- Tab 2: Compilers & Toolchains -->
+            <TabItem Header="Compilers &amp; Toolchains" Foreground="{StaticResource FgPrimary}" FontSize="12" Padding="12,6">
+                <Grid Background="{StaticResource BgSecondary}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <ListView x:Name="ListToolchains" Grid.Row="0" Background="Transparent" BorderThickness="0" Foreground="{StaticResource FgPrimary}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate DataType="{x:Type models:ToolchainReport}">
+                                <Border Padding="12,10" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding ToolName}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource FgAccent}" />
+                                                <TextBlock Text="{Binding DetectedVersion, StringFormat=' ({0})'}" FontSize="12" Foreground="{StaticResource FgSecondary}" VerticalAlignment="Center" Margin="4,0,0,0" />
+                                            </StackPanel>
+
+                                            <TextBlock Text="{Binding Description}" FontSize="12" Foreground="{StaticResource FgPrimary}" Margin="0,4,0,0" TextWrapping="Wrap" />
+
+                                            <TextBlock Text="{Binding InstallHelp}" FontSize="11" Foreground="#4FC3F7" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                        </StackPanel>
+
+                                        <!-- Status Badge -->
+                                        <Border Grid.Column="1" VerticalAlignment="Center" CornerRadius="3" Padding="8,4" Margin="10,0,0,0">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#37474F" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:ToolchainStatus.Available}">
+                                                            <Setter Property="Background" Value="#1B5E20" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:ToolchainStatus.Warning}">
+                                                            <Setter Property="Background" Value="#E65100" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:ToolchainStatus.Missing}">
+                                                            <Setter Property="Background" Value="#B71C1C" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+
+                                            <TextBlock FontWeight="SemiBold" FontSize="11" Foreground="#FFFFFF">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="Unknown" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="{x:Static models:ToolchainStatus.Available}">
+                                                                <Setter Property="Text" Value="✓ Available" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="{x:Static models:ToolchainStatus.Warning}">
+                                                                <Setter Property="Text" Value="⚠️ Optional" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="{x:Static models:ToolchainStatus.Missing}">
+                                                                <Setter Property="Text" Value="✕ Missing" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <Border Grid.Row="1" Background="{StaticResource BgTertiary}" Padding="8,6" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,1,0,0">
+                        <Button Style="{StaticResource ToolbarButtonStyle}" Content="🔄 Re-run Toolchain Checks" HorizontalAlignment="Left" Padding="8,4" Click="OnRefreshToolchainsClick" />
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
 
         <!-- Bottom Actions -->
         <DockPanel Grid.Row="2" Margin="0,14,0,0">
@@ -71,4 +156,3 @@
         </DockPanel>
     </Grid>
 </Window>
-

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 using RecluseEdit.Core.Models;
+using RecluseEdit.Sdk.Models;
 
 namespace RecluseEdit.Core.Services;
 

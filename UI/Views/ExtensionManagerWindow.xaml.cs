@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Windows;
 using Microsoft.Win32;
 using RecluseEdit.Core.Services;
-using RecluseEdit.Extensions;
+using RecluseEdit.Sdk;
 
 namespace RecluseEdit.UI.Views;
 
@@ -14,21 +14,40 @@ namespace RecluseEdit.UI.Views;
 public partial class ExtensionManagerWindow : Window
 {
     private readonly ExtensionManager _extensionManager;
+    private readonly ToolchainManager _toolchainManager;
 
-    public ExtensionManagerWindow(ExtensionManager extensionManager)
+    public ExtensionManagerWindow(ExtensionManager extensionManager, ToolchainManager toolchainManager)
     {
         InitializeComponent();
         _extensionManager = extensionManager;
-        RefreshList();
+        _toolchainManager = toolchainManager;
+
+        _toolchainManager.ToolchainStatusChanged += OnToolchainStatusChanged;
+
+        RefreshLists();
     }
 
-    private void RefreshList()
+    private void RefreshLists()
     {
         ListExtensions.ItemsSource = null;
         ListExtensions.ItemsSource = _extensionManager.LoadedExtensions;
+
+        ListToolchains.ItemsSource = null;
+        ListToolchains.ItemsSource = _toolchainManager.Reports;
     }
 
-    private void OnInstallDllClick(object sender, RoutedEventArgs e)
+    private void OnToolchainStatusChanged()
+    {
+        Dispatcher.Invoke(RefreshLists);
+    }
+
+    private async void OnRefreshToolchainsClick(object sender, RoutedEventArgs e)
+    {
+        await _toolchainManager.RunAllChecksAsync();
+        RefreshLists();
+    }
+
+    private async void OnInstallDllClick(object sender, RoutedEventArgs e)
     {
         var dlg = new OpenFileDialog
         {
@@ -55,11 +74,11 @@ public partial class ExtensionManagerWindow : Window
                 {
                     if (Activator.CreateInstance(type) is IExtension ext)
                     {
-                        _extensionManager.LoadExtension(ext);
+                        await _extensionManager.LoadExtensionAsync(ext);
                     }
                 }
 
-                RefreshList();
+                RefreshLists();
                 MessageBox.Show(this, $"Successfully installed and activated extension(s) from:\n{dlg.SafeFileName}", "Extension Installed", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -95,5 +114,10 @@ public partial class ExtensionManagerWindow : Window
     {
         Close();
     }
-}
 
+    protected override void OnClosed(EventArgs e)
+    {
+        _toolchainManager.ToolchainStatusChanged -= OnToolchainStatusChanged;
+        base.OnClosed(e);
+    }
+}

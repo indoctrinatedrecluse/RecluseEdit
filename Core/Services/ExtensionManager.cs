@@ -1,45 +1,52 @@
 using System.IO;
 using System.Reflection;
 using ICSharpCode.AvalonEdit.Highlighting;
-using RecluseEdit.Core.Models;
-using RecluseEdit.Extensions;
 using RecluseEdit.Extensions.BuiltIn;
+using RecluseEdit.Sdk;
+using RecluseEdit.Sdk.Models;
+using RecluseEdit.Sdk.Providers;
 
 namespace RecluseEdit.Core.Services;
 
 /// <summary>
-/// Manages discovery, loading, and lifecycle of editor extensions.
+/// Manages discovery, loading, and lifecycle of editor extensions using RecluseEdit.Sdk.
 /// </summary>
-public class ExtensionManager : IExtensionContext
+public class ExtensionManager : IExtensionHost
 {
     private readonly SyntaxManager _syntaxManager;
     private readonly AutocompleteManager _autocompleteManager;
+    private readonly ToolchainManager _toolchainManager;
     private readonly List<IExtension> _loadedExtensions = [];
     private readonly List<string> _logs = [];
 
     public IReadOnlyList<IExtension> LoadedExtensions => _loadedExtensions.AsReadOnly();
     public IReadOnlyList<string> Logs => _logs.AsReadOnly();
+    public ToolchainManager ToolchainManager => _toolchainManager;
 
     public event Action? ExtensionsChanged;
 
-    public ExtensionManager(SyntaxManager syntaxManager, AutocompleteManager autocompleteManager)
+    public ExtensionManager(
+        SyntaxManager syntaxManager,
+        AutocompleteManager autocompleteManager,
+        ToolchainManager toolchainManager)
     {
         _syntaxManager = syntaxManager;
         _autocompleteManager = autocompleteManager;
+        _toolchainManager = toolchainManager;
     }
 
-    public void Initialize()
+    public async Task InitializeAsync()
     {
         // 1. Load Built-In Extensions
-        LoadExtension(new WebDevExtension());
+        await LoadExtensionAsync(new WebDevExtension());
 
         // 2. Discover and load external plugins from extensions directory
-        LoadExternalExtensions();
+        await LoadExternalExtensionsAsync();
 
         ExtensionsChanged?.Invoke();
     }
 
-    public void LoadExtension(IExtension extension)
+    public async Task LoadExtensionAsync(IExtension extension)
     {
         try
         {
@@ -49,9 +56,10 @@ public class ExtensionManager : IExtensionContext
                 return;
             }
 
-            extension.Initialize(this);
+            await extension.InitializeAsync(this);
             _loadedExtensions.Add(extension);
             Log($"Loaded extension: {extension.Name} v{extension.Version} by {extension.Author}");
+            ExtensionsChanged?.Invoke();
         }
         catch (Exception ex)
         {
@@ -59,7 +67,7 @@ public class ExtensionManager : IExtensionContext
         }
     }
 
-    private void LoadExternalExtensions()
+    private async Task LoadExternalExtensionsAsync()
     {
         var appDir = AppDomain.CurrentDomain.BaseDirectory;
         var extDir = Path.Combine(appDir, "Extensions");
@@ -72,7 +80,6 @@ public class ExtensionManager : IExtensionContext
             }
             catch
             {
-                // Ignore if unable to create directory
                 return;
             }
         }
@@ -80,28 +87,39 @@ public class ExtensionManager : IExtensionContext
         var dlls = Directory.GetFiles(extDir, "*.dll", SearchOption.AllDirectories);
         foreach (var dll in dlls)
         {
+            var fileName = Path.GetFileName(dll);
+            // Skip known SDK / framework assemblies if copied
+            if (fileName.Equals("RecluseEdit.Sdk.dll", StringComparison.OrdinalIgnoreCase) ||
+                fileName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) ||
+                fileName.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase) ||
+                fileName.StartsWith("ICSharpCode.", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             try
             {
                 var assembly = Assembly.LoadFrom(dll);
                 var extensionTypes = assembly.GetTypes()
-                    .Where(t => typeof(IExtension).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
+                    .Where(t => typeof(IExtension).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+                    .ToList();
 
                 foreach (var type in extensionTypes)
                 {
                     if (Activator.CreateInstance(type) is IExtension ext)
                     {
-                        LoadExtension(ext);
+                        await LoadExtensionAsync(ext);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Log($"Error loading extension assembly '{dll}': {ex.Message}");
+                Log($"Error loading extension assembly '{fileName}': {ex.Message}");
             }
         }
     }
 
-    #region IExtensionContext Implementation
+    #region IExtensionHost Implementation
 
     public void RegisterLanguage(LanguageDefinition language)
     {
@@ -113,6 +131,18 @@ public class ExtensionManager : IExtensionContext
     {
         _autocompleteManager.RegisterProvider(provider);
         Log($"Registered inline completion provider '{provider.Name}'");
+    }
+
+    public void RegisterIntelliSense(IIntelliSenseProvider provider)
+    {
+        _autocompleteManager.RegisterIntelliSenseProvider(provider);
+        Log($"Registered IntelliSense provider '{provider.Name}'");
+    }
+
+    public void RegisterToolchainCheck(IToolchainCheck toolchainCheck)
+    {
+        _toolchainManager.RegisterCheck(toolchainCheck);
+        Log($"Registered toolchain check '{toolchainCheck.ToolName}' ({toolchainCheck.Command})");
     }
 
     public void RegisterSyntaxHighlighting(string languageId, IHighlightingDefinition definition)
@@ -133,4 +163,3 @@ public class ExtensionManager : IExtensionContext
 
     #endregion
 }
-

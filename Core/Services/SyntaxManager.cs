@@ -1,6 +1,6 @@
 using System.IO;
 using ICSharpCode.AvalonEdit.Highlighting;
-using RecluseEdit.Core.Models;
+using RecluseEdit.Sdk.Models;
 
 namespace RecluseEdit.Core.Services;
 

@@ -114,11 +114,17 @@ dotnet run
 RecluseEdit features a decoupled extension mechanism. To write an extension:
 
 1. Create a C# class library targeting `net10.0-windows`.
-2. Reference `RecluseEdit.dll`.
-3. Implement `IExtension`:
+2. Reference the lightweight `RecluseEdit.Sdk` library:
+   ```xml
+   <ItemGroup>
+     <ProjectReference Include="..\..\RecluseEdit.Sdk\RecluseEdit.Sdk.csproj" />
+   </ItemGroup>
+   ```
+3. Implement `IExtension` and optional `IToolchainCheck`:
    ```csharp
-   using RecluseEdit.Core.Models;
-   using RecluseEdit.Extensions;
+   using RecluseEdit.Sdk;
+   using RecluseEdit.Sdk.Models;
+   using RecluseEdit.Sdk.Providers;
 
    public class MyLanguageExtension : IExtension
    {
@@ -128,22 +134,41 @@ RecluseEdit features a decoupled extension mechanism. To write an extension:
        public string Description => "Adds support for My Language";
        public string Author => "indoctrinatedrecluse";
 
-       public void Initialize(IExtensionContext context)
+       public Task InitializeAsync(IExtensionHost host, CancellationToken ct = default)
        {
-           context.RegisterLanguage(new LanguageDefinition
+           // 1. Register Language
+           host.RegisterLanguage(new LanguageDefinition
            {
                Id = "mylang",
                DisplayName = "My Language",
                Extensions = [".ml", ".mylang"]
            });
 
-           context.RegisterInlineCompletion(new MyCompletionProvider());
+           // 2. Register Autocomplete & Snippets
+           host.RegisterInlineCompletion(new MyCompletionProvider());
+
+           // 3. Register Toolchain / Compiler Prerequisites
+           host.RegisterToolchainCheck(new MyCompilerCheck());
+
+           return Task.CompletedTask;
        }
 
-       public void Deinitialize() { }
+       public Task DeinitializeAsync(CancellationToken ct = default) => Task.CompletedTask;
    }
    ```
-4. Place your compiled `.dll` into the `Extensions/` directory (open quickly from **Extensions &rarr; Open Extensions Folder** in the app menu).
+4. Place your compiled `.dll` into the `Extensions/<YourExtensionName>/` folder (open quickly from **Extensions &rarr; Open Extensions Folder** in the app menu).
+
+---
+
+## ⚛️ Built-In & Official Extensions
+
+### React, Redux & GraphQL Language Pack (`RecluseEdit.Extensions.React`)
+- Built as a separate target in `RecluseEdit.slnx`.
+- Supports **React JSX** (`.jsx`), **React TSX** (`.tsx`), and **GraphQL** (`.graphql`, `.gql`).
+- **React Hooks**: `useState`, `useEffect`, `useCallback`, `useMemo`, `useRef`, `useContext`, `useReducer`, `useId`.
+- **Redux Toolkit**: `createSlice`, `createAsyncThunk`, `configureStore`, `useSelector`, `useDispatch`.
+- **GraphQL**: `query`, `mutation`, `subscription`, `fragment`, `schema`, `type`, and Apollo Client hooks (`useQuery`, `useMutation`).
+- **Toolchain Diagnostics**: Actively verifies Node.js (`node`), npm (`npm`), and TypeScript compiler (`tsc`) on the system `PATH`.
 
 ---
 

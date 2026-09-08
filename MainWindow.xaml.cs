@@ -7,6 +7,7 @@ using System.Windows.Input;
 using Microsoft.Win32;
 using RecluseEdit.Core.Models;
 using RecluseEdit.Core.Services;
+using RecluseEdit.Sdk.Models;
 using RecluseEdit.UI.Views;
 
 namespace RecluseEdit;
@@ -28,6 +29,7 @@ public partial class MainWindow : Window
 
     private readonly SyntaxManager _syntaxManager;
     private readonly AutocompleteManager _autocompleteManager;
+    private readonly ToolchainManager _toolchainManager;
     private readonly ExtensionManager _extensionManager;
     private readonly DocumentManager _documentManager;
     private readonly WorkspaceManager _workspaceManager;
@@ -40,7 +42,8 @@ public partial class MainWindow : Window
 
         _syntaxManager = new SyntaxManager();
         _autocompleteManager = new AutocompleteManager();
-        _extensionManager = new ExtensionManager(_syntaxManager, _autocompleteManager);
+        _toolchainManager = new ToolchainManager();
+        _extensionManager = new ExtensionManager(_syntaxManager, _autocompleteManager, _toolchainManager);
         _documentManager = new DocumentManager(_syntaxManager);
         _workspaceManager = new WorkspaceManager();
 
@@ -69,8 +72,9 @@ public partial class MainWindow : Window
         CmbLanguage.ItemsSource = _syntaxManager.SupportedLanguages;
 
         // Initialize extensions
-        _extensionManager.Initialize();
+        _ = _extensionManager.InitializeAsync();
         _extensionManager.ExtensionsChanged += UpdateExtensionsStatus;
+        _toolchainManager.ToolchainStatusChanged += UpdateExtensionsStatus;
         UpdateExtensionsStatus();
 
         // Create default initial document
@@ -79,7 +83,20 @@ public partial class MainWindow : Window
 
     private void UpdateExtensionsStatus()
     {
-        StatusExtensions.Text = $"Extensions: {_extensionManager.LoadedExtensions.Count}";
+        Dispatcher.Invoke(() =>
+        {
+            var extCount = _extensionManager.LoadedExtensions.Count;
+            if (_toolchainManager.HasIssues)
+            {
+                StatusExtensions.Text = $"Extensions: {extCount} (⚠️ Toolchains)";
+                StatusExtensions.ToolTip = "One or more compiler/toolchain prerequisites require attention. Click to inspect.";
+            }
+            else
+            {
+                StatusExtensions.Text = $"Extensions: {extCount}";
+                StatusExtensions.ToolTip = "Click to manage extensions and compilers";
+            }
+        });
     }
 
     #region Workspace Explorer Handling
@@ -524,7 +541,7 @@ public partial class MainWindow : Window
 
     private void OnManageExtensionsClick(object sender, RoutedEventArgs e)
     {
-        var win = new ExtensionManagerWindow(_extensionManager)
+        var win = new ExtensionManagerWindow(_extensionManager, _toolchainManager)
         {
             Owner = this
         };

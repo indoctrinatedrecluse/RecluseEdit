@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
-using RecluseEdit.Core.Models;
+using RecluseEdit.Sdk;
+using RecluseEdit.Sdk.Models;
+using RecluseEdit.Sdk.Providers;
 
 namespace RecluseEdit.Extensions.BuiltIn;
 
@@ -15,15 +17,17 @@ public class WebDevExtension : IExtension
     public string Description => "Built-in web intelligence providing HTML, CSS, and JS inline completions";
     public string Author => "RecluseEdit Team";
 
-    public void Initialize(IExtensionContext context)
+    public Task InitializeAsync(IExtensionHost host, CancellationToken cancellationToken = default)
     {
         // Register Web Completion Provider
-        context.RegisterInlineCompletion(new WebInlineCompletionProvider());
-        context.Log("Web Development Essentials extension initialized.");
+        host.RegisterInlineCompletion(new WebInlineCompletionProvider());
+        host.Log("Web Development Essentials extension initialized.");
+        return Task.CompletedTask;
     }
 
-    public void Deinitialize()
+    public Task DeinitializeAsync(CancellationToken cancellationToken = default)
     {
+        return Task.CompletedTask;
     }
 }
 

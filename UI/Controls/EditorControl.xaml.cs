@@ -8,7 +8,8 @@ using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
 using RecluseEdit.Core.Models;
 using RecluseEdit.Core.Services;
-using RecluseEdit.Extensions;
+using RecluseEdit.Sdk.Models;
+using RecluseEdit.Sdk.Providers;
 
 namespace RecluseEdit.UI.Controls;
 
