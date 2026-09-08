@@ -28,3 +28,4 @@ public class WebCompletionData : ICompletionData
         textArea.Document.Replace(completionSegment, Text);
     }
 }
+

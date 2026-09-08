@@ -232,3 +232,4 @@ public partial class FindReplaceControl : UserControl
         UpdateMatchesCount();
     }
 }
+

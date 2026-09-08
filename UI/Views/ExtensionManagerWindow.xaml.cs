@@ -96,3 +96,4 @@ public partial class ExtensionManagerWindow : Window
         Close();
     }
 }
+

@@ -44,3 +44,4 @@ public class WorkspaceManager
         WorkspaceChanged?.Invoke();
     }
 }
+
