@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+             xmlns:controls="clr-namespace:RecluseEdit.UI.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid Background="#1E1E1E">
@@ -17,6 +18,12 @@
                                WordWrap="False"
                                HorizontalScrollBarVisibility="Auto"
                                VerticalScrollBarVisibility="Auto" />
+
+        <!-- Floating Find & Replace Bar -->
+        <controls:FindReplaceControl x:Name="FindReplace"
+                                     VerticalAlignment="Top"
+                                     HorizontalAlignment="Right"
+                                     Margin="0,8,20,0"
+                                     Visibility="Collapsed" />
     </Grid>
 </UserControl>
-

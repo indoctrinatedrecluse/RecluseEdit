@@ -155,6 +155,45 @@ public class DocumentManager
         return true;
     }
 
+    /// <summary>
+    /// Closes all tabs except the specified document.
+    /// </summary>
+    public void CloseOtherDocuments(DocumentModel keepDoc, Func<DocumentModel, bool?>? confirmSavePrompt = null)
+    {
+        var others = Documents.Where(d => d != keepDoc).ToList();
+        foreach (var doc in others)
+        {
+            CloseDocument(doc, confirmSavePrompt);
+        }
+    }
+
+    /// <summary>
+    /// Closes all tabs located to the right of the specified document.
+    /// </summary>
+    public void CloseDocumentsToTheRight(DocumentModel currentDoc, Func<DocumentModel, bool?>? confirmSavePrompt = null)
+    {
+        var index = Documents.IndexOf(currentDoc);
+        if (index < 0) return;
+
+        var toClose = Documents.Skip(index + 1).ToList();
+        foreach (var doc in toClose)
+        {
+            CloseDocument(doc, confirmSavePrompt);
+        }
+    }
+
+    /// <summary>
+    /// Closes all open document tabs.
+    /// </summary>
+    public void CloseAllDocuments(Func<DocumentModel, bool?>? confirmSavePrompt = null)
+    {
+        var all = Documents.ToList();
+        foreach (var doc in all)
+        {
+            CloseDocument(doc, confirmSavePrompt);
+        }
+    }
+
     private static string GetDefaultTemplateForLanguage(string languageId)
     {
         return languageId switch

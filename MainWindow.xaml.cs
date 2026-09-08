@@ -7,6 +7,7 @@ using System.Windows.Input;
 using Microsoft.Win32;
 using RecluseEdit.Core.Models;
 using RecluseEdit.Core.Services;
+using RecluseEdit.UI.Views;
 
 namespace RecluseEdit;
 
@@ -17,14 +18,21 @@ public partial class MainWindow : Window
 {
     public static readonly RoutedUICommand NewFileCommand = new("New File", "NewFile", typeof(MainWindow));
     public static readonly RoutedUICommand OpenFileCommand = new("Open File", "OpenFile", typeof(MainWindow));
+    public static readonly RoutedUICommand OpenFolderCommand = new("Open Folder", "OpenFolder", typeof(MainWindow));
     public static readonly RoutedUICommand SaveFileCommand = new("Save File", "SaveFile", typeof(MainWindow));
     public static readonly RoutedUICommand SaveAsFileCommand = new("Save As File", "SaveAsFile", typeof(MainWindow));
     public static readonly RoutedUICommand CloseFileCommand = new("Close File", "CloseFile", typeof(MainWindow));
+    public static readonly RoutedUICommand ToggleSidebarCommand = new("Toggle Sidebar", "ToggleSidebar", typeof(MainWindow));
+    public static readonly RoutedUICommand FindCommand = new("Find", "Find", typeof(MainWindow));
+    public static readonly RoutedUICommand ReplaceCommand = new("Replace", "Replace", typeof(MainWindow));
 
     private readonly SyntaxManager _syntaxManager;
     private readonly AutocompleteManager _autocompleteManager;
     private readonly ExtensionManager _extensionManager;
     private readonly DocumentManager _documentManager;
+    private readonly WorkspaceManager _workspaceManager;
+
+    private GridLength _lastSidebarWidth = new(240);
 
     public MainWindow()
     {
@@ -34,6 +42,7 @@ public partial class MainWindow : Window
         _autocompleteManager = new AutocompleteManager();
         _extensionManager = new ExtensionManager(_syntaxManager, _autocompleteManager);
         _documentManager = new DocumentManager(_syntaxManager);
+        _workspaceManager = new WorkspaceManager();
 
         EditorHost.SyntaxManager = _syntaxManager;
         EditorHost.AutocompleteManager = _autocompleteManager;
@@ -41,18 +50,25 @@ public partial class MainWindow : Window
         // Command bindings
         CommandBindings.Add(new CommandBinding(NewFileCommand, (_, _) => CreateNewFile()));
         CommandBindings.Add(new CommandBinding(OpenFileCommand, (_, _) => OpenFileDialog()));
+        CommandBindings.Add(new CommandBinding(OpenFolderCommand, (_, _) => OpenFolderDialog()));
         CommandBindings.Add(new CommandBinding(SaveFileCommand, (_, _) => SaveActiveFile()));
         CommandBindings.Add(new CommandBinding(SaveAsFileCommand, (_, _) => SaveActiveFileAs()));
         CommandBindings.Add(new CommandBinding(CloseFileCommand, (_, _) => CloseActiveFile()));
+        CommandBindings.Add(new CommandBinding(ToggleSidebarCommand, (_, _) => ToggleSidebar()));
+        CommandBindings.Add(new CommandBinding(FindCommand, (_, _) => EditorHost.OpenFind()));
+        CommandBindings.Add(new CommandBinding(ReplaceCommand, (_, _) => EditorHost.OpenReplace()));
 
-        // Wire document changes
+        // Document events
         _documentManager.ActiveDocumentChanged += OnActiveDocumentChanged;
         _documentManager.DocumentClosed += OnDocumentClosed;
+
+        // Workspace events
+        _workspaceManager.WorkspaceChanged += OnWorkspaceChanged;
 
         TabItemsControl.ItemsSource = _documentManager.Documents;
         CmbLanguage.ItemsSource = _syntaxManager.SupportedLanguages;
 
-        // Initialize extensions (built-in and dynamic)
+        // Initialize extensions
         _extensionManager.Initialize();
         _extensionManager.ExtensionsChanged += UpdateExtensionsStatus;
         UpdateExtensionsStatus();
@@ -65,6 +81,92 @@ public partial class MainWindow : Window
     {
         StatusExtensions.Text = $"Extensions: {_extensionManager.LoadedExtensions.Count}";
     }
+
+    #region Workspace Explorer Handling
+
+    private void OpenFolderDialog()
+    {
+        var dlg = new OpenFolderDialog
+        {
+            Title = "Select Workspace Folder"
+        };
+
+        if (dlg.ShowDialog(this) == true)
+        {
+            _workspaceManager.OpenWorkspace(dlg.FolderName);
+            StatusMessage.Text = $"Opened workspace: {Path.GetFileName(dlg.FolderName)}";
+        }
+    }
+
+    private void OnWorkspaceChanged()
+    {
+        if (_workspaceManager.HasWorkspace && _workspaceManager.RootItem != null)
+        {
+            TxtWorkspaceName.Text = Path.GetFileName(_workspaceManager.RootPath)?.ToUpperInvariant() ?? "EXPLORER";
+            WorkspaceTreeView.ItemsSource = _workspaceManager.RootItem.Children;
+
+            // Ensure sidebar is visible
+            if (ColSidebar.Width.Value == 0)
+            {
+                ToggleSidebar();
+            }
+        }
+        else
+        {
+            TxtWorkspaceName.Text = "EXPLORER";
+            WorkspaceTreeView.ItemsSource = null;
+        }
+    }
+
+    private void OnRefreshWorkspaceClick(object sender, RoutedEventArgs e)
+    {
+        _workspaceManager.RefreshWorkspace();
+        StatusMessage.Text = "Workspace refreshed";
+    }
+
+    private void OnWorkspaceTreeDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (WorkspaceTreeView.SelectedItem is FileSystemItem item && !item.IsDirectory)
+        {
+            try
+            {
+                var doc = _documentManager.OpenDocument(item.FullPath);
+                StatusMessage.Text = $"Opened {doc.FileName}";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, $"Failed to open file:\n{ex.Message}", "RecluseEdit", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
+    private void OnWorkspaceItemSelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    {
+        // Highlight status or file preview if needed
+    }
+
+    private void ToggleSidebar()
+    {
+        if (ColSidebar.Width.Value > 0)
+        {
+            _lastSidebarWidth = ColSidebar.Width;
+            ColSidebar.MinWidth = 0;
+            ColSidebar.Width = new GridLength(0);
+            Splitter.Visibility = Visibility.Collapsed;
+            MenuSidebar.IsChecked = false;
+        }
+        else
+        {
+            ColSidebar.MinWidth = 140;
+            ColSidebar.Width = _lastSidebarWidth.Value > 50 ? _lastSidebarWidth : new GridLength(240);
+            Splitter.Visibility = Visibility.Visible;
+            MenuSidebar.IsChecked = true;
+        }
+    }
+
+    private void OnToggleSidebarClick(object sender, RoutedEventArgs e) => ToggleSidebar();
+
+    #endregion
 
     #region Document Lifecycle Actions
 
@@ -206,6 +308,94 @@ public partial class MainWindow : Window
 
     #endregion
 
+    #region Tab Context Menu & Middle Click
+
+    private void OnTabMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.MiddleButton == MouseButtonState.Pressed && sender is FrameworkElement { DataContext: DocumentModel doc })
+        {
+            CloseDocumentWithPrompt(doc);
+            e.Handled = true;
+        }
+    }
+
+    private DocumentModel? GetTabDocument(object sender)
+    {
+        if (sender is MenuItem { DataContext: DocumentModel doc }) return doc;
+        if (sender is MenuItem mi && mi.Parent is ContextMenu cm && cm.PlacementTarget is FrameworkElement fe && fe.DataContext is DocumentModel targetDoc)
+        {
+            return targetDoc;
+        }
+        return _documentManager.ActiveDocument;
+    }
+
+    private void OnMenuCloseTabClick(object sender, RoutedEventArgs e)
+    {
+        var doc = GetTabDocument(sender);
+        if (doc != null) CloseDocumentWithPrompt(doc);
+    }
+
+    private void OnMenuCloseOtherTabsClick(object sender, RoutedEventArgs e)
+    {
+        var doc = GetTabDocument(sender);
+        if (doc != null)
+        {
+            _documentManager.CloseOtherDocuments(doc, d =>
+            {
+                var res = MessageBox.Show(this, $"Do you want to save changes to '{d.FileName}'?", "RecluseEdit", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+                return res switch { MessageBoxResult.Yes => true, MessageBoxResult.No => false, _ => null };
+            });
+        }
+    }
+
+    private void OnMenuCloseRightTabsClick(object sender, RoutedEventArgs e)
+    {
+        var doc = GetTabDocument(sender);
+        if (doc != null)
+        {
+            _documentManager.CloseDocumentsToTheRight(doc, d =>
+            {
+                var res = MessageBox.Show(this, $"Do you want to save changes to '{d.FileName}'?", "RecluseEdit", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+                return res switch { MessageBoxResult.Yes => true, MessageBoxResult.No => false, _ => null };
+            });
+        }
+    }
+
+    private void OnMenuCopyFullPathClick(object sender, RoutedEventArgs e)
+    {
+        var doc = GetTabDocument(sender);
+        if (!string.IsNullOrEmpty(doc?.FilePath))
+        {
+            Clipboard.SetText(doc.FilePath);
+            StatusMessage.Text = "Copied full path to clipboard";
+        }
+    }
+
+    private void OnMenuRevealInExplorerClick(object sender, RoutedEventArgs e)
+    {
+        var doc = GetTabDocument(sender);
+        if (!string.IsNullOrEmpty(doc?.FilePath) && File.Exists(doc.FilePath))
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $"/select,\"{doc.FilePath}\"",
+                UseShellExecute = true
+            });
+        }
+    }
+
+    private void OnCloseAllTabsClick(object sender, RoutedEventArgs e)
+    {
+        _documentManager.CloseAllDocuments(doc =>
+        {
+            var res = MessageBox.Show(this, $"Do you want to save changes to '{doc.FileName}'?", "RecluseEdit", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+            return res switch { MessageBoxResult.Yes => true, MessageBoxResult.No => false, _ => null };
+        });
+    }
+
+    #endregion
+
     #region Tab & Active Document Handling
 
     private void OnActiveDocumentChanged(DocumentModel? document)
@@ -219,7 +409,6 @@ public partial class MainWindow : Window
             document.PropertyChanged += OnActiveDocumentPropertyChanged;
             UpdateDocumentStatusUI(document);
 
-            // Sync language combo
             CmbLanguage.SelectedItem = document.Language;
             Title = $"{document.FileName} - RecluseEdit";
         }
@@ -289,6 +478,7 @@ public partial class MainWindow : Window
 
     private void OnNewFileClick(object sender, RoutedEventArgs e) => CreateNewFile();
     private void OnOpenFileClick(object sender, RoutedEventArgs e) => OpenFileDialog();
+    private void OnOpenFolderClick(object sender, RoutedEventArgs e) => OpenFolderDialog();
     private void OnSaveFileClick(object sender, RoutedEventArgs e) => SaveActiveFile();
     private void OnSaveAsFileClick(object sender, RoutedEventArgs e) => SaveActiveFileAs();
     private void OnSaveAllClick(object sender, RoutedEventArgs e) => SaveAllFiles();
@@ -301,6 +491,8 @@ public partial class MainWindow : Window
     private void OnCopyClick(object sender, RoutedEventArgs e) => EditorHost.UnderlyingEditor.Copy();
     private void OnPasteClick(object sender, RoutedEventArgs e) => EditorHost.UnderlyingEditor.Paste();
     private void OnSelectAllClick(object sender, RoutedEventArgs e) => EditorHost.UnderlyingEditor.SelectAll();
+    private void OnFindClick(object sender, RoutedEventArgs e) => EditorHost.OpenFind();
+    private void OnReplaceClick(object sender, RoutedEventArgs e) => EditorHost.OpenReplace();
 
     private void OnToggleWordWrapClick(object sender, RoutedEventArgs e)
     {
@@ -330,18 +522,14 @@ public partial class MainWindow : Window
         EditorHost.ToggleLineNumbers(show);
     }
 
-    private void OnViewExtensionsClick(object sender, RoutedEventArgs e)
+    private void OnManageExtensionsClick(object sender, RoutedEventArgs e)
     {
-        var exts = _extensionManager.LoadedExtensions;
-        var info = exts.Count == 0
-            ? "No extensions currently loaded."
-            : string.Join("\n\n", exts.Select(x => $"• {x.Name} (v{x.Version})\n  ID: {x.Id}\n  Author: {x.Author}\n  {x.Description}"));
-
-        MessageBox.Show(this,
-            $"RecluseEdit Loaded Extensions ({exts.Count}):\n\n{info}\n\nTo add external language extensions, drop compiled extension DLLs into the Extensions folder.",
-            "RecluseEdit Extensions",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        var win = new ExtensionManagerWindow(_extensionManager)
+        {
+            Owner = this
+        };
+        win.ShowDialog();
+        UpdateExtensionsStatus();
     }
 
     private void OnOpenExtensionsFolderClick(object sender, RoutedEventArgs e)
@@ -369,14 +557,17 @@ public partial class MainWindow : Window
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
         MessageBox.Show(this,
-            "RecluseEdit v1.0.0\n\n" +
-            "A fast, modern code editor optimized for web applications.\n" +
-            "Features:\n" +
-            "- High performance AvalonEdit engine with line numbers\n" +
-            "- Syntax highlighting for HTML, CSS, JS, TS, JSON, XML, C#\n" +
-            "- Inline ghost-text autocomplete (Tab to complete)\n" +
-            "- Multi-file tabbed workspace\n" +
-            "- Pluggable Extension Architecture\n\n" +
+            "RecluseEdit v1.1.0\n\n" +
+            "A fast, modern code editor optimized for web applications.\n\n" +
+            "Key Features:\n" +
+            "• Web Workspace Explorer (Ctrl+B)\n" +
+            "• Dual Autocomplete: Ghost-text (Tab) + IntelliSense popup (Ctrl+Space)\n" +
+            "• Built-in Find & Replace (Ctrl+F, Ctrl+H)\n" +
+            "• Auto-closing pairs & HTML tags\n" +
+            "• Tab context menu & middle-click close\n" +
+            "• Code folding & bracket matching\n" +
+            "• Pluggable Extension System\n\n" +
+            "Made with love by indoctrinatedrecluse\n" +
             "Built with .NET 10 WPF & Visual Studio 2026 Enterprise.",
             "About RecluseEdit",
             MessageBoxButton.OK,

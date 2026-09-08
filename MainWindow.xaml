@@ -5,10 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RecluseEdit"
         xmlns:controls="clr-namespace:RecluseEdit.UI.Controls"
+        xmlns:models="clr-namespace:RecluseEdit.Core.Models"
         mc:Ignorable="d"
         Title="RecluseEdit - Web Application Editor" 
-        Height="720" Width="1140"
-        MinHeight="400" MinWidth="600"
+        Height="760" Width="1180"
+        MinHeight="450" MinWidth="650"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgPrimary}"
         Foreground="{StaticResource FgPrimary}">
@@ -16,18 +17,22 @@
     <Window.InputBindings>
         <KeyBinding Modifiers="Control" Key="N" Command="{x:Static local:MainWindow.NewFileCommand}" />
         <KeyBinding Modifiers="Control" Key="O" Command="{x:Static local:MainWindow.OpenFileCommand}" />
+        <KeyBinding Modifiers="Control+Shift" Key="O" Command="{x:Static local:MainWindow.OpenFolderCommand}" />
         <KeyBinding Modifiers="Control" Key="S" Command="{x:Static local:MainWindow.SaveFileCommand}" />
         <KeyBinding Modifiers="Control+Shift" Key="S" Command="{x:Static local:MainWindow.SaveAsFileCommand}" />
         <KeyBinding Modifiers="Control" Key="W" Command="{x:Static local:MainWindow.CloseFileCommand}" />
+        <KeyBinding Modifiers="Control" Key="B" Command="{x:Static local:MainWindow.ToggleSidebarCommand}" />
+        <KeyBinding Modifiers="Control" Key="F" Command="{x:Static local:MainWindow.FindCommand}" />
+        <KeyBinding Modifiers="Control" Key="H" Command="{x:Static local:MainWindow.ReplaceCommand}" />
     </Window.InputBindings>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /> <!-- Menu -->
-            <RowDefinition Height="Auto" /> <!-- Toolbar -->
-            <RowDefinition Height="Auto" /> <!-- Tab Strip -->
-            <RowDefinition Height="*" />    <!-- Editor Viewport -->
-            <RowDefinition Height="Auto" /> <!-- Status Bar -->
+            <RowDefinition Height="Auto" /> <!-- 0. Menu -->
+            <RowDefinition Height="Auto" /> <!-- 1. Toolbar -->
+            <RowDefinition Height="Auto" /> <!-- 2. Tab Strip -->
+            <RowDefinition Height="*" />    <!-- 3. Workspace / Editor Viewport -->
+            <RowDefinition Height="Auto" /> <!-- 4. Status Bar -->
         </Grid.RowDefinitions>
 
         <!-- 0. Menu Bar -->
@@ -35,12 +40,14 @@
             <MenuItem Header="_File">
                 <MenuItem Header="_New File" InputGestureText="Ctrl+N" Click="OnNewFileClick" />
                 <MenuItem Header="_Open File..." InputGestureText="Ctrl+O" Click="OnOpenFileClick" />
+                <MenuItem Header="Open _Folder..." InputGestureText="Ctrl+Shift+O" Click="OnOpenFolderClick" />
                 <Separator Background="{StaticResource BorderDark}" />
                 <MenuItem Header="_Save" InputGestureText="Ctrl+S" Click="OnSaveFileClick" />
                 <MenuItem Header="Save _As..." InputGestureText="Ctrl+Shift+S" Click="OnSaveAsFileClick" />
                 <MenuItem Header="Save A_ll" Click="OnSaveAllClick" />
                 <Separator Background="{StaticResource BorderDark}" />
                 <MenuItem Header="_Close Tab" InputGestureText="Ctrl+W" Click="OnCloseTabClick" />
+                <MenuItem Header="Close _All Tabs" Click="OnCloseAllTabsClick" />
                 <Separator Background="{StaticResource BorderDark}" />
                 <MenuItem Header="E_xit" Click="OnExitClick" />
             </MenuItem>
@@ -52,13 +59,17 @@
                 <MenuItem Header="_Copy" InputGestureText="Ctrl+C" Click="OnCopyClick" />
                 <MenuItem Header="_Paste" InputGestureText="Ctrl+V" Click="OnPasteClick" />
                 <MenuItem Header="Select _All" InputGestureText="Ctrl+A" Click="OnSelectAllClick" />
+                <Separator Background="{StaticResource BorderDark}" />
+                <MenuItem Header="_Find..." InputGestureText="Ctrl+F" Click="OnFindClick" />
+                <MenuItem Header="_Replace..." InputGestureText="Ctrl+H" Click="OnReplaceClick" />
             </MenuItem>
             <MenuItem Header="_View">
+                <MenuItem x:Name="MenuSidebar" Header="Toggle _Sidebar" InputGestureText="Ctrl+B" IsCheckable="True" IsChecked="True" Click="OnToggleSidebarClick" />
                 <MenuItem x:Name="MenuWordWrap" Header="Word _Wrap" IsCheckable="True" Click="OnToggleWordWrapClick" />
                 <MenuItem x:Name="MenuLineNumbers" Header="_Line Numbers" IsCheckable="True" IsChecked="True" Click="OnToggleLineNumbersClick" />
             </MenuItem>
             <MenuItem Header="E_xtensions">
-                <MenuItem Header="View _Loaded Extensions" Click="OnViewExtensionsClick" />
+                <MenuItem Header="_Manage Extensions..." Click="OnManageExtensionsClick" />
                 <MenuItem Header="Open Extensions _Folder" Click="OnOpenExtensionsFolderClick" />
             </MenuItem>
             <MenuItem Header="_Help">
@@ -69,45 +80,57 @@
         <!-- 1. Quick Action Toolbar -->
         <Border Grid.Row="1" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1" Padding="6,4">
             <StackPanel Orientation="Horizontal">
+                <Button x:Name="BtnToggleSidebar" Style="{StaticResource ToolbarButtonStyle}" Click="OnToggleSidebarClick" ToolTip="Toggle Sidebar (Ctrl+B)">
+                    <TextBlock Text="☰ Explorer" />
+                </Button>
+
+                <Rectangle Width="1" Fill="{StaticResource BorderDark}" Margin="6,2" />
+
                 <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnNewFileClick" ToolTip="New File (Ctrl+N)">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📄 New" />
-                    </StackPanel>
+                    <TextBlock Text="📄 New" />
                 </Button>
                 <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnOpenFileClick" ToolTip="Open File (Ctrl+O)">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📂 Open" />
-                    </StackPanel>
+                    <TextBlock Text="📄 Open File" />
+                </Button>
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnOpenFolderClick" ToolTip="Open Project Folder (Ctrl+Shift+O)">
+                    <TextBlock Text="📁 Open Folder" />
                 </Button>
                 <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnSaveFileClick" ToolTip="Save File (Ctrl+S)">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="💾 Save" />
-                    </StackPanel>
+                    <TextBlock Text="💾 Save" />
                 </Button>
                 <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnSaveAllClick" ToolTip="Save All">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="💾 Save All" />
-                    </StackPanel>
+                    <TextBlock Text="💾 Save All" />
                 </Button>
 
-                <Rectangle Width="1" Fill="{StaticResource BorderDark}" Margin="8,2" />
+                <Rectangle Width="1" Fill="{StaticResource BorderDark}" Margin="6,2" />
 
-                <ToggleButton x:Name="BtnWordWrap" 
-                              Content="Wrap" 
-                              ToolTip="Toggle Word Wrap"
-                              Padding="8,4" Margin="2,1"
-                              FontSize="12"
-                              Click="OnToolbarWordWrapClick" />
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnFindClick" ToolTip="Find (Ctrl+F)">
+                    <TextBlock Text="🔍 Find" />
+                </Button>
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnReplaceClick" ToolTip="Replace (Ctrl+H)">
+                    <TextBlock Text="🔄 Replace" />
+                </Button>
 
-                <ToggleButton x:Name="BtnLineNumbers" 
-                              Content="123" 
-                              IsChecked="True"
-                              ToolTip="Toggle Line Numbers"
-                              Padding="8,4" Margin="2,1"
-                              FontSize="12"
-                              Click="OnToolbarLineNumbersClick" />
+                <Rectangle Width="1" Fill="{StaticResource BorderDark}" Margin="6,2" />
 
-                <Rectangle Width="1" Fill="{StaticResource BorderDark}" Margin="8,2" />
+                <Primitives:ToggleButton xmlns:Primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
+                                         x:Name="BtnWordWrap" 
+                                         Content="Wrap" 
+                                         ToolTip="Toggle Word Wrap"
+                                         Padding="8,4" Margin="2,1"
+                                         FontSize="12"
+                                         Click="OnToolbarWordWrapClick" />
+
+                <Primitives:ToggleButton xmlns:Primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
+                                         x:Name="BtnLineNumbers" 
+                                         Content="123" 
+                                         IsChecked="True"
+                                         ToolTip="Toggle Line Numbers"
+                                         Padding="8,4" Margin="2,1"
+                                         FontSize="12"
+                                         Click="OnToolbarLineNumbersClick" />
+
+                <Rectangle Width="1" Fill="{StaticResource BorderDark}" Margin="6,2" />
 
                 <TextBlock Text="Language:" VerticalAlignment="Center" Foreground="{StaticResource FgSecondary}" Margin="4,0,6,0" FontSize="12" />
                 <ComboBox x:Name="CmbLanguage" 
@@ -136,7 +159,19 @@
                                         BorderThickness="0,0,1,0"
                                         Padding="12,7"
                                         Cursor="Hand"
-                                        MouseLeftButtonDown="OnTabClicked">
+                                        MouseLeftButtonDown="OnTabClicked"
+                                        MouseDown="OnTabMouseDown">
+                                    <Border.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Close" Click="OnMenuCloseTabClick" />
+                                            <MenuItem Header="Close Other Tabs" Click="OnMenuCloseOtherTabsClick" />
+                                            <MenuItem Header="Close Tabs to the Right" Click="OnMenuCloseRightTabsClick" />
+                                            <Separator Background="{StaticResource BorderDark}" />
+                                            <MenuItem Header="Copy Full Path" Click="OnMenuCopyFullPathClick" />
+                                            <MenuItem Header="Reveal in File Explorer" Click="OnMenuRevealInExplorerClick" />
+                                        </ContextMenu>
+                                    </Border.ContextMenu>
+
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Title}" 
                                                    Foreground="{StaticResource FgPrimary}" 
@@ -148,7 +183,7 @@
                                     </StackPanel>
                                 </Border>
                                 <DataTemplate.Triggers>
-                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter}, Path=DataContext.IsActive}" Value="True">
+                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
                                         <Setter TargetName="TabBorder" Property="Background" Value="{StaticResource BgPrimary}" />
                                         <Setter TargetName="TabBorder" Property="BorderThickness" Value="0,2,1,0" />
                                         <Setter TargetName="TabBorder" Property="BorderBrush" Value="{StaticResource AccentBlue}" />
@@ -171,38 +206,95 @@
             </ScrollViewer>
         </Border>
 
-        <!-- 3. Editor Host Viewport -->
+        <!-- 3. Workspace / Editor Viewport -->
         <Grid Grid.Row="3">
-            <controls:EditorControl x:Name="EditorHost" Visibility="Visible" />
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="ColSidebar" Width="240" MinWidth="140" />
+                <ColumnDefinition x:Name="ColSplitter" Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-            <!-- Empty State when no tabs are open -->
-            <Border x:Name="EmptyStateOverlay" Background="{StaticResource BgPrimary}" Visibility="Collapsed">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="RecluseEdit" 
-                               FontSize="28" 
-                               FontWeight="Bold" 
-                               Foreground="{StaticResource FgSecondary}" 
-                               HorizontalAlignment="Center" 
-                               Margin="0,0,0,8" />
-                    <TextBlock Text="Web Application Code Editor" 
-                               FontSize="14" 
-                               Foreground="{StaticResource FgMuted}" 
-                               HorizontalAlignment="Center" 
-                               Margin="0,0,0,24" />
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <Button Style="{StaticResource ToolbarButtonStyle}" 
-                                Content="Create New File (Ctrl+N)" 
-                                Padding="12,6" 
-                                Margin="4,0" 
-                                Click="OnNewFileClick" />
-                        <Button Style="{StaticResource ToolbarButtonStyle}" 
-                                Content="Open File (Ctrl+O)" 
-                                Padding="12,6" 
-                                Margin="4,0" 
-                                Click="OnOpenFileClick" />
-                    </StackPanel>
-                </StackPanel>
+            <!-- Left: Workspace Explorer Sidebar -->
+            <Border Grid.Column="0" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,1,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Sidebar Header -->
+                    <Border Grid.Row="0" Background="{StaticResource BgTertiary}" Padding="8,6" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock x:Name="TxtWorkspaceName" Text="EXPLORER" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource FgSecondary}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+
+                            <Button Grid.Column="1" Style="{StaticResource ToolbarButtonStyle}" Content="🔄" Width="22" Height="22" Padding="0" ToolTip="Refresh Workspace" Click="OnRefreshWorkspaceClick" />
+                            <Button Grid.Column="2" Style="{StaticResource ToolbarButtonStyle}" Content="📁" Width="22" Height="22" Padding="0" ToolTip="Open Folder" Click="OnOpenFolderClick" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Sidebar File Tree -->
+                    <TreeView x:Name="WorkspaceTreeView" Grid.Row="1" 
+                              SelectedItemChanged="OnWorkspaceItemSelectionChanged"
+                              MouseDoubleClick="OnWorkspaceTreeDoubleClick">
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate DataType="{x:Type models:FileSystemItem}" ItemsSource="{Binding Children}">
+                                <StackPanel Orientation="Horizontal" Margin="0,1">
+                                    <TextBlock Text="{Binding Icon}" Margin="0,0,6,0" FontSize="13" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Name}" FontSize="12" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+                </Grid>
             </Border>
+
+            <!-- Splitter between Sidebar & Editor -->
+            <GridSplitter x:Name="Splitter" Grid.Column="1" Style="{StaticResource VerticalSplitterStyle}" />
+
+            <!-- Right: Editor Area -->
+            <Grid Grid.Column="2">
+                <controls:EditorControl x:Name="EditorHost" Visibility="Visible" />
+
+                <!-- Empty State when no tabs are open -->
+                <Border x:Name="EmptyStateOverlay" Background="{StaticResource BgPrimary}" Visibility="Collapsed">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="RecluseEdit" 
+                                   FontSize="28" 
+                                   FontWeight="Bold" 
+                                   Foreground="{StaticResource FgSecondary}" 
+                                   HorizontalAlignment="Center" 
+                                   Margin="0,0,0,8" />
+                        <TextBlock Text="Web Application Code Editor" 
+                                   FontSize="14" 
+                                   Foreground="{StaticResource FgMuted}" 
+                                   HorizontalAlignment="Center" 
+                                   Margin="0,0,0,24" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Style="{StaticResource ToolbarButtonStyle}" 
+                                    Content="Create New File (Ctrl+N)" 
+                                    Padding="12,6" 
+                                    Margin="4,0" 
+                                    Click="OnNewFileClick" />
+                            <Button Style="{StaticResource ToolbarButtonStyle}" 
+                                    Content="Open File (Ctrl+O)" 
+                                    Padding="12,6" 
+                                    Margin="4,0" 
+                                    Click="OnOpenFileClick" />
+                            <Button Style="{StaticResource ToolbarButtonStyle}" 
+                                    Content="Open Folder (Ctrl+Shift+O)" 
+                                    Padding="12,6" 
+                                    Margin="4,0" 
+                                    Click="OnOpenFolderClick" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Grid>
 
         <!-- 4. Bottom Status Bar -->
@@ -232,7 +324,7 @@
                     <TextBlock Text="|" Opacity="0.5" />
                     <TextBlock x:Name="StatusEncoding" Text="UTF-8" FontSize="11" Margin="8,0" />
                     <TextBlock Text="|" Opacity="0.5" />
-                    <TextBlock x:Name="StatusExtensions" Text="Extensions: 1" FontSize="11" Margin="8,0" Cursor="Hand" MouseLeftButtonDown="OnViewExtensionsClick" ToolTip="Click to view loaded extensions" />
+                    <TextBlock x:Name="StatusExtensions" Text="Extensions: 1" FontSize="11" Margin="8,0" Cursor="Hand" MouseLeftButtonDown="OnManageExtensionsClick" ToolTip="Click to manage extensions" />
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>

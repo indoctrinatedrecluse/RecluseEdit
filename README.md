@@ -10,14 +10,40 @@
 
 ---
 
-## 🎯 Key Objectives
+## 🎯 Key Objectives & Features
 
-- 📑 **Multi-File Tabbed Workspace**: Seamlessly open, edit, and switch between multiple files with real-time dirty-state tracking (`*`) and safe unsaved-change guards.
+- 🗂️ **Web Workspace Explorer**: Open entire project directories (`Ctrl+Shift+O`), browse files via a collapsible tree sidebar (`Ctrl+B`), and double-click to open.
+- 📑 **Multi-File Tabbed Workspace**: Seamlessly open, edit, and switch between multiple tabs. Middle-click tab to close, and right-click for tab context actions (*Close Others*, *Close to Right*, *Copy Path*, *Reveal in Explorer*).
 - 🎨 **Code & Syntax Highlighting**: Comprehensive syntax coloring for web languages (HTML, CSS, JavaScript, TypeScript, JSON, XML, Markdown, C#).
-- 🔢 **Visual Line Numbers & Formatting**: Customizable line-number gutter and word wrapping for comfortable reading and editing.
-- ⚡ **Inline Autocomplete (Ghost Text)**: Instant inline suggestions displayed directly at the caret in faded italic text—press <kbd>Tab</kbd> to accept or <kbd>Esc</kbd> to dismiss.
-- 🔌 **Pluggable Extension Architecture**: Modular plugin system (`IExtension`, `IExtensionContext`, `IInlineCompletionProvider`) allowing external language packs, custom grammars, and completions to be loaded dynamically from the `Extensions/` directory.
+- ⚡ **Dual Autocomplete System**:
+  - **Inline Ghost Text**: Intelligent suggestions inline at the caret in faded italic text (<kbd>Tab</kbd> to accept, <kbd>Esc</kbd> to dismiss).
+  - **IntelliSense Popup**: Rich completion list with tags, CSS properties, and JS APIs (<kbd>Ctrl+Space</kbd>).
+- 🔄 **Auto-Closing Pairs & HTML Tags**: Automatic closure for `()`, `{}`, `[]`, `""`, `''` and auto-tag closing for HTML (e.g. `<div>` &rarr; `</div>`).
+- 🔍 **Built-In Find & Replace Overlay**: Floating top-right search panel with Next (<kbd>Enter</kbd>), Previous (<kbd>Shift+Enter</kbd>), Match Case, and Replace All (<kbd>Ctrl+F</kbd>, <kbd>Ctrl+H</kbd>).
+- 📐 **Code Folding & Bracket Matching**: Expand/collapse blocks and sections for HTML/XML and highlight matching brackets.
+- 🔢 **Visual Line Numbers & Formatting**: Customizable line-number gutter, word wrapping toggle, and font scaling with <kbd>Ctrl</kbd> + <kbd>MouseWheel</kbd>.
+- 🔌 **Pluggable Extension Architecture**: Dynamic plugin discovery from the `Extensions/` directory and dedicated UI manager (`Extensions -> Manage Extensions...`).
 - 🌙 **Modern Dark UI**: VS Code-inspired sleek dark theme (`#1E1E1E`), complete with menu bar, quick-action toolbar, and informative status bar.
+
+---
+
+## ⌨️ Keyboard Shortcuts Reference
+
+| Shortcut | Action |
+| :--- | :--- |
+| <kbd>Ctrl</kbd> + <kbd>N</kbd> | New File |
+| <kbd>Ctrl</kbd> + <kbd>O</kbd> | Open File |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>O</kbd> | Open Workspace Folder |
+| <kbd>Ctrl</kbd> + <kbd>S</kbd> | Save File |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | Save As |
+| <kbd>Ctrl</kbd> + <kbd>W</kbd> | Close Active Tab |
+| <kbd>Ctrl</kbd> + <kbd>B</kbd> | Toggle Workspace Explorer Sidebar |
+| <kbd>Ctrl</kbd> + <kbd>F</kbd> | Find in Document |
+| <kbd>Ctrl</kbd> + <kbd>H</kbd> | Find & Replace in Document |
+| <kbd>Ctrl</kbd> + <kbd>Space</kbd> | Trigger IntelliSense Completion Popup |
+| <kbd>Tab</kbd> | Accept Inline Ghost Text Suggestion |
+| <kbd>Esc</kbd> | Dismiss Ghost Text / Close Find Overlay |
+| <kbd>Ctrl</kbd> + <kbd>MouseWheel</kbd> | Zoom In / Out Editor Font Size |
 
 ---
 
@@ -124,3 +150,4 @@ RecluseEdit features a decoupled extension mechanism. To write an extension:
 ## 📜 License
 
 Created by **indoctrinatedrecluse**. All rights reserved.
+
