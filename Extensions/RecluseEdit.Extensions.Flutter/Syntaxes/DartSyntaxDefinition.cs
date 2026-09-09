@@ -17,10 +17,13 @@ public static class DartSyntaxDefinition
             <Color name="Digits" foreground="#B5CEA8" />
             <Color name="String" foreground="#CE9178" />
             <Color name="Keywords" foreground="#569CD6" fontWeight="bold" />
+            <Color name="ControlFlow" foreground="#C586C0" fontWeight="bold" />
+            <Color name="Functions" foreground="#DCDCAA" />
             <Color name="Types" foreground="#4EC9B0" />
             <Color name="Comment" foreground="#6A9955" />
             <Color name="DocComment" foreground="#6A9955" fontStyle="italic" />
             <Color name="Annotation" foreground="#DCDCAA" />
+            <Color name="Variable" foreground="#9CDCFE" />
             <Color name="Punctuation" foreground="#D4D4D4" />
 
             <RuleSet>
@@ -44,35 +47,68 @@ public static class DartSyntaxDefinition
                 <Span color="String" multiline="true">
                     <Begin>'''</Begin>
                     <End>'''</End>
+                    <RuleSet>
+                        <Span color="Variable">
+                            <Begin>\$\{</Begin>
+                            <End>\}</End>
+                        </Span>
+                    </RuleSet>
                 </Span>
                 <Span color="String" multiline="true">
                     <Begin>&quot;&quot;&quot;</Begin>
                     <End>&quot;&quot;&quot;</End>
+                    <RuleSet>
+                        <Span color="Variable">
+                            <Begin>\$\{</Begin>
+                            <End>\}</End>
+                        </Span>
+                    </RuleSet>
                 </Span>
 
                 <!-- Single Quoted String -->
+                <!-- Single Quoted String with $var and ${expr} interpolation -->
                 <Span color="String">
                     <Begin>'</Begin>
                     <End>'</End>
                     <RuleSet>
                         <Span begin="\\'" end="" />
                         <Span begin="\\\\" end="" />
+                        <Span color="Variable">
+                            <Begin>\$\{</Begin>
+                            <End>\}</End>
+                        </Span>
+                        <Rule color="Variable">
+                            \$[a-zA-Z_][a-zA-Z0-9_]*
+                        </Rule>
                     </RuleSet>
                 </Span>
 
                 <!-- Double Quoted String -->
+                <!-- Double Quoted String with $var and ${expr} interpolation -->
                 <Span color="String">
                     <Begin>&quot;</Begin>
                     <End>&quot;</End>
                     <RuleSet>
                         <Span begin="\\&quot;" end="" />
                         <Span begin="\\\\" end="" />
+                        <Span color="Variable">
+                            <Begin>\$\{</Begin>
+                            <End>\}</End>
+                        </Span>
+                        <Rule color="Variable">
+                            \$[a-zA-Z_][a-zA-Z0-9_]*
+                        </Rule>
                     </RuleSet>
                 </Span>
 
                 <!-- Annotations (@override, @deprecated, etc.) -->
                 <Rule color="Annotation">
                     @[a-zA-Z_][a-zA-Z0-9_]*
+                </Rule>
+
+                <!-- Method & Function Invocations -->
+                <Rule color="Functions">
+                    \b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()
                 </Rule>
 
                 <!-- Keywords -->

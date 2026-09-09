@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-09-09
+
+### ✨ Added Features & Polish
+
+#### 🎨 Exhaustive Syntax Highlighting Across All Languages
+- **High-Fidelity Markdown Grammar**: Dedicated XSHD syntax definition covering headings (`#` to `######`), bold (`**`, `__`), italics (`*`, `_`), inline code (`` `code` ``), fenced code blocks (```` ``` ````), blockquotes (`>`), links (`[text](url)`), lists (`*`, `-`, `+`, `1.`), horizontal rules, tables, and inline HTML tags.
+- **Modern ECMAScript 2024 & TypeScript Grammar**: Dedicated XSHD grammar supporting modern JS/TS declarations, control flow (`if`, `switch`, `try/catch`, `await`, etc.) in `#C586C0`, template literals with `${expression}` interpolation, arrow functions (`=>`), regex literals (`/.../`), built-in utility types (`Partial`, `Promise`, `Record`, etc.), and function call invocation coloring (`#DCDCAA`).
+- **Modern CSS3 / SCSS / LESS Grammar**: Custom XSHD definition supporting CSS custom properties/variables (`--custom-prop`), `var()`, modern pseudo-classes (`:has()`, `:is()`, `:where()`), pseudo-elements, modern at-rules (`@container`, `@media`, `@keyframes`), color formats (`#hex`, `rgb`, `hsl`, `oklch`), and comprehensive CSS units.
+- **Modern PHP 8+ Grammar**: Custom XSHD syntax definition supporting match expressions, PHP 8 attributes (`#[Attribute]`), typed properties, union types, variables (`$var`), and double-quoted string interpolation.
+- **React JSX & TSX Grammar (`RecluseEdit.Extensions.React`)**: Dedicated XSHD syntax definition distinguishing custom React components (`<Component>`), standard HTML tags (`<div>`), JSX attributes (`className="..."`, `onClick={...}`), embedded JS expressions, and all React Hooks.
+- **GraphQL Grammar (`RecluseEdit.Extensions.React`)**: Dedicated XSHD grammar highlighting operations (`query`, `mutation`, `subscription`, `fragment`), schema definition keywords, directives (`@include`, `@skip`), variables (`$var`), and types (`String`, `Int`, `Boolean`, `ID`).
+- **Angular HTML & TypeScript Grammars (`RecluseEdit.Extensions.Angular`)**:
+  - `AngularHTML`: Dedicated XSHD grammar highlighting modern control flow (`@if`, `@for`, `@switch`, `@defer`), structural directives (`*ngIf`, `*ngFor`), property bindings (`[prop]`), event bindings (`(event)`), two-way bindings (`[(ngModel)]`), and interpolation (`{{ item | pipe }}`).
+  - `AngularTS`: Dedicated XSHD grammar highlighting decorators (`@Component`, `@Injectable`, `@Directive`, `@Input`), Signals (`signal`, `computed`, `effect`, `input`, `output`, `model`), and dependency injection (`inject`).
+- **Polished Dart & Ruby Grammars**: Added method invocation highlighting, string interpolation (`${expr}` in Dart, `#{expr}` in Ruby), and Rails ActiveRecord macro coloring.
+- **Expanded Dark+ Palette Mapping**: Enhanced `ApplyDarkThemeColors()` with rich brushes for control flow, functions, types, variables, regex, headings, bold, tag brackets, and attributes.
+
+#### 🔲 Live Bracket Matching & Highlighting
+- **Active Bracket Matching**: Added `BracketHighlightRenderer` to `EditorControl` providing instant visual highlight borders around matching pairs of `()`, `[]`, and `{}` as the caret moves, matching modern VS Code UX.
+
+#### 🗂️ Unified File Dialog Filters
+- **Modernized File Filters**: Updated `OpenFileDialog` and `SaveFileDialog` in `MainWindow` with a comprehensive list of all supported extensions, categorizing Web & Script, React & GraphQL, Angular, Flutter & Dart, PHP, Ruby & Rails, C# & XAML, and Markdown files.
+
+#### 🧪 Expanded Test Suite
+- **11 New Automated Tests**: Added `SyntaxDefinitionTests` covering every custom syntax definition and live bracket matching algorithm, expanding the test suite to **43 passing tests** with 0 warnings and 0 errors.
+
+---
+
 ## [1.1.0] - 2026-09-09
 
 ### ✨ Added Features

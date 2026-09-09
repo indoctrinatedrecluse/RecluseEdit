@@ -1,4 +1,5 @@
 using RecluseEdit.Extensions.React.Providers;
+using RecluseEdit.Extensions.React.Syntaxes;
 using RecluseEdit.Extensions.React.Toolchains;
 using RecluseEdit.Sdk;
 using RecluseEdit.Sdk.Models;
@@ -26,6 +27,7 @@ public class ReactExtension : IExtension
             DisplayName = "React JSX",
             Extensions = [".jsx"],
             HighlightingName = "JavaScript"
+            HighlightingName = "ReactJSX"
         });
 
         host.RegisterLanguage(new LanguageDefinition
@@ -34,6 +36,7 @@ public class ReactExtension : IExtension
             DisplayName = "React TSX",
             Extensions = [".tsx"],
             HighlightingName = "JavaScript"
+            HighlightingName = "ReactJSX"
         });
 
         host.RegisterLanguage(new LanguageDefinition
@@ -42,7 +45,24 @@ public class ReactExtension : IExtension
             DisplayName = "GraphQL",
             Extensions = [".graphql", ".gql"],
             HighlightingName = "JavaScript"
+            HighlightingName = "GraphQL"
         });
+
+        // 1b. Register Custom Syntax Highlighting Definitions
+        try
+        {
+            var jsxDef = JsxSyntaxDefinition.CreateDefinition();
+            host.RegisterSyntaxHighlighting("jsx", jsxDef);
+            host.RegisterSyntaxHighlighting("tsx", jsxDef);
+        }
+        catch { }
+
+        try
+        {
+            var gqlDef = GraphQlSyntaxDefinition.CreateDefinition();
+            host.RegisterSyntaxHighlighting("graphql", gqlDef);
+        }
+        catch { }
 
         // 2. Register Inline Autocomplete Providers
         host.RegisterInlineCompletion(new ReactCompletionProvider());

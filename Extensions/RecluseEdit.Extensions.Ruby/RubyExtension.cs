@@ -66,3 +66,4 @@ public class RubyExtension : IExtension
         return Task.CompletedTask;
     }
 }
+

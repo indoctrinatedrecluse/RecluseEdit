@@ -14,13 +14,13 @@
 
 - 🗂️ **Web Workspace Explorer**: Open entire project directories (`Ctrl+Shift+O`), browse files via a collapsible tree sidebar (`Ctrl+B`), and double-click to open.
 - 📑 **Multi-File Tabbed Workspace**: Seamlessly open, edit, and switch between multiple tabs. Middle-click tab to close, and right-click for tab context actions (*Close Others*, *Close to Right*, *Copy Path*, *Reveal in Explorer*).
-- 🎨 **Enhanced Code & Syntax Highlighting**: Comprehensive syntax coloring for web and application languages (HTML, CSS, JavaScript, TypeScript, JSON, XML/XAML, Markdown, C#, PHP, and Dart), beautifully tuned with a modern VS Code Dark+ color palette for maximum readability.
+- 🎨 **Exhaustive High-Fidelity Syntax Highlighting**: Custom, dedicated XSHD syntax definitions across all supported languages (Markdown, modern ECMAScript/TypeScript with template literals and control flow, CSS3/SCSS/LESS with CSS variables and pseudo-classes, PHP 8+ with attributes and match expressions, React JSX/TSX, GraphQL, Angular HTML templates, Angular TypeScript, Dart 3, Ruby on Rails, JSON, and XML/XAML), beautifully tuned with a rich VS Code Dark+ color palette.
 - ⚡ **Dual Autocomplete System**:
   - **Inline Ghost Text**: Intelligent suggestions inline at the caret in faded italic text (<kbd>Tab</kbd> to accept, <kbd>Esc</kbd> to dismiss).
   - **IntelliSense Popup**: Rich completion list with tags, CSS properties, and JS APIs (<kbd>Ctrl+Space</kbd>).
 - 🔄 **Auto-Closing Pairs & HTML Tags**: Automatic closure for `()`, `{}`, `[]`, `""`, `''` and auto-tag closing for HTML (e.g. `<div>` &rarr; `</div>`).
 - 🔍 **Built-In Find & Replace Overlay**: Floating top-right search panel with Next (<kbd>Enter</kbd>), Previous (<kbd>Shift+Enter</kbd>), Match Case, and Replace All (<kbd>Ctrl+F</kbd>, <kbd>Ctrl+H</kbd>).
-- 📐 **Code Folding & Bracket Matching**: Expand/collapse blocks and sections for HTML/XML and highlight matching brackets.
+- 📐 **Code Folding & Live Bracket Matching**: Expand/collapse blocks and sections for HTML/XML and live accent border highlighting for matching pairs of `()`, `[]`, and `{}` as the caret moves.
 - 🔢 **Visual Line Numbers & Formatting**: Customizable line-number gutter, word wrapping toggle, and font scaling with <kbd>Ctrl</kbd> + <kbd>MouseWheel</kbd>.
 - 🔌 **Pluggable Extension Architecture**: Dynamic plugin discovery from the `Extensions/` directory with separate project build targets and a dedicated UI manager (`Extensions -> Manage Extensions...`).
 - 🌙 **Modern Dark UI**: VS Code-inspired sleek dark theme (`#1E1E1E`), complete with menu bar, quick-action toolbar, and informative status bar.
@@ -105,7 +105,7 @@ dotnet restore RecluseEdit.slnx
 # Build the entire solution (host + all extensions)
 dotnet build RecluseEdit.slnx
 
-# Run all unit and integration tests (32 tests)
+# Run all unit and integration tests (43 tests)
 dotnet test RecluseEdit.slnx
 
 # Launch the editor

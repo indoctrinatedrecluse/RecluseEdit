@@ -19,6 +19,7 @@ namespace RecluseEdit.UI.Controls;
 public partial class EditorControl : UserControl
 {
     private readonly GhostTextRenderer _ghostRenderer;
+    private readonly BracketHighlightRenderer _bracketRenderer;
     private CancellationTokenSource? _suggestionCts;
     private DocumentModel? _documentModel;
     private CompletionWindow? _completionWindow;
@@ -79,6 +80,7 @@ public partial class EditorControl : UserControl
             }
 
             _ghostRenderer.Clear();
+            _bracketRenderer.Clear();
             FindReplace.Visibility = Visibility.Collapsed;
         }
     }
@@ -90,7 +92,9 @@ public partial class EditorControl : UserControl
         FindReplace.Editor = Editor;
 
         _ghostRenderer = new GhostTextRenderer(Editor.TextArea.TextView);
+        _bracketRenderer = new BracketHighlightRenderer(Editor.TextArea.TextView);
         Editor.TextArea.TextView.BackgroundRenderers.Add(_ghostRenderer);
+        Editor.TextArea.TextView.BackgroundRenderers.Add(_bracketRenderer);
 
         Editor.TextArea.Caret.PositionChanged += OnCaretPositionChanged;
         Editor.TextArea.TextEntering += OnTextEntering;
@@ -181,6 +185,20 @@ public partial class EditorControl : UserControl
         if (_ghostRenderer.HasSuggestion && Editor.CaretOffset != _ghostRenderer.TargetOffset)
         {
             _ghostRenderer.Clear();
+        }
+
+        // Live bracket matching highlight
+        if (Editor.Document != null)
+        {
+            var match = BracketHighlightRenderer.FindMatchingBrackets(Editor.Document, Editor.CaretOffset);
+            if (match.HasValue)
+            {
+                _bracketRenderer.SetBracketMatch(match.Value.OpenOffset, match.Value.CloseOffset);
+            }
+            else
+            {
+                _bracketRenderer.Clear();
+            }
         }
     }
 

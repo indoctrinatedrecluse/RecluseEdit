@@ -3,6 +3,7 @@ using System.Windows.Media;
 using System.Xml;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using RecluseEdit.Core.Services.Syntaxes;
 using RecluseEdit.Sdk.Models;
 
 namespace RecluseEdit.Core.Services;
@@ -98,6 +99,7 @@ public class SyntaxManager
             DisplayName = "Markdown",
             Extensions = [".md", ".markdown"],
             HighlightingName = null
+            HighlightingName = "Markdown"
         });
 
         _languages.Add(new LanguageDefinition
@@ -117,9 +119,37 @@ public class SyntaxManager
             RegisterSyntaxDefinition("json", jsonDef);
         }
         catch
+        catch { }
+
+        try
         {
             // Fallback gracefully to default highlighting if custom definition fails
+            var mdDef = MarkdownSyntaxDefinition.CreateDefinition();
+            RegisterSyntaxDefinition("markdown", mdDef);
         }
+        catch { }
+
+        try
+        {
+            var jsDef = JavaScriptSyntaxDefinition.CreateDefinition();
+            RegisterSyntaxDefinition("javascript", jsDef);
+            RegisterSyntaxDefinition("typescript", jsDef);
+        }
+        catch { }
+
+        try
+        {
+            var cssDef = CssSyntaxDefinition.CreateDefinition();
+            RegisterSyntaxDefinition("css", cssDef);
+        }
+        catch { }
+
+        try
+        {
+            var phpDef = ModernPhpSyntaxDefinition.CreateDefinition();
+            RegisterSyntaxDefinition("php", phpDef);
+        }
+        catch { }
     }
 
     private static IHighlightingDefinition CreateJsonHighlightingDefinition()
@@ -249,25 +279,82 @@ public class SyntaxManager
         var attributeBrush = new SimpleHighlightingBrush(Color.FromRgb(0x9C, 0xDC, 0xFE)); // #9CDCFE Light cyan
         var tagBrush = new SimpleHighlightingBrush(Color.FromRgb(0x56, 0x9C, 0xD6));     // #569CD6 Tag
         var typeBrush = new SimpleHighlightingBrush(Color.FromRgb(0x4E, 0xC9, 0xB0));    // #4EC9B0 Teal
+        var keywordBrush = new SimpleHighlightingBrush(Color.FromRgb(0x56, 0x9C, 0xD6));     // #569CD6 Blue
+        var controlFlowBrush = new SimpleHighlightingBrush(Color.FromRgb(0xC5, 0x86, 0xC0)); // #C586C0 Magenta
+        var functionBrush = new SimpleHighlightingBrush(Color.FromRgb(0xDC, 0xDC, 0xAA));    // #DCDCAA Light yellow
+        var stringBrush = new SimpleHighlightingBrush(Color.FromRgb(0xCE, 0x91, 0x78));      // #CE9178 Warm orange
+        var commentBrush = new SimpleHighlightingBrush(Color.FromRgb(0x6A, 0x99, 0x55));     // #6A9955 Green
+        var numberBrush = new SimpleHighlightingBrush(Color.FromRgb(0xB5, 0xCE, 0xA8));      // #B5CEA8 Mint
+        var attributeBrush = new SimpleHighlightingBrush(Color.FromRgb(0x9C, 0xDC, 0xFE));   // #9CDCFE Light cyan
+        var variableBrush = new SimpleHighlightingBrush(Color.FromRgb(0x9C, 0xDC, 0xFE));    // #9CDCFE Sky blue
+        var tagBrush = new SimpleHighlightingBrush(Color.FromRgb(0x56, 0x9C, 0xD6));         // #569CD6 Tag blue
+        var typeBrush = new SimpleHighlightingBrush(Color.FromRgb(0x4E, 0xC9, 0xB0));        // #4EC9B0 Teal
+        var regexBrush = new SimpleHighlightingBrush(Color.FromRgb(0xD1, 0x69, 0x69));       // #D16969 Soft red
         var punctuationBrush = new SimpleHighlightingBrush(Color.FromRgb(0xD4, 0xD4, 0xD4)); // #D4D4D4 Gray
+        var boldBrush = new SimpleHighlightingBrush(Color.FromRgb(0xFF, 0xFF, 0xFF));        // #FFFFFF White
+        var heading1Brush = new SimpleHighlightingBrush(Color.FromRgb(0x4E, 0xC9, 0xB0));    // #4EC9B0 Teal
+        var heading2Brush = new SimpleHighlightingBrush(Color.FromRgb(0x56, 0x9C, 0xD6));    // #569CD6 Blue
+        var heading3Brush = new SimpleHighlightingBrush(Color.FromRgb(0x9C, 0xDC, 0xFE));    // #9CDCFE Cyan
+        var heading4Brush = new SimpleHighlightingBrush(Color.FromRgb(0xDC, 0xDC, 0xAA));    // #DCDCAA Yellow
+        var tagBracketBrush = new SimpleHighlightingBrush(Color.FromRgb(0x80, 0x80, 0x80));  // #808080 Dim Gray
 
         foreach (var color in definition.NamedHighlightingColors)
         {
             var name = color.Name ?? "";
             if (name.Contains("Comment", StringComparison.OrdinalIgnoreCase))
+
+            if (name.Equals("Heading1", StringComparison.OrdinalIgnoreCase)) color.Foreground = heading1Brush;
+            else if (name.Equals("Heading2", StringComparison.OrdinalIgnoreCase)) color.Foreground = heading2Brush;
+            else if (name.Equals("Heading3", StringComparison.OrdinalIgnoreCase)) color.Foreground = heading3Brush;
+            else if (name.Equals("Heading4", StringComparison.OrdinalIgnoreCase)) color.Foreground = heading4Brush;
+            else if (name.Equals("Heading5", StringComparison.OrdinalIgnoreCase)) color.Foreground = controlFlowBrush;
+            else if (name.Equals("Heading6", StringComparison.OrdinalIgnoreCase)) color.Foreground = stringBrush;
+            else if (name.Equals("Bold", StringComparison.OrdinalIgnoreCase)) color.Foreground = boldBrush;
+            else if (name.Contains("ControlFlow", StringComparison.OrdinalIgnoreCase) ||
+                     name.Equals("AtRule", StringComparison.OrdinalIgnoreCase))
+            {
+                color.Foreground = controlFlowBrush;
+            }
+            else if (name.Contains("Function", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("Method", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("Annotation", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("Decorator", StringComparison.OrdinalIgnoreCase))
+            {
+                color.Foreground = functionBrush;
+            }
+            else if (name.Contains("Regex", StringComparison.OrdinalIgnoreCase))
+            {
+                color.Foreground = regexBrush;
+            }
+            else if (name.Contains("Comment", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("Blockquote", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("HorizontalRule", StringComparison.OrdinalIgnoreCase))
             {
                 color.Foreground = commentBrush;
             }
             else if (name.Contains("String", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("AttributeValue", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("Value", StringComparison.OrdinalIgnoreCase))
+                     name.Contains("Value", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("Code", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("Italic", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("ColorHex", StringComparison.OrdinalIgnoreCase))
             {
                 color.Foreground = stringBrush;
             }
             else if (name.Contains("Digit", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("Number", StringComparison.OrdinalIgnoreCase))
+                     name.Contains("Number", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("Units", StringComparison.OrdinalIgnoreCase))
             {
                 color.Foreground = numberBrush;
+            }
+            else if (name.Contains("Variable", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("Parameter", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("Symbol", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("LinkUrl", StringComparison.OrdinalIgnoreCase))
+            {
+                color.Foreground = variableBrush;
             }
             else if (name.Contains("Attribute", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("Property", StringComparison.OrdinalIgnoreCase) ||
@@ -275,9 +362,17 @@ public class SyntaxManager
             {
                 color.Foreground = attributeBrush;
             }
+            else if (name.Contains("TagBracket", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("Table", StringComparison.OrdinalIgnoreCase))
+            {
+                color.Foreground = tagBracketBrush;
+            }
             else if (name.Contains("Tag", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("DocType", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("XmlDeclaration", StringComparison.OrdinalIgnoreCase))
+                     name.Contains("XmlDeclaration", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("Link", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("ListBullet", StringComparison.OrdinalIgnoreCase))
             {
                 color.Foreground = tagBrush;
             }
@@ -290,6 +385,8 @@ public class SyntaxManager
             }
             else if (name.Contains("Type", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("Class", StringComparison.OrdinalIgnoreCase))
+                     name.Contains("Class", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("Interface", StringComparison.OrdinalIgnoreCase))
             {
                 color.Foreground = typeBrush;
             }

@@ -167,3 +167,4 @@ public sealed class RubyExtensionTests
         Assert.IsTrue(railsReport.Status is ToolchainStatus.Available or ToolchainStatus.Warning or ToolchainStatus.Missing);
     }
 }
+

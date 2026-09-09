@@ -80,3 +80,4 @@ public class RailsCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+

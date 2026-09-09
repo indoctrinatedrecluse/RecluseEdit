@@ -17,6 +17,9 @@ public static class RubySyntaxDefinition
             <Color name="Digits" foreground="#B5CEA8" />
             <Color name="String" foreground="#CE9178" />
             <Color name="Keywords" foreground="#569CD6" fontWeight="bold" />
+            <Color name="ControlFlow" foreground="#C586C0" fontWeight="bold" />
+            <Color name="Functions" foreground="#DCDCAA" />
+            <Color name="RailsMacro" foreground="#C586C0" fontWeight="bold" />
             <Color name="Types" foreground="#4EC9B0" />
             <Color name="Comment" foreground="#6A9955" />
             <Color name="Symbol" foreground="#9CDCFE" />
@@ -25,6 +28,28 @@ public static class RubySyntaxDefinition
             <Color name="Regex" foreground="#D16969" />
 
             <RuleSet>
+                <!-- Rails Macros & Helpers (Magenta #C586C0) -->
+                <Keywords color="RailsMacro">
+                    <Word>has_many</Word>
+                    <Word>belongs_to</Word>
+                    <Word>has_one</Word>
+                    <Word>has_and_belongs_to_many</Word>
+                    <Word>validates</Word>
+                    <Word>validate</Word>
+                    <Word>before_action</Word>
+                    <Word>after_action</Word>
+                    <Word>around_action</Word>
+                    <Word>scope</Word>
+                    <Word>resources</Word>
+                    <Word>resource</Word>
+                    <Word>root</Word>
+                    <Word>namespace</Word>
+                </Keywords>
+
+                <!-- Method Invocations (Yellow #DCDCAA) -->
+                <Rule color="Functions">
+                    \b[a-zA-Z_][a-zA-Z0-9_]*[?!]?(?=\s*\()
+                </Rule>
                 <!-- Multiline Comment (=begin ... =end) -->
                 <Span color="Comment" multiline="true">
                     <Begin>^=begin</Begin>
@@ -191,3 +216,4 @@ public static class RubySyntaxDefinition
         return HighlightingLoader.Load(reader, HighlightingManager.Instance);
     }
 }
+

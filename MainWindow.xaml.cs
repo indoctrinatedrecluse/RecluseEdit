@@ -199,6 +199,15 @@ public partial class MainWindow : Window
         {
             Filter = "Web Files (*.html;*.htm;*.css;*.js;*.ts;*.json)|*.html;*.htm;*.css;*.js;*.ts;*.json|" +
                      "Text & Code (*.txt;*.xml;*.cs;*.md)|*.txt;*.xml;*.cs;*.md|" +
+            Filter = "All Supported Files (*.html;*.css;*.js;*.ts;*.jsx;*.tsx;*.json;*.xml;*.xaml;*.cs;*.md;*.dart;*.php;*.rb;*.erb;*.graphql;*.txt)|*.html;*.htm;*.xhtml;*.css;*.scss;*.less;*.js;*.mjs;*.cjs;*.ts;*.mts;*.cts;*.jsx;*.tsx;*.json;*.jsonc;*.xml;*.xaml;*.svg;*.config;*.csproj;*.props;*.targets;*.axaml;*.cs;*.md;*.markdown;*.dart;*.php;*.phtml;*.rb;*.rake;*.gemspec;*.ru;Gemfile;Rakefile;*.erb;*.html.erb;*.graphql;*.gql;*.txt;*.log|" +
+                     "Web & Script Files (*.html;*.css;*.js;*.ts;*.jsx;*.tsx;*.json)|*.html;*.htm;*.xhtml;*.css;*.scss;*.less;*.js;*.mjs;*.cjs;*.ts;*.mts;*.cts;*.jsx;*.tsx;*.json;*.jsonc|" +
+                     "React & GraphQL (*.jsx;*.tsx;*.graphql;*.gql)|*.jsx;*.tsx;*.graphql;*.gql|" +
+                     "Angular Templates & Code (*.component.html;*.component.ts)|*.component.html;*.component.ts;*.service.ts;*.directive.ts;*.pipe.ts;*.guard.ts|" +
+                     "Flutter & Dart (*.dart)|*.dart|" +
+                     "PHP Scripts (*.php;*.phtml)|*.php;*.phtml;*.php3;*.php4;*.php5;*.php8|" +
+                     "Ruby & Rails (*.rb;*.rake;*.erb)|*.rb;*.rake;*.gemspec;*.ru;Gemfile;Rakefile;*.erb;*.html.erb|" +
+                     "C# & XAML (*.cs;*.xaml;*.xml)|*.cs;*.xaml;*.xml;*.csproj;*.props;*.targets;*.axaml;*.config|" +
+                     "Markdown & Documents (*.md;*.txt)|*.md;*.markdown;*.txt;*.log|" +
                      "All Files (*.*)|*.*",
             Multiselect = true
         };
@@ -253,9 +262,22 @@ public partial class MainWindow : Window
             FileName = doc.FileName.Replace(" *", ""),
             Filter = "HTML Files (*.html)|*.html|" +
                      "JavaScript Files (*.js)|*.js|" +
+                     "TypeScript Files (*.ts)|*.ts|" +
+                     "React JSX Files (*.jsx)|*.jsx|" +
+                     "React TSX Files (*.tsx)|*.tsx|" +
                      "CSS Files (*.css)|*.css|" +
                      "TypeScript Files (*.ts)|*.ts|" +
+                     "SCSS Files (*.scss)|*.scss|" +
                      "JSON Files (*.json)|*.json|" +
+                     "XML / XAML Files (*.xml;*.xaml)|*.xml;*.xaml|" +
+                     "Markdown Files (*.md)|*.md|" +
+                     "Dart Files (*.dart)|*.dart|" +
+                     "PHP Files (*.php)|*.php|" +
+                     "Ruby Files (*.rb)|*.rb|" +
+                     "ERB Templates (*.erb)|*.erb|" +
+                     "GraphQL Files (*.graphql)|*.graphql|" +
+                     "C# Source Files (*.cs)|*.cs|" +
+                     "Plain Text Files (*.txt)|*.txt|" +
                      "All Files (*.*)|*.*"
         };
 

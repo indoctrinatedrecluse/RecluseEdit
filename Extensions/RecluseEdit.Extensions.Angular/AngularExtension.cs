@@ -1,4 +1,5 @@
 using RecluseEdit.Extensions.Angular.Providers;
+using RecluseEdit.Extensions.Angular.Syntaxes;
 using RecluseEdit.Extensions.Angular.Toolchains;
 using RecluseEdit.Sdk;
 using RecluseEdit.Sdk.Models;
@@ -26,6 +27,7 @@ public class AngularExtension : IExtension
             DisplayName = "Angular HTML Template",
             Extensions = [".component.html"],
             HighlightingName = "HTML"
+            HighlightingName = "AngularHTML"
         });
 
         host.RegisterLanguage(new LanguageDefinition
@@ -34,7 +36,23 @@ public class AngularExtension : IExtension
             DisplayName = "Angular TypeScript",
             Extensions = [".component.ts", ".service.ts", ".directive.ts", ".pipe.ts", ".guard.ts"],
             HighlightingName = "JavaScript"
+            HighlightingName = "AngularTS"
         });
+
+        // 1b. Register Custom Syntax Highlighting Definitions
+        try
+        {
+            var htmlDef = AngularHtmlSyntaxDefinition.CreateDefinition();
+            host.RegisterSyntaxHighlighting("angular-html", htmlDef);
+        }
+        catch { }
+
+        try
+        {
+            var tsDef = AngularTsSyntaxDefinition.CreateDefinition();
+            host.RegisterSyntaxHighlighting("angular-ts", tsDef);
+        }
+        catch { }
 
         // 2. Register Inline Autocomplete Providers
         host.RegisterInlineCompletion(new AngularCompletionProvider());

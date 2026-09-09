@@ -79,3 +79,4 @@ public class RubyCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+
