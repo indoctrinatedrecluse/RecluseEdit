@@ -187,3 +187,4 @@ public static class JinjaSyntaxDefinition
         return HighlightingLoader.Load(reader, HighlightingManager.Instance);
     }
 }
+

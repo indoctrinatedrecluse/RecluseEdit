@@ -153,3 +153,4 @@ public class FlaskDjangoCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+

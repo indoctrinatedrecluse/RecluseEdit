@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.3.0] - 2026-09-09
+## [1.1.0] - 2026-09-09
 
 ### ✨ Added Features
 
@@ -26,13 +26,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Express.js Snippets**: Server bootstrap (`const app = express()`), JSON body parsing middleware, REST endpoint routing (`app.get`, `app.post`, `app.put`, `app.delete`), router modules (`express.Router()`), and global error handling middleware.
 - **Toolchain Diagnostics**: Active diagnostics for the **Python interpreter** (`python -V`), **Pip package manager** (`pip -V`), and **Django CLI** (`django-admin --version`).
 - **Decoupled Architecture**: Fully isolated project target in `RecluseEdit.slnx` built to `Extensions/Python/` and automatically discovered at startup by `ExtensionManager`.
-- **Comprehensive Automated Tests**: Added dedicated unit tests and expanded integration test suite to **49 passing tests** with 0 warnings and 0 errors.
 
----
-
-## [1.2.0] - 2026-09-09
-
-### ✨ Added Features & Polish
+#### 💎 Ruby & Ruby on Rails Language Pack (`RecluseEdit.Extensions.Ruby`)
+- **First-Class Ruby Support**: File associations for `.rb`, `.rake`, `.gemspec`, `.ru`, `Gemfile`, and `Rakefile`.
+- **Custom XSHD Ruby Syntax Highlighting**: Custom AvalonEdit syntax definition covering Ruby keywords (`def`, `class`, `module`, `yield`, `self`), symbols (`:symbol`), instance variables (`@var`), class variables (`@@var`), global variables (`$var`), regex literals (`/.../`), percent string/array notations (`%w`, `%i`), and double-quoted string interpolation (`#{...}`).
+- **Ruby Completion Snippets**: Inline snippets and idioms for methods (`def`), classes (`class`), modules (`module`), attribute accessors (`attr_accessor`), block iteration (`each do |item|`, `map do |item|`), exception handling (`begin ... rescue StandardError => e`), and conditionals (`case ... when`, `unless`).
+- **Ruby on Rails & ERB Snippets**:
+  - ActiveRecord model definitions (`class Model < ApplicationRecord`), associations (`has_many`, `belongs_to`, `has_one`, `has_and_belongs_to_many`), validations (`validates :field, presence: true`), callbacks (`before_action`), and scopes.
+  - ActionController helpers (`respond_to`, `render json:`, `params.require(:item).permit(...)`).
+  - RESTful routing declarations (`resources :items`, `root to: "home#index"`, `namespace :api`).
+  - ERB template tags (`<%= ... %>`, `<% ... %>`, `<% if ... %>`).
+- **Toolchain Diagnostics**: Active diagnostics and path resolution checks for the Ruby runtime (`ruby -v`), Bundler (`bundle -v`), and Rails CLI (`rails -v`).
 
 #### 🎨 Exhaustive Syntax Highlighting Across All Languages
 - **High-Fidelity Markdown Grammar**: Dedicated XSHD syntax definition covering headings (`#` to `######`), bold (`**`, `__`), italics (`*`, `_`), inline code (`` `code` ``), fenced code blocks (```` ``` ````), blockquotes (`>`), links (`[text](url)`), lists (`*`, `-`, `+`, `1.`), horizontal rules, tables, and inline HTML tags.
@@ -50,30 +54,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### 🔲 Live Bracket Matching & Highlighting
 - **Active Bracket Matching**: Added `BracketHighlightRenderer` to `EditorControl` providing instant visual highlight borders around matching pairs of `()`, `[]`, and `{}` as the caret moves, matching modern VS Code UX.
 
+#### 📜 Software License Extension Coverage
+- Updated `LICENSE` and `README.md` to explicitly state that all official language extensions and SDK components (`RecluseEdit.Sdk`) are fully covered under the RecluseEdit Software License clauses.
+
 #### 🗂️ Unified File Dialog Filters
-- **Modernized File Filters**: Updated `OpenFileDialog` and `SaveFileDialog` in `MainWindow` with a comprehensive list of all supported extensions, categorizing Web & Script, React & GraphQL, Angular, Flutter & Dart, PHP, Ruby & Rails, C# & XAML, and Markdown files.
+- Modernized `OpenFileDialog` and `SaveFileDialog` in `MainWindow` with comprehensive filters covering all supported file formats: Python & Jinja templates, Web & Script, React & GraphQL, Angular, Flutter & Dart, PHP, Ruby & Rails, C# & XAML, and Markdown.
 
-#### 🧪 Expanded Test Suite
-- **11 New Automated Tests**: Added `SyntaxDefinitionTests` covering every custom syntax definition and live bracket matching algorithm, expanding the test suite to **43 passing tests** with 0 warnings and 0 errors.
-
----
-
-## [1.1.0] - 2026-09-09
-
-### ✨ Added Features
-
-#### 💎 Ruby & Ruby on Rails Language Pack (`RecluseEdit.Extensions.Ruby`)
-- **First-Class Ruby Support**: File associations for `.rb`, `.rake`, `.gemspec`, `.ru`, `Gemfile`, and `Rakefile`.
-- **Custom XSHD Ruby Syntax Highlighting**: Custom AvalonEdit syntax definition covering Ruby keywords (`def`, `class`, `module`, `yield`, `self`, etc.), symbols (`:symbol`), instance variables (`@var`), class variables (`@@var`), global variables (`$var`), regex literals (`/.../`), percent string/array notations (`%w`, `%i`), and double-quoted string interpolation (`#{...}`).
-- **Ruby Completion Snippets**: Inline snippets and idioms for methods (`def`), classes (`class`), modules (`module`), attribute accessors (`attr_accessor`), block iteration (`each do |item|`, `map do |item|`), exception handling (`begin ... rescue StandardError => e`), and conditionals (`case ... when`, `unless`).
-- **Ruby on Rails & ERB Snippets**:
-  - ActiveRecord model definitions (`class Model < ApplicationRecord`), associations (`has_many`, `belongs_to`, `has_one`, `has_and_belongs_to_many`), validations (`validates :field, presence: true`), callbacks (`before_action`), and scopes.
-  - ActionController helpers (`respond_to`, `render json:`, `params.require(:item).permit(...)`).
-  - RESTful routing declarations (`resources :items`, `root to: "home#index"`, `namespace :api`).
-  - ERB template tags (`<%= ... %>`, `<% ... %>`, `<% if ... %>`).
-- **Toolchain Diagnostics**: Active diagnostics and path resolution checks for the Ruby runtime (`ruby -v`), Bundler (`bundle -v`), and Rails CLI (`rails -v`).
-- **Decoupled Architecture**: Fully isolated project target in `RecluseEdit.slnx` built to `Extensions/Ruby/` and auto-discovered at runtime by `ExtensionManager`.
-- **Comprehensive Test Coverage**: Added 5 dedicated unit tests verifying extension metadata, syntax definition compilation, completion suggestions, and toolchain checks (bringing total test suite to 32 tests, all passing).
+#### 🧪 49 Passing Automated Tests
+- Expanded the automated test suite across all 9 projects to **49 passing tests** with 0 warnings and 0 errors.
 
 ---
 

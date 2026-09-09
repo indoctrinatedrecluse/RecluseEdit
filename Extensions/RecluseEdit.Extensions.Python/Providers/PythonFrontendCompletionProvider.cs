@@ -77,3 +77,4 @@ public class PythonFrontendCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+

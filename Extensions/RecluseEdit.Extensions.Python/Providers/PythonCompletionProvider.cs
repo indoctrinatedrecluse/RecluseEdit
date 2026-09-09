@@ -95,3 +95,4 @@ public class PythonCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+

@@ -219,3 +219,4 @@ public sealed class PythonExtensionTests
         Assert.IsTrue(djangoReport.Status is ToolchainStatus.Available or ToolchainStatus.Warning or ToolchainStatus.Missing);
     }
 }
+

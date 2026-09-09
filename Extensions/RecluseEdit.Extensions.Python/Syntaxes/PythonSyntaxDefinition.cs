@@ -245,3 +245,4 @@ public static class PythonSyntaxDefinition
         return HighlightingLoader.Load(reader, HighlightingManager.Instance);
     }
 }
+
