@@ -1,0 +1,140 @@
+<UserControl x:Class="RecluseEdit.UI.Controls.TerminalPaneControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="220" d:DesignWidth="800"
+             Background="{StaticResource BgSecondary}">
+
+    <UserControl.Resources>
+        <!-- Combobox Dark Theme Minimal Template -->
+        <Style x:Key="TerminalShellComboStyle" TargetType="ComboBox">
+            <Setter Property="Background" Value="{StaticResource BgPrimary}" />
+            <Setter Property="Foreground" Value="{StaticResource FgPrimary}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderDark}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="6,2" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="28" /> <!-- Header Bar -->
+            <RowDefinition Height="*" />  <!-- Terminal Console -->
+            <RowDefinition Height="Auto" /> <!-- Command Input Bar -->
+        </Grid.RowDefinitions>
+
+        <!-- 0. Header Bar -->
+        <Border Grid.Row="0" Background="{StaticResource BgTertiary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1" Padding="6,2">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
+                    <TextBlock Text="💻 TERMINAL" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource FgSecondary}" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Center: Open Terminal Tabs & Add Button -->
+                <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Focusable="False">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- ItemsControl for Tab Items -->
+                        <ItemsControl x:Name="TabsItemsControl">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+
+                        <!-- Add Default Terminal Button -->
+                        <Button x:Name="BtnNewTerminal" 
+                                Style="{StaticResource ToolbarButtonStyle}" 
+                                Content="+" 
+                                FontSize="14" 
+                                FontWeight="Bold" 
+                                Width="22" 
+                                Height="22" 
+                                Padding="0" 
+                                Margin="3,0,4,0" 
+                                ToolTip="New Terminal" 
+                                Click="OnNewTerminalClick" />
+
+                        <!-- Shell Selection Dropdown (if multiple shells available) -->
+                        <ComboBox x:Name="CmbShells" 
+                                  Style="{StaticResource TerminalShellComboStyle}" 
+                                  MinWidth="140" 
+                                  Margin="2,0,4,0" 
+                                  ToolTip="Select Shell to Launch" 
+                                  SelectionChanged="OnShellSelected" />
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Right: Action Buttons -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Content="🗑️ Clear" FontSize="11" Padding="6,2" Height="22" ToolTip="Clear Terminal Buffer" Click="OnClearOutputClick" />
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Content="✕" FontSize="11" Width="22" Height="22" Padding="0" Margin="4,0,0,0" ToolTip="Close Terminal Panel (Ctrl+`)" Click="OnClosePaneClick" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 1. Terminal Output View -->
+        <Grid Grid.Row="1" Background="#141414">
+            <!-- Empty state when no tabs -->
+            <Border x:Name="EmptyStateBorder" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="💻" FontSize="28" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                    <TextBlock Text="No active terminal sessions" Foreground="{StaticResource FgSecondary}" FontSize="12" HorizontalAlignment="Center" Margin="0,0,0,8" />
+                    <Button Style="{StaticResource ToolbarButtonStyle}" Content="+ Launch Terminal" Padding="10,4" HorizontalAlignment="Center" Click="OnNewTerminalClick" />
+                </StackPanel>
+            </Border>
+
+            <!-- Console Output Box -->
+            <TextBox x:Name="TxtConsoleOutput" 
+                     Background="#141414" 
+                     Foreground="#CCCCCC" 
+                     BorderThickness="0" 
+                     FontFamily="Consolas, Cascadia Code, Courier New" 
+                     FontSize="12" 
+                     IsReadOnly="True" 
+                     TextWrapping="Wrap" 
+                     VerticalScrollBarVisibility="Auto" 
+                     HorizontalScrollBarVisibility="Disabled"
+                     Padding="8,6" 
+                     PreviewKeyDown="OnConsoleOutputPreviewKeyDown" />
+        </Grid>
+
+        <!-- 2. Command Prompt Input Bar -->
+        <Border x:Name="InputBarBorder" Grid.Row="2" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,1,0,0" Padding="6,4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Prompt Prefix -->
+                <TextBlock x:Name="TxtPromptPrefix" Grid.Column="0" Text="PS > " Foreground="{StaticResource AccentBlue}" FontFamily="Consolas, Cascadia Code" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" Margin="2,0,6,0" />
+
+                <!-- Command Input Box -->
+                <TextBox x:Name="TxtCommandInput" 
+                         Grid.Column="1" 
+                         Background="{StaticResource BgPrimary}" 
+                         Foreground="#FFFFFF" 
+                         CaretBrush="#FFFFFF" 
+                         BorderBrush="{StaticResource BorderDark}" 
+                         BorderThickness="1" 
+                         FontFamily="Consolas, Cascadia Code, Courier New" 
+                         FontSize="12" 
+                         Padding="6,3" 
+                         PreviewKeyDown="OnCommandInputPreviewKeyDown" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

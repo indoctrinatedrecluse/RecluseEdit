@@ -145,6 +145,20 @@
         </Style.Triggers>
     </Style>
 
+    <!-- Horizontal GridSplitter Style -->
+    <Style x:Key="HorizontalSplitterStyle" TargetType="GridSplitter">
+        <Setter Property="Background" Value="{StaticResource BorderDark}" />
+        <Setter Property="Height" Value="3" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Cursor" Value="SizeNS" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource AccentBlue}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <!-- TreeView Styles -->
     <Style TargetType="TreeView">
         <Setter Property="Background" Value="{StaticResource BgSecondary}" />

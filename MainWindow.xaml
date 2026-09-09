@@ -25,6 +25,7 @@
         <KeyBinding Modifiers="Control" Key="F" Command="{x:Static local:MainWindow.FindCommand}" />
         <KeyBinding Modifiers="Control" Key="H" Command="{x:Static local:MainWindow.ReplaceCommand}" />
         <KeyBinding Modifiers="Control+Alt" Key="A" Command="{x:Static local:MainWindow.ToggleAiChatCommand}" />
+        <KeyBinding Modifiers="Control" Key="OemTilde" Command="{x:Static local:MainWindow.ToggleTerminalCommand}" />
     </Window.InputBindings>
 
     <Grid>
@@ -67,6 +68,7 @@
             <MenuItem Header="_View">
                 <MenuItem x:Name="MenuSidebar" Header="Toggle _Sidebar" InputGestureText="Ctrl+B" IsCheckable="True" IsChecked="True" Click="OnToggleSidebarClick" />
                 <MenuItem x:Name="MenuRightPane" Header="Toggle _AI Chat" InputGestureText="Ctrl+Alt+A" IsCheckable="True" IsChecked="True" Click="OnToggleAiChatClick" />
+                <MenuItem x:Name="MenuTerminal" Header="Toggle _Terminal" InputGestureText="Ctrl+`" IsCheckable="True" IsChecked="True" Click="OnToggleTerminalClick" />
                 <MenuItem x:Name="MenuWordWrap" Header="Word _Wrap" IsCheckable="True" Click="OnToggleWordWrapClick" />
                 <MenuItem x:Name="MenuLineNumbers" Header="_Line Numbers" IsCheckable="True" IsChecked="True" Click="OnToggleLineNumbersClick" />
             </MenuItem>
@@ -140,6 +142,15 @@
                                          Padding="8,4" Margin="2,1"
                                          FontSize="12"
                                          Click="OnToggleAiChatClick" />
+
+                <Primitives:ToggleButton xmlns:Primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
+                                         x:Name="BtnToggleTerminal" 
+                                         Content="💻 Terminal" 
+                                         IsChecked="True"
+                                         ToolTip="Toggle Terminal (Ctrl+`)"
+                                         Padding="8,4" Margin="2,1"
+                                         FontSize="12"
+                                         Click="OnToolbarTerminalClick" />
 
                 <Rectangle Width="1" Fill="{StaticResource BorderDark}" Margin="6,2" />
 
@@ -270,43 +281,58 @@
             <!-- Splitter between Sidebar & Editor -->
             <GridSplitter x:Name="Splitter" Grid.Column="1" Style="{StaticResource VerticalSplitterStyle}" />
 
-            <!-- Right: Editor Area -->
+            <!-- Center: Editor & Terminal Area -->
             <Grid Grid.Column="2">
-                <controls:EditorControl x:Name="EditorHost" Visibility="Visible" />
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition x:Name="RowTerminalSplitter" Height="Auto" />
+                    <RowDefinition x:Name="RowTerminalPane" Height="220" MinHeight="100" />
+                </Grid.RowDefinitions>
 
-                <!-- Empty State when no tabs are open -->
-                <Border x:Name="EmptyStateOverlay" Background="{StaticResource BgPrimary}" Visibility="Collapsed">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="RecluseEdit" 
-                                   FontSize="28" 
-                                   FontWeight="Bold" 
-                                   Foreground="{StaticResource FgSecondary}" 
-                                   HorizontalAlignment="Center" 
-                                   Margin="0,0,0,8" />
-                        <TextBlock Text="Web Application Code Editor" 
-                                   FontSize="14" 
-                                   Foreground="{StaticResource FgMuted}" 
-                                   HorizontalAlignment="Center" 
-                                   Margin="0,0,0,24" />
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <Button Style="{StaticResource ToolbarButtonStyle}" 
-                                    Content="Create New File (Ctrl+N)" 
-                                    Padding="12,6" 
-                                    Margin="4,0" 
-                                    Click="OnNewFileClick" />
-                            <Button Style="{StaticResource ToolbarButtonStyle}" 
-                                    Content="Open File (Ctrl+O)" 
-                                    Padding="12,6" 
-                                    Margin="4,0" 
-                                    Click="OnOpenFileClick" />
-                            <Button Style="{StaticResource ToolbarButtonStyle}" 
-                                    Content="Open Folder (Ctrl+Shift+O)" 
-                                    Padding="12,6" 
-                                    Margin="4,0" 
-                                    Click="OnOpenFolderClick" />
+                <!-- Top: Editor Host & Empty State -->
+                <Grid Grid.Row="0">
+                    <controls:EditorControl x:Name="EditorHost" Visibility="Visible" />
+
+                    <!-- Empty State when no tabs are open -->
+                    <Border x:Name="EmptyStateOverlay" Background="{StaticResource BgPrimary}" Visibility="Collapsed">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="RecluseEdit" 
+                                       FontSize="28" 
+                                       FontWeight="Bold" 
+                                       Foreground="{StaticResource FgSecondary}" 
+                                       HorizontalAlignment="Center" 
+                                       Margin="0,0,0,8" />
+                            <TextBlock Text="Web Application Code Editor" 
+                                       FontSize="14" 
+                                       Foreground="{StaticResource FgMuted}" 
+                                       HorizontalAlignment="Center" 
+                                       Margin="0,0,0,24" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Style="{StaticResource ToolbarButtonStyle}" 
+                                        Content="Create New File (Ctrl+N)" 
+                                        Padding="12,6" 
+                                        Margin="4,0" 
+                                        Click="OnNewFileClick" />
+                                <Button Style="{StaticResource ToolbarButtonStyle}" 
+                                        Content="Open File (Ctrl+O)" 
+                                        Padding="12,6" 
+                                        Margin="4,0" 
+                                        Click="OnOpenFileClick" />
+                                <Button Style="{StaticResource ToolbarButtonStyle}" 
+                                        Content="Open Folder (Ctrl+Shift+O)" 
+                                        Padding="12,6" 
+                                        Margin="4,0" 
+                                        Click="OnOpenFolderClick" />
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
-                </Border>
+                    </Border>
+                </Grid>
+
+                <!-- Horizontal Splitter between Editor and Terminal -->
+                <GridSplitter x:Name="TerminalSplitter" Grid.Row="1" Style="{StaticResource HorizontalSplitterStyle}" />
+
+                <!-- Bottom: Terminal Pane -->
+                <controls:TerminalPaneControl x:Name="TerminalPane" Grid.Row="2" />
             </Grid>
 
             <!-- Splitter between Editor & Right Pane -->

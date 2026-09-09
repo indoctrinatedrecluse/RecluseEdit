@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2026-09-09
+
+### ✨ Added Features
+
+#### 💻 Integrated Terminal Panel & Multi-Shell Support
+- **Bottom Pane Terminal**: Built-in, draggable bottom terminal panel with a horizontal splitter, dark console styling, keyboard shortcut (<kbd>Ctrl</kbd>+<kbd>`</kbd>), `View -> Toggle Terminal` menu toggle, and quick toolbar button (`💻 Terminal`).
+- **Multi-Shell Auto-Detection (`ShellDetector`)**: Automatically scans system environment and PATH for installed shells:
+  - PowerShell 7+ (`pwsh.exe`)
+  - Windows PowerShell (`powershell.exe`)
+  - Git Bash (`bash.exe` in Git directories or via `git.exe`)
+  - Windows Subsystem for Linux (`wsl.exe`)
+  - Command Prompt (`cmd.exe`)
+  - Cygwin & MSYS2 (`bash.exe`)
+- **Shell Selector & Tabbed Sessions**: Allows users to spawn multiple concurrent terminal sessions across different shells (`+` button and shell selector dropdown) with custom icons and titles (`⚡ PowerShell`, `🐚 Git Bash`, `🐧 WSL`, `>_ Command Prompt`).
+- **Interactive Console & History**: Monospace console output with auto-scrolling, text selection, command prompt prefix (`PS > `, `$ `, `> `), and command history navigation (<kbd>Up</kbd>/<kbd>Down</kbd> arrows).
+- **Clean Process Lifecycle**: Terminating via the `exit` command or clicking the tab close button (`✕`) cleanly terminates the entire process tree (`entireProcessTree: true`), preventing orphaned `conhost.exe` or shell processes from lingering in the background. All active terminal sessions are safely terminated upon editor exit.
+
+#### 🤖 DeepSeek AI Assistant Enhancements
+- **Rich Markdown Response Rendering (`MarkdownBlockRenderer`)**: DeepSeek assistant responses are now formatted with rich WPF visual blocks including headings (`#`, `##`, `###`), syntax-styled monospace code blocks with language headers and background borders, inline code (`` `code` ``), bold/italic formatting, blockquotes, and bullet/numbered lists instead of raw plain text.
+- **Query-Lifecycle Tool Log Cleanup**: Intermediate tool execution status badges (`⚡ Executing: read_file...`, `execute_command`, etc.) display live during the query lifecycle to provide real-time feedback and are automatically cleaned up once the final response is produced, leaving only clean user prompts and formatted Markdown responses.
+
+#### 🧪 Expanded Test Suite
+- Added 9 new automated unit and integration tests covering shell detection, process lifecycle, command execution, and Markdown block parsing, expanding the test suite to **87 passing tests** with 0 warnings.
+
+---
+
 ## [1.3.0] - 2026-09-09
 
 ### ✨ Added Features
@@ -170,6 +196,7 @@ The debut release of **RecluseEdit**, a modern, lightweight, high-performance de
 - **GitHub Actions Workflow**: Automated build and release pipeline (`.github/workflows/release.yml`) triggered on tag pushes (`v*`) to run the 27-test automated test suite and package a portable distribution archive (`RecluseEdit-windows-<tag>.zip`) attached to GitHub Releases.
 - **Git Environment Configuration**: Configured `.gitattributes` to enforce consistent LF/CRLF normalization across development environments and CI runners.
 
+[1.4.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.0.0...v1.1.0

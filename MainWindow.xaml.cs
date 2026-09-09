@@ -26,6 +26,7 @@ public partial class MainWindow : Window
     public static readonly RoutedUICommand CloseFileCommand = new("Close File", "CloseFile", typeof(MainWindow));
     public static readonly RoutedUICommand ToggleSidebarCommand = new("Toggle Sidebar", "ToggleSidebar", typeof(MainWindow));
     public static readonly RoutedUICommand ToggleAiChatCommand = new("Toggle AI Chat", "ToggleAiChat", typeof(MainWindow));
+    public static readonly RoutedUICommand ToggleTerminalCommand = new("Toggle Terminal", "ToggleTerminal", typeof(MainWindow));
     public static readonly RoutedUICommand FindCommand = new("Find", "Find", typeof(MainWindow));
     public static readonly RoutedUICommand ReplaceCommand = new("Replace", "Replace", typeof(MainWindow));
 
@@ -38,6 +39,7 @@ public partial class MainWindow : Window
 
     private GridLength _lastSidebarWidth = new(240);
     private GridLength _lastRightPaneWidth = new(380);
+    private GridLength _lastBottomPaneHeight = new(220);
 
     public MainWindow()
     {
@@ -63,8 +65,11 @@ public partial class MainWindow : Window
         CommandBindings.Add(new CommandBinding(CloseFileCommand, (_, _) => CloseActiveFile()));
         CommandBindings.Add(new CommandBinding(ToggleSidebarCommand, (_, _) => ToggleSidebar()));
         CommandBindings.Add(new CommandBinding(ToggleAiChatCommand, (_, _) => ToggleRightPane()));
+        CommandBindings.Add(new CommandBinding(ToggleTerminalCommand, (_, _) => ToggleTerminal()));
         CommandBindings.Add(new CommandBinding(FindCommand, (_, _) => EditorHost.OpenFind()));
         CommandBindings.Add(new CommandBinding(ReplaceCommand, (_, _) => EditorHost.OpenReplace()));
+
+        TerminalPane.ClosePaneRequested += () => ToggleTerminal(false);
 
         // Document events
         _documentManager.ActiveDocumentChanged += OnActiveDocumentChanged;
@@ -132,6 +137,7 @@ public partial class MainWindow : Window
         {
             TxtWorkspaceName.Text = Path.GetFileName(_workspaceManager.RootPath)?.ToUpperInvariant() ?? "EXPLORER";
             WorkspaceTreeView.ItemsSource = _workspaceManager.RootItem.Children;
+            TerminalPane.SetWorkingDirectory(_workspaceManager.RootPath);
 
             // Ensure sidebar is visible
             if (ColSidebar.Width.Value == 0)
@@ -226,6 +232,42 @@ public partial class MainWindow : Window
             ToggleRightPane();
         }
     }
+
+    public void ToggleTerminal(bool? forceState = null)
+    {
+        var shouldOpen = forceState ?? (RowTerminalPane.Height.Value == 0 || TerminalPane.Visibility == Visibility.Collapsed);
+
+        if (!shouldOpen)
+        {
+            _lastBottomPaneHeight = RowTerminalPane.Height.Value > 50 ? RowTerminalPane.Height : _lastBottomPaneHeight;
+            RowTerminalPane.MinHeight = 0;
+            RowTerminalPane.Height = new GridLength(0);
+            RowTerminalSplitter.Height = new GridLength(0);
+            TerminalSplitter.Visibility = Visibility.Collapsed;
+            TerminalPane.Visibility = Visibility.Collapsed;
+            MenuTerminal.IsChecked = false;
+            BtnToggleTerminal.IsChecked = false;
+        }
+        else
+        {
+            RowTerminalPane.MinHeight = 100;
+            RowTerminalPane.Height = _lastBottomPaneHeight.Value > 80 ? _lastBottomPaneHeight : new GridLength(220);
+            RowTerminalSplitter.Height = GridLength.Auto;
+            TerminalSplitter.Visibility = Visibility.Visible;
+            TerminalPane.Visibility = Visibility.Visible;
+            MenuTerminal.IsChecked = true;
+            BtnToggleTerminal.IsChecked = true;
+
+            if (TerminalPane.TerminalCount == 0)
+            {
+                TerminalPane.CreateTerminal();
+            }
+            TerminalPane.FocusInput();
+        }
+    }
+
+    private void OnToggleTerminalClick(object sender, RoutedEventArgs e) => ToggleTerminal();
+    private void OnToolbarTerminalClick(object sender, RoutedEventArgs e) => ToggleTerminal();
 
     private void OnSidePanelRegistered(ISidePanelProvider panel)
     {
@@ -655,9 +697,10 @@ public partial class MainWindow : Window
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
         MessageBox.Show(this,
-            "RecluseEdit v1.3.0\n\n" +
+            "RecluseEdit v1.4.0\n\n" +
             "A fast, modern code editor optimized for web applications.\n\n" +
             "Key Features:\n" +
+            "• Integrated Multi-Shell Terminal (Ctrl+`)\n" +
             "• DeepSeek AI Chat Assistant (Ctrl+Alt+A)\n" +
             "• Web Workspace Explorer (Ctrl+B)\n" +
             "• Dual Autocomplete: Ghost-text (Tab) + IntelliSense popup (Ctrl+Space)\n" +
@@ -696,6 +739,7 @@ public partial class MainWindow : Window
             }
         }
 
+        TerminalPane.CloseAllTerminals();
         base.OnClosing(e);
     }
 

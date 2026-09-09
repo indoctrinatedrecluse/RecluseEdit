@@ -1,9 +1,11 @@
 using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using RecluseEdit.Extensions.DeepSeek.Models;
+using RecluseEdit.Extensions.DeepSeek.Rendering;
 using RecluseEdit.Extensions.DeepSeek.Services;
 using RecluseEdit.Sdk;
 
@@ -19,6 +21,7 @@ public partial class DeepSeekChatView : UserControl
     private readonly DeepSeekApiClient _apiClient;
 
     private readonly List<ChatMessage> _conversationHistory = [];
+    private readonly List<UIElement> _currentQueryStatusBadges = [];
     private CancellationTokenSource? _currentCts;
 
     public DeepSeekChatView(
@@ -112,6 +115,7 @@ public partial class DeepSeekChatView : UserControl
             _currentCts.Cancel();
         }
 
+        _currentQueryStatusBadges.Clear();
         _conversationHistory.Clear();
         MessagePanel.Children.Clear();
         WelcomeBorder.Visibility = Visibility.Visible;
@@ -140,6 +144,13 @@ public partial class DeepSeekChatView : UserControl
                 "DeepSeek AI Configuration Required", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
+
+        // Clean any leftover tool execution badges from previous queries
+        foreach (var badge in _currentQueryStatusBadges)
+        {
+            MessagePanel.Children.Remove(badge);
+        }
+        _currentQueryStatusBadges.Clear();
 
         // Prepare prompt with optional active file context
         var promptToSend = input;
@@ -176,8 +187,8 @@ public partial class DeepSeekChatView : UserControl
             Content = promptToSend
         });
 
-        // Add assistant response bubble
-        var assistantBubble = AddMessageBubble("assistant", "");
+        // Add assistant response container
+        var assistantMsg = AddAssistantMessageContainer();
 
         // Set busy state
         BtnSend.IsEnabled = false;
@@ -197,7 +208,8 @@ public partial class DeepSeekChatView : UserControl
                 {
                     Dispatcher.Invoke(() =>
                     {
-                        assistantBubble.Text += delta;
+                        assistantMsg.FullText.Append(delta);
+                        assistantMsg.LiveBox.Text = assistantMsg.FullText.ToString();
                         ScrollToBottom();
                     });
                 },
@@ -215,21 +227,24 @@ public partial class DeepSeekChatView : UserControl
             _conversationHistory.Add(new ChatMessage
             {
                 Role = "assistant",
-                Content = assistantBubble.Text
+                Content = assistantMsg.FullText.ToString()
             });
         }
         catch (OperationCanceledException)
         {
-            assistantBubble.Text += "\n\n*(Generation stopped by user)*";
+            assistantMsg.FullText.Append("\n\n*(Generation stopped by user)*");
         }
         catch (Exception ex)
         {
-            assistantBubble.Text += $"\n\n⚠️ Error: {ex.Message}";
+            assistantMsg.FullText.Append($"\n\n⚠️ Error: {ex.Message}");
         }
         finally
         {
             _currentCts?.Dispose();
             _currentCts = null;
+
+            // Finalize: delete intermediate tool run logs & render Markdown output
+            FinalizeAssistantMessage(assistantMsg);
 
             BtnSend.IsEnabled = true;
             StatusBarBorder.Visibility = Visibility.Collapsed;
@@ -246,6 +261,84 @@ public partial class DeepSeekChatView : UserControl
     #endregion
 
     #region Message Rendering Helpers
+
+    private class AssistantMessageContainer
+    {
+        public StackPanel ContentPanel { get; set; } = null!;
+        public TextBox LiveBox { get; set; } = null!;
+        public StringBuilder FullText { get; } = new();
+    }
+
+    private AssistantMessageContainer AddAssistantMessageContainer()
+    {
+        var container = new Grid
+        {
+            Margin = new Thickness(0, 4, 0, 4),
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
+
+        var border = new Border
+        {
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(10, 8, 10, 8),
+            Background = (Brush)FindResource("AssistantBubbleBg"),
+            BorderBrush = (Brush)FindResource("BorderBrushColor"),
+            BorderThickness = new Thickness(1)
+        };
+
+        var stack = new StackPanel();
+
+        var liveBox = new TextBox
+        {
+            Text = "",
+            TextWrapping = TextWrapping.Wrap,
+            IsReadOnly = true,
+            Background = Brushes.Transparent,
+            Foreground = (Brush)FindResource("TextPrimary"),
+            BorderThickness = new Thickness(0),
+            FontSize = 12,
+            FontFamily = new FontFamily("Segoe UI")
+        };
+
+        stack.Children.Add(liveBox);
+        border.Child = stack;
+        container.Children.Add(border);
+        MessagePanel.Children.Add(container);
+
+        ScrollToBottom();
+
+        return new AssistantMessageContainer
+        {
+            ContentPanel = stack,
+            LiveBox = liveBox
+        };
+    }
+
+    private void FinalizeAssistantMessage(AssistantMessageContainer assistant)
+    {
+        // 1. Delete all intermediate tool run logs as requested
+        foreach (var badge in _currentQueryStatusBadges)
+        {
+            MessagePanel.Children.Remove(badge);
+        }
+        _currentQueryStatusBadges.Clear();
+
+        // 2. Render response as rich Markdown
+        var textPrimary = (Brush)FindResource("TextPrimary");
+        var accent = (Brush)FindResource("AccentColor");
+        var codeBg = (Brush)FindResource("SectionBg");
+        var codeBorder = (Brush)FindResource("BorderBrushColor");
+
+        MarkdownBlockRenderer.RenderInto(
+            assistant.ContentPanel,
+            assistant.FullText.ToString(),
+            textPrimary,
+            accent,
+            codeBg,
+            codeBorder);
+
+        ScrollToBottom();
+    }
 
     private TextBox AddMessageBubble(string role, string initialContent)
     {
@@ -276,7 +369,7 @@ public partial class DeepSeekChatView : UserControl
             Foreground = isUser ? Brushes.White : (Brush)FindResource("TextPrimary"),
             BorderThickness = new Thickness(0),
             FontSize = 12,
-            FontFamily = isUser ? new FontFamily("Segoe UI") : new FontFamily("Consolas, Segoe UI")
+            FontFamily = new FontFamily("Segoe UI")
         };
 
         border.Child = textBox;
@@ -307,6 +400,7 @@ public partial class DeepSeekChatView : UserControl
 
         border.Child = tb;
         MessagePanel.Children.Add(border);
+        _currentQueryStatusBadges.Add(border);
         ScrollToBottom();
     }
 
