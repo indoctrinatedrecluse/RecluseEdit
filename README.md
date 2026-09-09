@@ -85,7 +85,7 @@
    - Alternatively, right-click the solution in **Solution Explorer** &rarr; select **Restore NuGet Packages**.
 4. **Build the Solution**:
    - Select **Build &rarr; Build Solution** from the top menu, or press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>.
-   - All projects (Host, SDK, React, Angular, Flutter, PHP, and Tests) build as independent targets.
+   - All projects (Host, SDK, React, Angular, Flutter, PHP, Ruby, and Tests) build as independent targets.
    - Verify the Output window reports `Build succeeded: 0 Warning(s), 0 Error(s)`.
 5. **Run & Test**:
    - Set active configuration to `Debug` or `Release` with target `x64` or `Any CPU`.
@@ -105,7 +105,7 @@ dotnet restore RecluseEdit.slnx
 # Build the entire solution (host + all extensions)
 dotnet build RecluseEdit.slnx
 
-# Run all unit and integration tests (27+ tests)
+# Run all unit and integration tests (32 tests)
 dotnet test RecluseEdit.slnx
 
 # Launch the editor
@@ -167,7 +167,7 @@ RecluseEdit features a modular, decoupled extension architecture. Each extension
 
 ## 📦 Official Extensions (Separate Build Targets)
 
-RecluseEdit comes with four modular language extensions built as dedicated targets in `RecluseEdit.slnx`:
+RecluseEdit comes with five modular language extensions built as dedicated targets in `RecluseEdit.slnx`:
 
 ### ⚛️ React, Redux & GraphQL Pack (`RecluseEdit.Extensions.React`)
 - Supports **React JSX** (`.jsx`), **React TSX** (`.tsx`), and **GraphQL** (`.graphql`, `.gql`).
@@ -195,6 +195,13 @@ RecluseEdit comes with four modular language extensions built as dedicated targe
 - **Class & Error Handling**: `try ... catch (Throwable)`, `declare(strict_types=1);`, and JSON helpers.
 - **Toolchain Diagnostics**: Verifies **PHP CLI** (`php`) and **Composer** (`composer`) package manager.
 
+### 💎 Ruby & Ruby on Rails Language Pack (`RecluseEdit.Extensions.Ruby`)
+- Supports **Ruby** (`.rb`, `.rake`, `.gemspec`, `.ru`, `Gemfile`, `Rakefile`) and **ERB Templates** (`.erb`, `.html.erb`).
+- **Custom Syntax Highlighting**: Dedicated XSHD grammar for Ruby keywords, symbols (`:symbol`), instance/class variables (`@var`, `@@var`), and string interpolation (`#{...}`).
+- **Ruby Idioms & Blocks**: `def`, `class`, `module`, `attr_accessor`, `each do |item|`, `map do |item|`, `begin ... rescue StandardError`.
+- **Rails & ActiveRecord Snippets**: `class User < ApplicationRecord`, `has_many`, `belongs_to`, `validates`, `before_action`, `resources`, `render json:`, and ERB tags (`<%= ... %>`, `<% ... %>`).
+- **Toolchain Diagnostics**: Actively verifies **Ruby runtime** (`ruby`), **Bundler** (`bundle`), and **Rails CLI** (`rails`).
+
 ---
 
 ## 🤖 Automated CI/CD & GitHub Releases
@@ -205,7 +212,7 @@ RecluseEdit includes a fully automated GitHub Actions workflow (`.github/workflo
 - 🧪 **Full Verification**: Executes the complete test suite (`dotnet test RecluseEdit.slnx -c Release`) across all projects before packaging.
 - 📦 **Bundle & Package**:
   - Compiles the host editor and all extensions in `Release` configuration.
-  - Bundles the main application executable, dependencies, and all four language extensions (`React`, `Angular`, `Flutter`, `Php`) under `Extensions/`.
+  - Bundles the main application executable, dependencies, and all five language extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`) under `Extensions/`.
   - Packages the entire distribution into a portable archive: `RecluseEdit-windows-<tag>.zip`.
 - 🚀 **GitHub Release**: Automatically creates a new GitHub Release with the bundled `.zip` asset attached and generates release notes.
 - 🕹️ **Manual Trigger**: Can also be executed manually via the **Actions** tab with custom version tags (`workflow_dispatch`).

@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Angular\RecluseEdit.Extensions.Angular.csproj" />
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Flutter\RecluseEdit.Extensions.Flutter.csproj" />
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Php\RecluseEdit.Extensions.Php.csproj" />
+    <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Ruby\RecluseEdit.Extensions.Ruby.csproj" />
   </ItemGroup>
 
 </Project>

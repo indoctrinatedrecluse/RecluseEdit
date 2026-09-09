@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>RecluseEdit.Extensions.Ruby</RootNamespace>
+    <AssemblyName>RecluseEdit.Extensions.Ruby</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
+    <ProjectReference Include="..\..\RecluseEdit.Sdk\RecluseEdit.Sdk.csproj" />
+  </ItemGroup>
+
+  <Target Name="CopyExtensionToHost" AfterTargets="Build">
+    <PropertyGroup>
+      <ExtensionOutputDir Condition="'$(SolutionDir)' != '' and '$(SolutionDir)' != '*Undefined*'">$(SolutionDir)bin\$(Configuration)\net10.0-windows\Extensions\Ruby\</ExtensionOutputDir>
+      <ExtensionOutputDir Condition="'$(ExtensionOutputDir)' == ''">$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\net10.0-windows\Extensions\Ruby\</ExtensionOutputDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <ExtensionFiles Include="$(TargetDir)$(TargetName).dll" />
+      <ExtensionFiles Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    </ItemGroup>
+    <MakeDir Directories="$(ExtensionOutputDir)" />
+    <Copy SourceFiles="@(ExtensionFiles)" DestinationFolder="$(ExtensionOutputDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

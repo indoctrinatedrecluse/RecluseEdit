@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-09-09
+
+### ✨ Added Features
+
+#### 💎 Ruby & Ruby on Rails Language Pack (`RecluseEdit.Extensions.Ruby`)
+- **First-Class Ruby Support**: File associations for `.rb`, `.rake`, `.gemspec`, `.ru`, `Gemfile`, and `Rakefile`.
+- **Custom XSHD Ruby Syntax Highlighting**: Custom AvalonEdit syntax definition covering Ruby keywords (`def`, `class`, `module`, `yield`, `self`, etc.), symbols (`:symbol`), instance variables (`@var`), class variables (`@@var`), global variables (`$var`), regex literals (`/.../`), percent string/array notations (`%w`, `%i`), and double-quoted string interpolation (`#{...}`).
+- **Ruby Completion Snippets**: Inline snippets and idioms for methods (`def`), classes (`class`), modules (`module`), attribute accessors (`attr_accessor`), block iteration (`each do |item|`, `map do |item|`), exception handling (`begin ... rescue StandardError => e`), and conditionals (`case ... when`, `unless`).
+- **Ruby on Rails & ERB Snippets**:
+  - ActiveRecord model definitions (`class Model < ApplicationRecord`), associations (`has_many`, `belongs_to`, `has_one`, `has_and_belongs_to_many`), validations (`validates :field, presence: true`), callbacks (`before_action`), and scopes.
+  - ActionController helpers (`respond_to`, `render json:`, `params.require(:item).permit(...)`).
+  - RESTful routing declarations (`resources :items`, `root to: "home#index"`, `namespace :api`).
+  - ERB template tags (`<%= ... %>`, `<% ... %>`, `<% if ... %>`).
+- **Toolchain Diagnostics**: Active diagnostics and path resolution checks for the Ruby runtime (`ruby -v`), Bundler (`bundle -v`), and Rails CLI (`rails -v`).
+- **Decoupled Architecture**: Fully isolated project target in `RecluseEdit.slnx` built to `Extensions/Ruby/` and auto-discovered at runtime by `ExtensionManager`.
+- **Comprehensive Test Coverage**: Added 5 dedicated unit tests verifying extension metadata, syntax definition compilation, completion suggestions, and toolchain checks (bringing total test suite to 32 tests, all passing).
+
+---
+
 ## [1.0.0] - 2026-09-08
 
 ### 🌟 Initial Official Release

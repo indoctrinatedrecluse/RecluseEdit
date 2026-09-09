@@ -3,6 +3,7 @@ using RecluseEdit.Extensions.Angular;
 using RecluseEdit.Extensions.Flutter;
 using RecluseEdit.Extensions.Php;
 using RecluseEdit.Extensions.React;
+using RecluseEdit.Extensions.Ruby;
 
 namespace RecluseEdit.Tests;
 
@@ -23,9 +24,10 @@ public class ExtensionManagerIntegrationTests
         await extensionManager.LoadExtensionAsync(new AngularExtension());
         await extensionManager.LoadExtensionAsync(new FlutterExtension());
         await extensionManager.LoadExtensionAsync(new PhpExtension());
+        await extensionManager.LoadExtensionAsync(new RubyExtension());
 
-        // Verify loaded count (4 external)
-        Assert.HasCount(4, extensionManager.LoadedExtensions);
+        // Verify loaded count (5 external)
+        Assert.HasCount(5, extensionManager.LoadedExtensions);
 
         // Verify languages registered
         var languages = syntaxManager.SupportedLanguages;
@@ -35,6 +37,8 @@ public class ExtensionManagerIntegrationTests
         Assert.IsTrue(languages.Any(l => l.Id == "angular-ts"));
         Assert.IsTrue(languages.Any(l => l.Id == "dart"));
         Assert.IsTrue(languages.Any(l => l.Id == "php"));
+        Assert.IsTrue(languages.Any(l => l.Id == "ruby"));
+        Assert.IsTrue(languages.Any(l => l.Id == "erb"));
 
         // Verify toolchains registered
         var checks = toolchainManager.RegisteredChecks;
@@ -46,12 +50,17 @@ public class ExtensionManagerIntegrationTests
         Assert.IsTrue(checks.Any(c => c.Command == "dart"));
         Assert.IsTrue(checks.Any(c => c.Command == "php"));
         Assert.IsTrue(checks.Any(c => c.Command == "composer"));
+        Assert.IsTrue(checks.Any(c => c.Command == "ruby"));
+        Assert.IsTrue(checks.Any(c => c.Command == "bundle"));
+        Assert.IsTrue(checks.Any(c => c.Command == "rails"));
 
         // Verify completions available across all languages
         Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "react.inline.completion"));
         Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "angular.inline.completion"));
         Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "flutter.inline.completion"));
         Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "php.inline.completion"));
+        Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "ruby.inline.completion"));
+        Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "rails.inline.completion"));
     }
 
     [TestMethod]
@@ -64,11 +73,14 @@ public class ExtensionManagerIntegrationTests
         toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Flutter.Toolchains.DartToolchainCheck());
         toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Php.Toolchains.PhpToolchainCheck());
         toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Php.Toolchains.ComposerToolchainCheck());
+        toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Ruby.Toolchains.RubyToolchainCheck());
+        toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Ruby.Toolchains.BundlerToolchainCheck());
+        toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Ruby.Toolchains.RailsToolchainCheck());
 
         await toolchainManager.RunAllChecksAsync();
         var reports = toolchainManager.Reports;
 
-        Assert.HasCount(5, reports);
+        Assert.HasCount(8, reports);
         foreach (var report in reports)
         {
             Assert.IsFalse(string.IsNullOrWhiteSpace(report.ToolName));
