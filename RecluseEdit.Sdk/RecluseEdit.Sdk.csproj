@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>RecluseEdit.Sdk</RootNamespace>
     <AssemblyName>RecluseEdit.Sdk</AssemblyName>
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>

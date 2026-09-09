@@ -14,7 +14,10 @@ public interface IExtensionHost
     void RegisterIntelliSense(IIntelliSenseProvider provider);
     void RegisterToolchainCheck(IToolchainCheck toolchainCheck);
     void RegisterSyntaxHighlighting(string languageId, IHighlightingDefinition definition);
+    void RegisterSidePanel(ISidePanelProvider panelProvider) {}
     IReadOnlyList<LanguageDefinition> GetRegisteredLanguages();
+    IReadOnlyList<ISidePanelProvider> RegisteredSidePanels => [];
+    IWorkspaceContext WorkspaceContext => null!;
     void Log(string message);
 }
 

@@ -16,23 +16,30 @@ public class ExtensionManager : IExtensionHost
     private readonly SyntaxManager _syntaxManager;
     private readonly AutocompleteManager _autocompleteManager;
     private readonly ToolchainManager _toolchainManager;
+    private readonly IWorkspaceContext _workspaceContext;
     private readonly List<IExtension> _loadedExtensions = [];
+    private readonly List<ISidePanelProvider> _sidePanels = [];
     private readonly List<string> _logs = [];
 
     public IReadOnlyList<IExtension> LoadedExtensions => _loadedExtensions.AsReadOnly();
+    public IReadOnlyList<ISidePanelProvider> RegisteredSidePanels => _sidePanels.AsReadOnly();
+    public IWorkspaceContext WorkspaceContext => _workspaceContext;
     public IReadOnlyList<string> Logs => _logs.AsReadOnly();
     public ToolchainManager ToolchainManager => _toolchainManager;
 
     public event Action? ExtensionsChanged;
+    public event Action<ISidePanelProvider>? SidePanelRegistered;
 
     public ExtensionManager(
         SyntaxManager syntaxManager,
         AutocompleteManager autocompleteManager,
-        ToolchainManager toolchainManager)
+        ToolchainManager toolchainManager,
+        IWorkspaceContext? workspaceContext = null)
     {
         _syntaxManager = syntaxManager;
         _autocompleteManager = autocompleteManager;
         _toolchainManager = toolchainManager;
+        _workspaceContext = workspaceContext ?? new WorkspaceContext(new WorkspaceManager(), new DocumentManager(syntaxManager));
     }
 
     public async Task InitializeAsync()
@@ -149,6 +156,16 @@ public class ExtensionManager : IExtensionHost
     {
         _syntaxManager.RegisterSyntaxDefinition(languageId, definition);
         Log($"Registered syntax highlighting for language '{languageId}'");
+    }
+
+    public void RegisterSidePanel(ISidePanelProvider panelProvider)
+    {
+        if (!_sidePanels.Any(p => p.Id == panelProvider.Id))
+        {
+            _sidePanels.Add(panelProvider);
+            Log($"Registered side panel '{panelProvider.Title}' ({panelProvider.Id})");
+            SidePanelRegistered?.Invoke(panelProvider);
+        }
     }
 
     public IReadOnlyList<LanguageDefinition> GetRegisteredLanguages()

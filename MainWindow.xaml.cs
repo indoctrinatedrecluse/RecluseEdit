@@ -7,6 +7,7 @@ using System.Windows.Input;
 using Microsoft.Win32;
 using RecluseEdit.Core.Models;
 using RecluseEdit.Core.Services;
+using RecluseEdit.Sdk;
 using RecluseEdit.Sdk.Models;
 using RecluseEdit.UI.Views;
 
@@ -24,6 +25,7 @@ public partial class MainWindow : Window
     public static readonly RoutedUICommand SaveAsFileCommand = new("Save As File", "SaveAsFile", typeof(MainWindow));
     public static readonly RoutedUICommand CloseFileCommand = new("Close File", "CloseFile", typeof(MainWindow));
     public static readonly RoutedUICommand ToggleSidebarCommand = new("Toggle Sidebar", "ToggleSidebar", typeof(MainWindow));
+    public static readonly RoutedUICommand ToggleAiChatCommand = new("Toggle AI Chat", "ToggleAiChat", typeof(MainWindow));
     public static readonly RoutedUICommand FindCommand = new("Find", "Find", typeof(MainWindow));
     public static readonly RoutedUICommand ReplaceCommand = new("Replace", "Replace", typeof(MainWindow));
 
@@ -35,6 +37,7 @@ public partial class MainWindow : Window
     private readonly WorkspaceManager _workspaceManager;
 
     private GridLength _lastSidebarWidth = new(240);
+    private GridLength _lastRightPaneWidth = new(380);
 
     public MainWindow()
     {
@@ -43,9 +46,10 @@ public partial class MainWindow : Window
         _syntaxManager = new SyntaxManager();
         _autocompleteManager = new AutocompleteManager();
         _toolchainManager = new ToolchainManager();
-        _extensionManager = new ExtensionManager(_syntaxManager, _autocompleteManager, _toolchainManager);
-        _documentManager = new DocumentManager(_syntaxManager);
         _workspaceManager = new WorkspaceManager();
+        _documentManager = new DocumentManager(_syntaxManager);
+        var workspaceContext = new WorkspaceContext(_workspaceManager, _documentManager);
+        _extensionManager = new ExtensionManager(_syntaxManager, _autocompleteManager, _toolchainManager, workspaceContext);
 
         EditorHost.SyntaxManager = _syntaxManager;
         EditorHost.AutocompleteManager = _autocompleteManager;
@@ -58,6 +62,7 @@ public partial class MainWindow : Window
         CommandBindings.Add(new CommandBinding(SaveAsFileCommand, (_, _) => SaveActiveFileAs()));
         CommandBindings.Add(new CommandBinding(CloseFileCommand, (_, _) => CloseActiveFile()));
         CommandBindings.Add(new CommandBinding(ToggleSidebarCommand, (_, _) => ToggleSidebar()));
+        CommandBindings.Add(new CommandBinding(ToggleAiChatCommand, (_, _) => ToggleRightPane()));
         CommandBindings.Add(new CommandBinding(FindCommand, (_, _) => EditorHost.OpenFind()));
         CommandBindings.Add(new CommandBinding(ReplaceCommand, (_, _) => EditorHost.OpenReplace()));
 
@@ -71,7 +76,13 @@ public partial class MainWindow : Window
         TabItemsControl.ItemsSource = _documentManager.Documents;
         CmbLanguage.ItemsSource = _syntaxManager.SupportedLanguages;
 
-        // Initialize extensions
+        // Initialize extensions and side panels
+        _extensionManager.SidePanelRegistered += OnSidePanelRegistered;
+        foreach (var panel in _extensionManager.RegisteredSidePanels)
+        {
+            OnSidePanelRegistered(panel);
+        }
+
         _ = _extensionManager.InitializeAsync();
         _extensionManager.ExtensionsChanged += UpdateExtensionsStatus;
         _toolchainManager.ToolchainStatusChanged += UpdateExtensionsStatus;
@@ -182,6 +193,49 @@ public partial class MainWindow : Window
     }
 
     private void OnToggleSidebarClick(object sender, RoutedEventArgs e) => ToggleSidebar();
+
+    public void ToggleRightPane()
+    {
+        if (ColRightPane.Width.Value > 0)
+        {
+            _lastRightPaneWidth = ColRightPane.Width;
+            ColRightPane.MinWidth = 0;
+            ColRightPane.Width = new GridLength(0);
+            RightSplitter.Visibility = Visibility.Collapsed;
+            RightPaneBorder.Visibility = Visibility.Collapsed;
+            MenuRightPane.IsChecked = false;
+            BtnToggleAiChat.IsChecked = false;
+        }
+        else
+        {
+            ColRightPane.MinWidth = 260;
+            ColRightPane.Width = _lastRightPaneWidth.Value > 100 ? _lastRightPaneWidth : new GridLength(380);
+            RightSplitter.Visibility = Visibility.Visible;
+            RightPaneBorder.Visibility = Visibility.Visible;
+            MenuRightPane.IsChecked = true;
+            BtnToggleAiChat.IsChecked = true;
+        }
+    }
+
+    private void OnToggleAiChatClick(object sender, RoutedEventArgs e) => ToggleRightPane();
+
+    private void OnCloseRightPaneClick(object sender, RoutedEventArgs e)
+    {
+        if (ColRightPane.Width.Value > 0)
+        {
+            ToggleRightPane();
+        }
+    }
+
+    private void OnSidePanelRegistered(ISidePanelProvider panel)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            TxtRightPaneTitle.Text = panel.Title.ToUpperInvariant();
+            TxtRightPaneIcon.Text = panel.Icon ?? "🤖";
+            RightPaneHost.Content = panel.CreateView(_extensionManager.WorkspaceContext);
+        });
+    }
 
     #endregion
 

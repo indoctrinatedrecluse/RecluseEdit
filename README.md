@@ -13,6 +13,7 @@
 ## 🎯 Key Objectives & Features
 
 - 🗂️ **Web Workspace Explorer**: Open entire project directories (`Ctrl+Shift+O`), browse files via a collapsible tree sidebar (`Ctrl+B`), and double-click to open.
+- 🤖 **DeepSeek AI Chat Assistant**: Collapsible right-pane conversational AI panel (<kbd>Ctrl+Alt+A</kbd>) with real-time streaming, configurable API endpoints & keys, secure file read/write permissions, and interactive confirmation prompts before running terminal commands.
 - 📑 **Multi-File Tabbed Workspace**: Seamlessly open, edit, and switch between multiple tabs. Middle-click tab to close, and right-click for tab context actions (*Close Others*, *Close to Right*, *Copy Path*, *Reveal in Explorer*).
 - 🎨 **Exhaustive High-Fidelity Syntax Highlighting**: Custom, dedicated XSHD syntax definitions across all supported languages (Markdown, modern ECMAScript/TypeScript with template literals and control flow, CSS3/SCSS/LESS with CSS variables and pseudo-classes, PHP 8+ with attributes and match expressions, React JSX/TSX, GraphQL, Angular HTML templates, Angular TypeScript, Dart 3, Ruby on Rails, JSON, and XML/XAML), beautifully tuned with a rich VS Code Dark+ color palette.
 - ⚡ **Dual Autocomplete System**:
@@ -22,7 +23,7 @@
 - 🔍 **Built-In Find & Replace Overlay**: Floating top-right search panel with Next (<kbd>Enter</kbd>), Previous (<kbd>Shift+Enter</kbd>), Match Case, and Replace All (<kbd>Ctrl+F</kbd>, <kbd>Ctrl+H</kbd>).
 - 📐 **Code Folding & Live Bracket Matching**: Expand/collapse blocks and sections for HTML/XML and live accent border highlighting for matching pairs of `()`, `[]`, and `{}` as the caret moves.
 - 🔢 **Visual Line Numbers & Formatting**: Customizable line-number gutter, word wrapping toggle, and font scaling with <kbd>Ctrl</kbd> + <kbd>MouseWheel</kbd>.
-- 🔌 **Pluggable Extension Architecture**: Dynamic plugin discovery from the `Extensions/` directory with separate project build targets and a dedicated UI manager (`Extensions -> Manage Extensions...`).
+- 🔌 **Pluggable Extension Architecture**: Dynamic plugin discovery from the `Extensions/` directory with separate project build targets, side panel UI integration, and a dedicated UI manager (`Extensions -> Manage Extensions...`).
 - 🌙 **Modern Dark UI**: VS Code-inspired sleek dark theme (`#1E1E1E`), complete with menu bar, quick-action toolbar, and informative status bar.
 
 ---
@@ -38,6 +39,7 @@
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | Save As |
 | <kbd>Ctrl</kbd> + <kbd>W</kbd> | Close Active Tab |
 | <kbd>Ctrl</kbd> + <kbd>B</kbd> | Toggle Workspace Explorer Sidebar |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>A</kbd> | Toggle DeepSeek AI Chat Right Pane |
 | <kbd>Ctrl</kbd> + <kbd>F</kbd> | Find in Document |
 | <kbd>Ctrl</kbd> + <kbd>H</kbd> | Find & Replace in Document |
 | <kbd>Ctrl</kbd> + <kbd>Space</kbd> | Trigger IntelliSense Completion Popup |
@@ -167,7 +169,20 @@ RecluseEdit features a modular, decoupled extension architecture. Each extension
 
 ## 📦 Official Extensions (Separate Build Targets)
 
-RecluseEdit comes with eight modular language extensions built as dedicated targets in `RecluseEdit.slnx`:
+RecluseEdit comes with nine modular extensions built as dedicated targets in `RecluseEdit.slnx`:
+
+### 🤖 DeepSeek AI Chat Assistant Pack (`RecluseEdit.Extensions.DeepSeek`)
+- **Right Pane AI Interface**: Integrated collapsible right-side dock (<kbd>Ctrl+Alt+A</kbd>) styled seamlessly in dark theme, with live conversation history, auto-scroll, message bubbles, and status updates.
+- **Configurable Endpoint & API Key**: User-configurable API Endpoint URL (defaulting to `https://api.deepseek.com/chat/completions` or custom local OpenAI/Ollama-compatible services) and API secret, with settings persisted to `%APPDATA%\RecluseEdit\deepseek_settings.json`.
+- **Live Token Streaming**: Server-Sent Events (SSE) streaming engine delivering instantaneous token-by-token responses.
+- **Autonomous Tool Calling**:
+  - `read_file`: Reads full text contents of workspace files to analyze code context.
+  - `write_file`: Directly creates or modifies files in the project workspace with automatic tab buffer synchronization.
+  - `list_files`: Traverses and enumerates directory trees within the workspace.
+  - `execute_command`: Spawns terminal commands with workspace working directories.
+- **Interactive Security Confirmation Dialog**: DeepSeek will never execute shell commands silently; users are explicitly prompted with interactive confirmation dialogs to approve or deny terminal execution.
+- **Active Document Context**: One-click checkbox to attach the active editor tab's file path and code content to the prompt.
+- **Extensible Side Panel SDK**: Leverages `ISidePanelProvider` and `IWorkspaceContext` in `RecluseEdit.Sdk`.
 
 ### 🐹 Go Backend & Language Pack (`RecluseEdit.Extensions.Go`)
 - Supports **Go** (`.go`), **Go Modules & Workspaces** (`go.mod`, `go.work`, `go.sum`), and **Go Templates** (`.gotmpl`, `.gohtml`).
@@ -236,7 +251,7 @@ RecluseEdit includes a fully automated GitHub Actions workflow (`.github/workflo
 - 🧪 **Full Verification**: Executes the complete test suite (`dotnet test RecluseEdit.slnx -c Release`) across all projects before packaging.
 - 📦 **Bundle & Package**:
   - Compiles the host editor and all extensions in `Release` configuration.
-  - Bundles the main application executable, dependencies, and all eight language extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`, `Go`) under `Extensions/`.
+  - Bundles the main application executable, dependencies, and all nine extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`, `Go`, and `DeepSeek`) under `Extensions/`.
   - Packages the entire distribution into a portable archive: `RecluseEdit-windows-<tag>.zip`.
 - 🚀 **GitHub Release**: Automatically creates a new GitHub Release with the bundled `.zip` asset attached and generates release notes.
 - 🕹️ **Manual Trigger**: Can also be executed manually via the **Actions** tab with custom version tags (`workflow_dispatch`).

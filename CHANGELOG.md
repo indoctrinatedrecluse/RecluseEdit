@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### ✨ Added Features
+
+#### 🤖 DeepSeek AI Chat Assistant Extension (`RecluseEdit.Extensions.DeepSeek`)
+- **Right Pane AI Interface**: Dedicated, collapsible right pane in the main editor window with full Dark+ styling, keyboard shortcut (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>A</kbd>), View menu toggle, and quick toolbar button (`🤖 AI Chat`).
+- **Configurable API Endpoint & Key**: Built-in configuration drawer allowing users to customize the API Endpoint URL (defaulting to `https://api.deepseek.com/chat/completions` or local Ollama/OpenAI-compatible models) and API key/secret, stored securely in `%APPDATA%\RecluseEdit\deepseek_settings.json`.
+- **Streaming Responses**: Live Server-Sent Events (SSE) token streaming for real-time assistant responses.
+- **Autonomous Tool Calling**:
+  - `read_file`: Reads text contents of workspace files for contextual understanding.
+  - `write_file`: Directly creates or updates files in the project workspace with editor tab sync.
+  - `list_files`: Explores and lists project directory structures.
+  - `execute_command`: Executes terminal commands in the workspace.
+- **Interactive Security Confirmation Dialog**: Every shell command invocation requires explicit interactive user confirmation (`[Yes]` / `[No]` prompt dialog) before any process is executed, ensuring complete user control and safety.
+- **Active File Context**: One-click attachment of the currently active document's path and buffer contents into the prompt.
+- **Side Panel SDK Extension (`ISidePanelProvider`)**: Extensible side panel architecture in `RecluseEdit.Sdk` and `ExtensionManager` enabling any extension to mount custom UI views into editor panels.
+- **Automated Tests**: Added comprehensive unit and integration tests expanding the test suite to **70 passing tests** across 12 projects.
+
+---
+
 ## [1.2.0] - 2026-09-09
 
 ### ✨ Added Features

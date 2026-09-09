@@ -24,6 +24,7 @@
         <KeyBinding Modifiers="Control" Key="B" Command="{x:Static local:MainWindow.ToggleSidebarCommand}" />
         <KeyBinding Modifiers="Control" Key="F" Command="{x:Static local:MainWindow.FindCommand}" />
         <KeyBinding Modifiers="Control" Key="H" Command="{x:Static local:MainWindow.ReplaceCommand}" />
+        <KeyBinding Modifiers="Control+Alt" Key="A" Command="{x:Static local:MainWindow.ToggleAiChatCommand}" />
     </Window.InputBindings>
 
     <Grid>
@@ -65,6 +66,7 @@
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem x:Name="MenuSidebar" Header="Toggle _Sidebar" InputGestureText="Ctrl+B" IsCheckable="True" IsChecked="True" Click="OnToggleSidebarClick" />
+                <MenuItem x:Name="MenuRightPane" Header="Toggle _AI Chat" InputGestureText="Ctrl+Alt+A" IsCheckable="True" IsChecked="True" Click="OnToggleAiChatClick" />
                 <MenuItem x:Name="MenuWordWrap" Header="Word _Wrap" IsCheckable="True" Click="OnToggleWordWrapClick" />
                 <MenuItem x:Name="MenuLineNumbers" Header="_Line Numbers" IsCheckable="True" IsChecked="True" Click="OnToggleLineNumbersClick" />
             </MenuItem>
@@ -129,6 +131,15 @@
                                          Padding="8,4" Margin="2,1"
                                          FontSize="12"
                                          Click="OnToolbarLineNumbersClick" />
+
+                <Primitives:ToggleButton xmlns:Primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
+                                         x:Name="BtnToggleAiChat" 
+                                         Content="🤖 AI Chat" 
+                                         IsChecked="True"
+                                         ToolTip="Toggle DeepSeek AI Chat (Ctrl+Alt+A)"
+                                         Padding="8,4" Margin="2,1"
+                                         FontSize="12"
+                                         Click="OnToggleAiChatClick" />
 
                 <Rectangle Width="1" Fill="{StaticResource BorderDark}" Margin="6,2" />
 
@@ -212,6 +223,8 @@
                 <ColumnDefinition x:Name="ColSidebar" Width="240" MinWidth="140" />
                 <ColumnDefinition x:Name="ColSplitter" Width="Auto" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="ColRightSplitter" Width="Auto" />
+                <ColumnDefinition x:Name="ColRightPane" Width="380" MinWidth="260" />
             </Grid.ColumnDefinitions>
 
             <!-- Left: Workspace Explorer Sidebar -->
@@ -295,6 +308,45 @@
                     </StackPanel>
                 </Border>
             </Grid>
+
+            <!-- Splitter between Editor & Right Pane -->
+            <GridSplitter x:Name="RightSplitter" Grid.Column="3" Style="{StaticResource VerticalSplitterStyle}" />
+
+            <!-- Right: AI Chat / Side Panel Host -->
+            <Border x:Name="RightPaneBorder" Grid.Column="4" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1,0,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Right Pane Header -->
+                    <Border Grid.Row="0" Background="{StaticResource BgTertiary}" Padding="10,6" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtRightPaneIcon" Text="🤖" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                <TextBlock x:Name="TxtRightPaneTitle" Text="AI CHAT" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource FgSecondary}" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Style="{StaticResource ToolbarButtonStyle}" Content="✕" Width="22" Height="22" Padding="0" ToolTip="Close Panel (Ctrl+Alt+A)" Click="OnCloseRightPaneClick" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Host for active side panel view -->
+                    <ContentControl x:Name="RightPaneHost" Grid.Row="1">
+                        <Border Padding="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="🤖" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,12" />
+                                <TextBlock Text="DeepSeek AI Assistant" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource FgPrimary}" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                                <TextBlock Text="Initializing AI Extension..." FontSize="12" Foreground="{StaticResource FgMuted}" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </ContentControl>
+                </Grid>
+            </Border>
         </Grid>
 
         <!-- 4. Bottom Status Bar -->

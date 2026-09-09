@@ -9,5 +9,6 @@
   <Project Path="extensions/RecluseEdit.Extensions.Python/RecluseEdit.Extensions.Python.csproj" />
   <Project Path="extensions/RecluseEdit.Extensions.Laravel/RecluseEdit.Extensions.Laravel.csproj" />
   <Project Path="extensions/RecluseEdit.Extensions.Go/RecluseEdit.Extensions.Go.csproj" />
+  <Project Path="extensions/RecluseEdit.Extensions.DeepSeek/RecluseEdit.Extensions.DeepSeek.csproj" />
   <Project Path="tests/RecluseEdit.Tests/RecluseEdit.Tests.csproj" />
 </Solution>
