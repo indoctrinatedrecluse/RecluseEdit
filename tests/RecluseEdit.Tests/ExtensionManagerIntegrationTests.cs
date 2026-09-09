@@ -1,6 +1,7 @@
 using RecluseEdit.Core.Services;
 using RecluseEdit.Extensions.Angular;
 using RecluseEdit.Extensions.Flutter;
+using RecluseEdit.Extensions.Go;
 using RecluseEdit.Extensions.Laravel;
 using RecluseEdit.Extensions.Php;
 using RecluseEdit.Extensions.Python;
@@ -21,7 +22,7 @@ public class ExtensionManagerIntegrationTests
 
         var extensionManager = new ExtensionManager(syntaxManager, autocompleteManager, toolchainManager);
 
-        // Load all 7 official extensions
+        // Load all 8 official extensions
         await extensionManager.LoadExtensionAsync(new ReactExtension());
         await extensionManager.LoadExtensionAsync(new AngularExtension());
         await extensionManager.LoadExtensionAsync(new FlutterExtension());
@@ -29,9 +30,10 @@ public class ExtensionManagerIntegrationTests
         await extensionManager.LoadExtensionAsync(new RubyExtension());
         await extensionManager.LoadExtensionAsync(new PythonExtension());
         await extensionManager.LoadExtensionAsync(new LaravelExtension());
+        await extensionManager.LoadExtensionAsync(new GoExtension());
 
-        // Verify loaded count (7 external)
-        Assert.HasCount(7, extensionManager.LoadedExtensions);
+        // Verify loaded count (8 external)
+        Assert.HasCount(8, extensionManager.LoadedExtensions);
 
         // Verify languages registered
         var languages = syntaxManager.SupportedLanguages;
@@ -47,6 +49,9 @@ public class ExtensionManagerIntegrationTests
         Assert.IsTrue(languages.Any(l => l.Id == "jinja"));
         Assert.IsTrue(languages.Any(l => l.Id == "blade"));
         Assert.IsTrue(languages.Any(l => l.Id == "laravel"));
+        Assert.IsTrue(languages.Any(l => l.Id == "go"));
+        Assert.IsTrue(languages.Any(l => l.Id == "gomod"));
+        Assert.IsTrue(languages.Any(l => l.Id == "gotemplate"));
 
         // Verify toolchains registered
         var checks = toolchainManager.RegisteredChecks;
@@ -66,6 +71,8 @@ public class ExtensionManagerIntegrationTests
         Assert.IsTrue(checks.Any(c => c.Command == "django-admin"));
         Assert.IsTrue(checks.Any(c => c.Command == "laravel"));
         Assert.IsTrue(checks.Any(c => c.Command == "php artisan"));
+        Assert.IsTrue(checks.Any(c => c.Command == "go"));
+        Assert.IsTrue(checks.Any(c => c.Command == "golangci-lint"));
 
         // Verify completions available across all languages
         Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "react.inline.completion"));
@@ -81,6 +88,9 @@ public class ExtensionManagerIntegrationTests
         Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "laravel.blade.completion"));
         Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "laravel.eloquent.completion"));
         Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "laravel.routes.completion"));
+        Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "go.core.completion"));
+        Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "go.backend.completion"));
+        Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "go.mod.completion"));
     }
 
     [TestMethod]
@@ -101,11 +111,13 @@ public class ExtensionManagerIntegrationTests
         toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Python.Toolchains.DjangoToolchainCheck());
         toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Laravel.Toolchains.LaravelCliToolchainCheck());
         toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Laravel.Toolchains.ArtisanToolchainCheck());
+        toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Go.Toolchains.GoCompilerToolchainCheck());
+        toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Go.Toolchains.GolangciLintToolchainCheck());
 
         await toolchainManager.RunAllChecksAsync();
         var reports = toolchainManager.Reports;
 
-        Assert.HasCount(13, reports);
+        Assert.HasCount(15, reports);
         foreach (var report in reports)
         {
             Assert.IsFalse(string.IsNullOrWhiteSpace(report.ToolName));

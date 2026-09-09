@@ -167,7 +167,15 @@ RecluseEdit features a modular, decoupled extension architecture. Each extension
 
 ## 📦 Official Extensions (Separate Build Targets)
 
-RecluseEdit comes with seven modular language extensions built as dedicated targets in `RecluseEdit.slnx`:
+RecluseEdit comes with eight modular language extensions built as dedicated targets in `RecluseEdit.slnx`:
+
+### 🐹 Go Backend & Language Pack (`RecluseEdit.Extensions.Go`)
+- Supports **Go** (`.go`), **Go Modules & Workspaces** (`go.mod`, `go.work`, `go.sum`), and **Go Templates** (`.gotmpl`, `.gohtml`).
+- **Custom Go 1.23+ XSHD Syntax Highlighting**: Custom grammar for keywords, control flow (`select`, `defer`, `go`), built-in types (`any`, `comparable`, `rune`, `byte`), built-in functions (`make`, `new`, `len`, `append`, `clear`), raw backtick strings (`` `...` ``), runes (`'...'`), operators (`:=`, `<-`), and struct tag highlighting (`json:"..."`, `db:"..."`, `binding:"..."`).
+- **Custom Go Module Grammar**: Dedicated XSHD highlighting for `go.mod` and `go.work` directives (`module`, `go`, `toolchain`, `require`, `replace`, `exclude`, `use`), versions (`v1.2.3`), and package paths.
+- **Go Core Idioms & Concurrency**: Inline completions for entrypoints (`package main`, `func main()`), error handling (`if err != nil`), goroutines (`go func() { ... }()`), channels (`ch := make(chan string)`), `select` blocks, `sync.WaitGroup`, `sync.RWMutex`, context timeouts (`context.WithTimeout`), and structs/interfaces.
+- **Go Backend Web Frameworks & ORM**: Snippets for **Gin** (`r := gin.Default()`, `r.GET`, `r.POST`, `c.ShouldBindJSON`, `c.JSON`), **Fiber** (`app := fiber.New()`, `c.BodyParser`), **Chi Router** (`r := chi.NewRouter()`, `r.Use`), **Echo** (`e := echo.New()`), **standard net/http** (`http.HandleFunc`, `http.ListenAndServe`, `json.NewDecoder`, `json.NewEncoder`), **GORM** (`gorm.Open`, `db.AutoMigrate`, `db.Where`, `db.Create`), and `database/sql` (`db.QueryContext`, `db.BeginTx`).
+- **Toolchain Diagnostics**: Active diagnostics for the **Go compiler** (`go version`) detecting version and target platform, and **golangci-lint** (`golangci-lint --version`) with installation guidance.
 
 ### 🔴 Laravel Framework & Blade Pack (`RecluseEdit.Extensions.Laravel`)
 - Supports **Laravel Blade Templates** (`.blade.php`) and Artisan scripts (`artisan`).
@@ -228,7 +236,7 @@ RecluseEdit includes a fully automated GitHub Actions workflow (`.github/workflo
 - 🧪 **Full Verification**: Executes the complete test suite (`dotnet test RecluseEdit.slnx -c Release`) across all projects before packaging.
 - 📦 **Bundle & Package**:
   - Compiles the host editor and all extensions in `Release` configuration.
-  - Bundles the main application executable, dependencies, and all seven language extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`) under `Extensions/`.
+  - Bundles the main application executable, dependencies, and all eight language extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`, `Go`) under `Extensions/`.
   - Packages the entire distribution into a portable archive: `RecluseEdit-windows-<tag>.zip`.
 - 🚀 **GitHub Release**: Automatically creates a new GitHub Release with the bundled `.zip` asset attached and generates release notes.
 - 🕹️ **Manual Trigger**: Can also be executed manually via the **Actions** tab with custom version tags (`workflow_dispatch`).

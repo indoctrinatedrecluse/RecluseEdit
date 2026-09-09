@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ✨ Added Features
 
+#### 🐹 Go Backend & Language Pack Extension (`RecluseEdit.Extensions.Go`)
+- **First-Class Go & Module Support**: File associations for `.go`, `go.mod`, `go.work`, `go.sum`, `.gotmpl`, and `.gohtml`.
+- **Custom XSHD Go Syntax Definition**: Dedicated syntax highlighting for Go 1.23+ language constructs including keywords, control flow (`select`, `defer`, `go`), built-in types (`any`, `comparable`, `rune`, `byte`, integers, floats), built-in functions (`make`, `new`, `len`, `append`, `clear`), raw backtick strings (`` `...` ``) with nested struct tag colorization (`json:"..."`, `db:"..."`, `binding:"..."`), runes (`'...'`), and operators (`:=`, `<-`, `...`).
+- **Custom XSHD Go Module Syntax Definition**: Highlighting for `go.mod` and `go.work` files covering directives (`module`, `go`, `toolchain`, `require`, `replace`, `exclude`, `use`), version tags (`v1.2.3`), and package paths.
+- **Go Core Idioms & Concurrency Completions**: Inline suggestions for entrypoints (`package main`, `func main()`), error handling (`if err != nil`, sentinel errors), goroutines (`go func() { ... }()`), channels, `select` statements, `sync.WaitGroup`, `sync.RWMutex`, context cancellation (`context.WithTimeout`), and structs/interfaces.
+- **Go Backend Web Frameworks & ORM**: Rich snippets for **Gin** (`gin.Default`, `r.GET`, `r.POST`, `c.ShouldBindJSON`, `c.JSON`), **Fiber** (`fiber.New`, `app.Get`, `c.BodyParser`), **Chi Router** (`chi.NewRouter`, `r.Use`), **Echo** (`echo.New`), **standard net/http** (`http.HandleFunc`, `http.ListenAndServe`, `json.NewDecoder`, `json.NewEncoder`), **GORM** (`gorm.Open`, `db.AutoMigrate`, `db.Where`, `db.Create`), and `database/sql` (`db.QueryContext`, `db.BeginTx`).
+- **Toolchain Diagnostics**: Active diagnostics for the **Go compiler** (`go version`) detecting runtime version and target platform, and **golangci-lint** (`golangci-lint --version`) with installation guidance.
+- **Decoupled Architecture**: Built as an independent project target in `RecluseEdit.slnx` outputting directly to `Extensions/Go/` and auto-discovered at runtime.
+- **Automated Tests**: Added dedicated unit tests and expanded suite to **60 passing tests** across 11 projects.
+
 #### 🔴 Laravel Framework & Blade Pack Extension (`RecluseEdit.Extensions.Laravel`)
 - **First-Class Blade Template Support**: File associations for `.blade.php` and Artisan scripts (`artisan`).
 - **Custom XSHD Blade Syntax Definition**: Dedicated syntax highlighting for Blade directives (`@extends`, `@section`, `@yield`, `@if`, `@foreach`, `@forelse`, `@auth`, `@guest`, `@csrf`, `@method`, `@error`, `@livewire`, `@vite`), escaped and unescaped expressions (`{{ $var }}`, `{!! $html !!}`), Blade comments (`{{-- ... --}}`), and embedded HTML markup.
