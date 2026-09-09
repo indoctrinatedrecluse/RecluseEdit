@@ -11,7 +11,26 @@ public class DeepSeekSettings
     [JsonPropertyName("api_endpoint")]
     public string ApiEndpoint { get; set; } = "https://api.deepseek.com/chat/completions";
 
+    /// <summary>
+    /// Encrypted API key/secret stored on disk (using DPAPI / AES).
+    /// </summary>
+    [JsonPropertyName("encrypted_api_key")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? EncryptedApiKey { get; set; }
+
+    /// <summary>
+    /// Legacy plaintext API key from previous versions for automatic one-way migration.
+    /// Excluded from serialization when null.
+    /// </summary>
     [JsonPropertyName("api_key")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? LegacyPlaintextApiKey { get; set; }
+
+    /// <summary>
+    /// In-memory unencrypted API key for runtime use.
+    /// Never serialized to disk in plaintext.
+    /// </summary>
+    [JsonIgnore]
     public string ApiKey { get; set; } = "";
 
     [JsonPropertyName("model")]
@@ -191,3 +210,4 @@ public class UsageInfo
     [JsonPropertyName("total_tokens")]
     public int TotalTokens { get; set; }
 }
+

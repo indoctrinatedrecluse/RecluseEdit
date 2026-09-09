@@ -16,3 +16,4 @@ public interface ISidePanelProvider
     /// </summary>
     FrameworkElement CreateView(IWorkspaceContext workspaceContext);
 }
+

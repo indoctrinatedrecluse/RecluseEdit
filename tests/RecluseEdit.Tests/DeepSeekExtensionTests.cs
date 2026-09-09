@@ -133,18 +133,24 @@ public class DeepSeekExtensionTests
             Assert.AreEqual("https://api.deepseek.com/chat/completions", svc.CurrentSettings.ApiEndpoint);
             Assert.AreEqual("deepseek-chat", svc.CurrentSettings.Model);
 
+            var secretKey = "sk-deepseek-test-secret-999888777";
             svc.SaveSettings(new DeepSeekSettings
             {
                 ApiEndpoint = "https://custom.ai/v1",
-                ApiKey = "sk-test-12345",
+                ApiKey = secretKey,
                 Model = "deepseek-coder",
                 Temperature = 0.5
             });
 
-            // Reload from same file
+            // 1. Verify file on disk is ENCRYPTED and contains no plaintext secret
+            var fileContent = File.ReadAllText(tempFile);
+            StringAssert.Contains(fileContent, "encrypted_api_key");
+            Assert.DoesNotContain(secretKey, fileContent, "Disk file must never contain plaintext secret API key!");
+
+            // 2. Reload from same file and verify decryption works
             var svcReloaded = new DeepSeekSettingsService(tempFile);
             Assert.AreEqual("https://custom.ai/v1", svcReloaded.CurrentSettings.ApiEndpoint);
-            Assert.AreEqual("sk-test-12345", svcReloaded.CurrentSettings.ApiKey);
+            Assert.AreEqual(secretKey, svcReloaded.CurrentSettings.ApiKey);
             Assert.AreEqual("deepseek-coder", svcReloaded.CurrentSettings.Model);
             Assert.AreEqual(0.5, svcReloaded.CurrentSettings.Temperature);
         }
@@ -152,6 +158,45 @@ public class DeepSeekExtensionTests
         {
             if (File.Exists(tempFile)) File.Delete(tempFile);
         }
+    }
+
+    [TestMethod]
+    public void TestLegacyPlaintextMigration()
+    {
+        var tempFile = Path.Combine(Path.GetTempPath(), $"deepseek_legacy_{Guid.NewGuid():N}.json");
+        try
+        {
+            // Seed a legacy unencrypted file
+            var legacyPlainKey = "sk-legacy-unencrypted-key-444333";
+            var rawJson = $"{{\n  \"api_endpoint\": \"https://api.deepseek.com/chat/completions\",\n  \"api_key\": \"{legacyPlainKey}\",\n  \"model\": \"deepseek-chat\"\n}}";
+            File.WriteAllText(tempFile, rawJson);
+
+            // Load via service: should migrate legacy plaintext to encrypted on disk
+            var svc = new DeepSeekSettingsService(tempFile);
+            Assert.AreEqual(legacyPlainKey, svc.CurrentSettings.ApiKey);
+
+            // Verify disk file was migrated: plaintext wiped, encrypted key present
+            var migratedDiskContent = File.ReadAllText(tempFile);
+            StringAssert.Contains(migratedDiskContent, "encrypted_api_key");
+            Assert.DoesNotContain(legacyPlainKey, migratedDiskContent, "Legacy plaintext key must be scrubbed from disk upon migration!");
+        }
+        finally
+        {
+            if (File.Exists(tempFile)) File.Delete(tempFile);
+        }
+    }
+
+    [TestMethod]
+    public void TestDirectSecretEncryptionRoundtrip()
+    {
+        var secret = "sk-test-token-" + Guid.NewGuid().ToString("N");
+        var encrypted = DeepSeekSettingsService.EncryptSecret(secret);
+
+        Assert.AreNotEqual(secret, encrypted);
+        Assert.IsTrue(encrypted.StartsWith("dpapi:") || encrypted.StartsWith("aes:"));
+
+        var decrypted = DeepSeekSettingsService.DecryptSecret(encrypted);
+        Assert.AreEqual(secret, decrypted);
     }
 
     [TestMethod]

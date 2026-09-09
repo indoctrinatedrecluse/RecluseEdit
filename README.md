@@ -173,7 +173,7 @@ RecluseEdit comes with nine modular extensions built as dedicated targets in `Re
 
 ### 🤖 DeepSeek AI Chat Assistant Pack (`RecluseEdit.Extensions.DeepSeek`)
 - **Right Pane AI Interface**: Integrated collapsible right-side dock (<kbd>Ctrl+Alt+A</kbd>) styled seamlessly in dark theme, with live conversation history, auto-scroll, message bubbles, and status updates.
-- **Configurable Endpoint & API Key**: User-configurable API Endpoint URL (defaulting to `https://api.deepseek.com/chat/completions` or custom local OpenAI/Ollama-compatible services) and API secret, with settings persisted to `%APPDATA%\RecluseEdit\deepseek_settings.json`.
+- **Configurable Endpoint & Encrypted API Secret Storage**: User-configurable API Endpoint URL (defaulting to `https://api.deepseek.com/chat/completions` or custom local OpenAI/Ollama-compatible services) and API secret. Secrets are stored strictly in encrypted formats on disk (`%APPDATA%\RecluseEdit\deepseek_settings.json`) using the Windows Data Protection API (DPAPI, `CurrentUser` scope) with an AES fallback; plaintext credentials are never persisted to disk.
 - **Live Token Streaming**: Server-Sent Events (SSE) streaming engine delivering instantaneous token-by-token responses.
 - **Autonomous Tool Calling**:
   - `read_file`: Reads full text contents of workspace files to analyze code context.

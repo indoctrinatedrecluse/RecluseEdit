@@ -205,3 +205,4 @@ public class WorkspaceContext : IWorkspaceContext
         return Path.GetFullPath(Path.Combine(root, path));
     }
 }
+

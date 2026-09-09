@@ -67,3 +67,4 @@ public class CommandExecutionResult
     public bool UserApproved { get; init; } = true;
     public bool Succeeded => UserApproved && ExitCode == 0;
 }
+

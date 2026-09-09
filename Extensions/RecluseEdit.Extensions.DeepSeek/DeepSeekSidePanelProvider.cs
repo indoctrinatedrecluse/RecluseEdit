@@ -15,3 +15,4 @@ public class DeepSeekSidePanelProvider : ISidePanelProvider
         return new DeepSeekChatView(context);
     }
 }
+
