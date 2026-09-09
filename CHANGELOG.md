@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### 🛡️ Resilience & Bug Fixes
+
+#### 🎨 Syntax Highlighting & Editor Error Handling
+- **Graceful Highlighting Fallback**: Files with unrecognized, malformed, or failing syntax definitions now open smoothly as plain text without throwing exceptions or crashing the editor.
+- **Cascading Modal Waterfall Elimination**: Implemented re-entrancy protection and rate-limiting debounce in `App.xaml.cs` to prevent infinite modal message-box storms when unhandled exceptions occur during WPF render/layout passes.
+- **AvalonEdit Regex `#` Escaping**: Fixed a critical issue where AvalonEdit compiles XSHD regexes with `RegexOptions.IgnorePatternWhitespace`, treating unescaped `#` as comments and causing zero-length match infinite-loop exceptions (`InvalidOperationException: A highlighting rule matched 0 characters`). Escaped `#` across Markdown, Modern PHP, Python, Ruby, GraphQL, CSS, and Angular HTML grammars.
+- **Escape Span Modernization**: Replaced zero-length `end=""` string escape spans across all core and extension grammars with standard `<Span begin="\\" end="." />` rules.
+- **Test Suite Expansion**: Added 6 new automated test suites covering markdown documents, JSON documents, PHP hash comments, extension grammars, and graceful fallback behavior, bringing the test suite to **78 passing tests**.
+
+---
+
 ## [1.3.0] - 2026-09-09
 
 ### ✨ Added Features

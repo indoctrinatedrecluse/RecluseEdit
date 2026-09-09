@@ -177,8 +177,7 @@ public class SyntaxManager
                         <Begin>&quot;</Begin>
                         <End>&quot;</End>
                         <RuleSet>
-                            <Span begin="\\&quot;" end="" />
-                            <Span begin="\\\\" end="" />
+                            <Span begin="\\" end="." />
                         </RuleSet>
                     </Span>
                     <Keywords color="Keywords">

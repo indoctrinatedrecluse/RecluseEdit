@@ -45,8 +45,7 @@ public static class CssSyntaxDefinition
                     <Begin>&quot;</Begin>
                     <End>&quot;</End>
                     <RuleSet>
-                        <Span begin="\\&quot;" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                     </RuleSet>
                 </Span>
 
@@ -55,8 +54,7 @@ public static class CssSyntaxDefinition
                     <Begin>'</Begin>
                     <End>'</End>
                     <RuleSet>
-                        <Span begin="\\'" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                     </RuleSet>
                 </Span>
 
@@ -77,12 +75,12 @@ public static class CssSyntaxDefinition
 
                 <!-- Hex Colors (#FFF, #1E1E1E, #333333AA) -->
                 <Rule color="ColorHex">
-                    #(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b
+                    \#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b
                 </Rule>
 
                 <!-- ID Selectors (#my-element) -->
                 <Rule color="SelectorId">
-                    #[a-zA-Z_][a-zA-Z0-9_\-]*
+                    \#[a-zA-Z_][a-zA-Z0-9_\-]*
                 </Rule>
 
                 <!-- Class Selectors (.btn, .active) -->

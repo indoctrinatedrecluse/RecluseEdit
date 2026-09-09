@@ -47,22 +47,22 @@ public static class MarkdownSyntaxDefinition
 
                 <!-- Headings (H1 to H6) -->
                 <Rule color="Heading1">
-                    ^#\s+.*$
+                    ^\#\s+.*$
                 </Rule>
                 <Rule color="Heading2">
-                    ^##\s+.*$
+                    ^\#\#\s+.*$
                 </Rule>
                 <Rule color="Heading3">
-                    ^###\s+.*$
+                    ^\#\#\#\s+.*$
                 </Rule>
                 <Rule color="Heading4">
-                    ^####\s+.*$
+                    ^\#\#\#\#\s+.*$
                 </Rule>
                 <Rule color="Heading5">
-                    ^#####\s+.*$
+                    ^\#\#\#\#\#\s+.*$
                 </Rule>
                 <Rule color="Heading6">
-                    ^######\s+.*$
+                    ^\#\#\#\#\#\#\s+.*$
                 </Rule>
 
                 <!-- Horizontal Rules -->

@@ -27,7 +27,7 @@ public static class GraphQlSyntaxDefinition
             <RuleSet>
                 <!-- Single Line Comment (#) -->
                 <Span color="Comment">
-                    <Begin>#</Begin>
+                    <Begin>\#</Begin>
                 </Span>
 
                 <!-- Block Strings -->
@@ -41,8 +41,7 @@ public static class GraphQlSyntaxDefinition
                     <Begin>&quot;</Begin>
                     <End>&quot;</End>
                     <RuleSet>
-                        <Span begin="\\&quot;" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                     </RuleSet>
                 </Span>
 

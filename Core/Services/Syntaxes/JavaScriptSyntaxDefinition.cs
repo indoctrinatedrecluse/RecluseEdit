@@ -49,8 +49,7 @@ public static class JavaScriptSyntaxDefinition
                     <Begin>`</Begin>
                     <End>`</End>
                     <RuleSet>
-                        <Span begin="\\`" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                         <Span color="Variable" multiline="true">
                             <Begin>\$\{</Begin>
                             <End>\}</End>
@@ -63,8 +62,7 @@ public static class JavaScriptSyntaxDefinition
                     <Begin>&quot;</Begin>
                     <End>&quot;</End>
                     <RuleSet>
-                        <Span begin="\\&quot;" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                     </RuleSet>
                 </Span>
 
@@ -73,8 +71,7 @@ public static class JavaScriptSyntaxDefinition
                     <Begin>'</Begin>
                     <End>'</End>
                     <RuleSet>
-                        <Span begin="\\'" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                     </RuleSet>
                 </Span>
 
@@ -83,8 +80,7 @@ public static class JavaScriptSyntaxDefinition
                     <Begin>(?&lt;=[=(,;:!&amp;|?+\-*/~^%\[]\s*)/(?![/*])</Begin>
                     <End>/[gimsuy]*</End>
                     <RuleSet>
-                        <Span begin="\\/" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                     </RuleSet>
                 </Span>
 

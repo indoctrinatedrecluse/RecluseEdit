@@ -31,7 +31,7 @@ public static class PythonSyntaxDefinition
             <RuleSet>
                 <!-- Single Line Comment (#) -->
                 <Span color="Comment">
-                    <Begin>#</Begin>
+                    <Begin>\#</Begin>
                 </Span>
 
                 <!-- Triple Single-Quoted Multiline Strings ('''...''') -->
@@ -51,8 +51,7 @@ public static class PythonSyntaxDefinition
                     <Begin>[fF]&quot;</Begin>
                     <End>&quot;</End>
                     <RuleSet>
-                        <Span begin="\\&quot;" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                         <Span color="Variable">
                             <Begin>\{</Begin>
                             <End>\}</End>
@@ -63,8 +62,7 @@ public static class PythonSyntaxDefinition
                     <Begin>[fF]'</Begin>
                     <End>'</End>
                     <RuleSet>
-                        <Span begin="\\'" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                         <Span color="Variable">
                             <Begin>\{</Begin>
                             <End>\}</End>
@@ -77,8 +75,7 @@ public static class PythonSyntaxDefinition
                     <Begin>[rRbBuU]?&quot;</Begin>
                     <End>&quot;</End>
                     <RuleSet>
-                        <Span begin="\\&quot;" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                     </RuleSet>
                 </Span>
 
@@ -87,8 +84,7 @@ public static class PythonSyntaxDefinition
                     <Begin>[rRbBuU]?'</Begin>
                     <End>'</End>
                     <RuleSet>
-                        <Span begin="\\'" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                     </RuleSet>
                 </Span>
 

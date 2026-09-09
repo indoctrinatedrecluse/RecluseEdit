@@ -51,8 +51,7 @@ public static class AngularTsSyntaxDefinition
                     <Begin>`</Begin>
                     <End>`</End>
                     <RuleSet>
-                        <Span begin="\\`" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                         <Span color="Variable" multiline="true">
                             <Begin>\$\{</Begin>
                             <End>\}</End>
@@ -65,8 +64,7 @@ public static class AngularTsSyntaxDefinition
                     <Begin>&quot;</Begin>
                     <End>&quot;</End>
                     <RuleSet>
-                        <Span begin="\\&quot;" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                     </RuleSet>
                 </Span>
 
@@ -75,8 +73,7 @@ public static class AngularTsSyntaxDefinition
                     <Begin>'</Begin>
                     <End>'</End>
                     <RuleSet>
-                        <Span begin="\\'" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                     </RuleSet>
                 </Span>
 

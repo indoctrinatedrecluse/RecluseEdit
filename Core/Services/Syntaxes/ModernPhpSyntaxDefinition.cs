@@ -45,12 +45,12 @@ public static class ModernPhpSyntaxDefinition
                     <Begin>//</Begin>
                 </Span>
                 <Span color="Comment">
-                    <Begin>#(?![\[])</Begin>
+                    <Begin>\#(?![\\[])</Begin>
                 </Span>
 
                 <!-- PHP 8 Attributes (#[Attribute]) -->
                 <Span color="Attribute">
-                    <Begin>#\[</Begin>
+                    <Begin>\#\[</Begin>
                     <End>\]</End>
                 </Span>
 
@@ -59,8 +59,7 @@ public static class ModernPhpSyntaxDefinition
                     <Begin>&quot;</Begin>
                     <End>&quot;</End>
                     <RuleSet>
-                        <Span begin="\\&quot;" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                         <Span color="Variable">
                             <Begin>\{?\$</Begin>
                             <End>\}?</End>
@@ -73,8 +72,7 @@ public static class ModernPhpSyntaxDefinition
                     <Begin>'</Begin>
                     <End>'</End>
                     <RuleSet>
-                        <Span begin="\\'" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                     </RuleSet>
                 </Span>
 

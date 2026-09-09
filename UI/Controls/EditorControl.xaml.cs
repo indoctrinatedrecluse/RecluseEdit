@@ -167,7 +167,27 @@ public partial class EditorControl : UserControl
             return;
         }
 
-        Editor.SyntaxHighlighting = SyntaxManager.GetHighlighting(_documentModel.Language);
+        try
+        {
+            var def = SyntaxManager.GetHighlighting(_documentModel.Language);
+            if (def != null && Editor.Document != null && Editor.Document.LineCount > 0)
+            {
+                // Safely pre-test highlighting on the first few lines to ensure definition rules don't throw
+                var testHighlighter = new ICSharpCode.AvalonEdit.Highlighting.DocumentHighlighter(Editor.Document, def);
+                int checkCount = Math.Min(10, Editor.Document.LineCount);
+                for (int i = 1; i <= checkCount; i++)
+                {
+                    testHighlighter.HighlightLine(i);
+                }
+            }
+
+            Editor.SyntaxHighlighting = def;
+        }
+        catch (Exception ex)
+        {
+            Editor.SyntaxHighlighting = null;
+            System.Diagnostics.Debug.WriteLine($"[EditorControl] Failed to apply syntax highlighting: {ex.Message}");
+        }
     }
 
     public void ToggleWordWrap(bool wrap) => Editor.WordWrap = wrap;

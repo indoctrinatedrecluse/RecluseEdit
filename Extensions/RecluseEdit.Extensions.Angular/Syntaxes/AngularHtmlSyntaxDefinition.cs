@@ -93,7 +93,7 @@ public static class AngularHtmlSyntaxDefinition
 
                 <!-- Template Reference Variables (#myInput, #ref) -->
                 <Rule color="TemplateRef">
-                    #[a-zA-Z_][a-zA-Z0-9_\-]*
+                    \#[a-zA-Z_][a-zA-Z0-9_\-]*
                 </Rule>
 
                 <!-- Standard HTML Closing Tags (</tag>) -->

@@ -58,7 +58,7 @@ public static class RubySyntaxDefinition
 
                 <!-- Single Line Comment (#) -->
                 <Span color="Comment">
-                    <Begin>#</Begin>
+                    <Begin>\#</Begin>
                 </Span>
 
                 <!-- Double Quoted Strings with Interpolation -->
@@ -66,11 +66,10 @@ public static class RubySyntaxDefinition
                     <Begin>&quot;</Begin>
                     <End>&quot;</End>
                     <RuleSet>
-                        <Span begin="\\&quot;" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                         <!-- #{expression} interpolation inside strings -->
                         <Span color="Variable" multiline="false">
-                            <Begin>#\{</Begin>
+                            <Begin>\#\{</Begin>
                             <End>\}</End>
                         </Span>
                     </RuleSet>
@@ -81,8 +80,7 @@ public static class RubySyntaxDefinition
                     <Begin>'</Begin>
                     <End>'</End>
                     <RuleSet>
-                        <Span begin="\\'" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                     </RuleSet>
                 </Span>
 

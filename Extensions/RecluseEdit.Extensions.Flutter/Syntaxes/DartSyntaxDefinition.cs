@@ -71,8 +71,7 @@ public static class DartSyntaxDefinition
                     <Begin>'</Begin>
                     <End>'</End>
                     <RuleSet>
-                        <Span begin="\\'" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                         <Span color="Variable">
                             <Begin>\$\{</Begin>
                             <End>\}</End>
@@ -89,8 +88,7 @@ public static class DartSyntaxDefinition
                     <Begin>&quot;</Begin>
                     <End>&quot;</End>
                     <RuleSet>
-                        <Span begin="\\&quot;" end="" />
-                        <Span begin="\\\\" end="" />
+                        <Span begin="\\" end="." />
                         <Span color="Variable">
                             <Begin>\$\{</Begin>
                             <End>\}</End>
