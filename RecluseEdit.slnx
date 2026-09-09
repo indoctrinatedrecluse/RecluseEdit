@@ -7,5 +7,6 @@
   <Project Path="extensions/RecluseEdit.Extensions.Php/RecluseEdit.Extensions.Php.csproj" />
   <Project Path="extensions/RecluseEdit.Extensions.Ruby/RecluseEdit.Extensions.Ruby.csproj" />
   <Project Path="extensions/RecluseEdit.Extensions.Python/RecluseEdit.Extensions.Python.csproj" />
+  <Project Path="extensions/RecluseEdit.Extensions.Laravel/RecluseEdit.Extensions.Laravel.csproj" />
   <Project Path="tests/RecluseEdit.Tests/RecluseEdit.Tests.csproj" />
 </Solution>

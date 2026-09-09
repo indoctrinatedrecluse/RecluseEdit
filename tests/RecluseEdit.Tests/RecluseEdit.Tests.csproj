@@ -25,6 +25,7 @@
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Php\RecluseEdit.Extensions.Php.csproj" />
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Ruby\RecluseEdit.Extensions.Ruby.csproj" />
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Python\RecluseEdit.Extensions.Python.csproj" />
+    <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Laravel\RecluseEdit.Extensions.Laravel.csproj" />
   </ItemGroup>
 
 </Project>

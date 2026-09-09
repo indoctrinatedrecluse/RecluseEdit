@@ -167,7 +167,14 @@ RecluseEdit features a modular, decoupled extension architecture. Each extension
 
 ## 📦 Official Extensions (Separate Build Targets)
 
-RecluseEdit comes with six modular language extensions built as dedicated targets in `RecluseEdit.slnx`:
+RecluseEdit comes with seven modular language extensions built as dedicated targets in `RecluseEdit.slnx`:
+
+### 🔴 Laravel Framework & Blade Pack (`RecluseEdit.Extensions.Laravel`)
+- Supports **Laravel Blade Templates** (`.blade.php`) and Artisan scripts (`artisan`).
+- **Custom XSHD Blade Syntax Highlighting**: Highlighting for Blade directives (`@extends`, `@section`, `@yield`, `@if`, `@foreach`, `@forelse`, `@auth`, `@csrf`, `@method`, `@error`, `@livewire`, `@vite`), escaped and unescaped expressions (`{{ $var }}`, `{!! $html !!}`), Blade comments (`{{-- ... --}}`), and embedded HTML.
+- **Eloquent ORM & Migrations**: Snippets for model properties (`$fillable`, `$casts`), relationships (`hasMany`, `belongsTo`, `hasOne`, `belongsToMany`, `morphMany`), schema builders (`Schema::create`, `foreignId`), and query scopes.
+- **Routing, Controllers & Middleware**: RESTful routing (`Route::get`, `Route::post`, `Route::resource`, `Route::apiResource`), route groups, controller action signatures, Request validation, and response helpers (`view()`, `response()->json()`).
+- **Toolchain Diagnostics**: Active diagnostics for the **Laravel Installer CLI** (`laravel -V`) and **Artisan CLI** (`php artisan --version`).
 
 ### 🐍 Python & Full-Stack Web Pack (`RecluseEdit.Extensions.Python`)
 - Supports **Python** (`.py`, `.pyw`, `.pyi`, `.pyd`) and **Jinja2 / Django Templates** (`.jinja`, `.jinja2`, `.j2`, `.html.jinja`, `.djhtml`).
@@ -221,7 +228,7 @@ RecluseEdit includes a fully automated GitHub Actions workflow (`.github/workflo
 - 🧪 **Full Verification**: Executes the complete test suite (`dotnet test RecluseEdit.slnx -c Release`) across all projects before packaging.
 - 📦 **Bundle & Package**:
   - Compiles the host editor and all extensions in `Release` configuration.
-  - Bundles the main application executable, dependencies, and all six language extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`) under `Extensions/`.
+  - Bundles the main application executable, dependencies, and all seven language extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`) under `Extensions/`.
   - Packages the entire distribution into a portable archive: `RecluseEdit-windows-<tag>.zip`.
 - 🚀 **GitHub Release**: Automatically creates a new GitHub Release with the bundled `.zip` asset attached and generates release notes.
 - 🕹️ **Manual Trigger**: Can also be executed manually via the **Actions** tab with custom version tags (`workflow_dispatch`).

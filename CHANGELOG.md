@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### ✨ Added Features
+
+#### 🔴 Laravel Framework & Blade Pack Extension (`RecluseEdit.Extensions.Laravel`)
+- **First-Class Blade Template Support**: File associations for `.blade.php` and Artisan scripts (`artisan`).
+- **Custom XSHD Blade Syntax Definition**: Dedicated syntax highlighting for Blade directives (`@extends`, `@section`, `@yield`, `@if`, `@foreach`, `@forelse`, `@auth`, `@guest`, `@csrf`, `@method`, `@error`, `@livewire`, `@vite`), escaped and unescaped expressions (`{{ $var }}`, `{!! $html !!}`), Blade comments (`{{-- ... --}}`), and embedded HTML markup.
+- **Eloquent ORM & Database Snippets**: Model properties (`$fillable`, `$casts`, `$hidden`), relationships (`hasMany`, `belongsTo`, `hasOne`, `belongsToMany`, `morphMany`), query scopes, and migration schema definitions (`Schema::create`, `foreignId`).
+- **Routing & Controller Snippets**: RESTful endpoints (`Route::get`, `Route::post`, `Route::resource`, `Route::apiResource`), route middleware groups, controller actions, Request validation, and response helpers (`view()`, `response()->json()`).
+- **Toolchain Diagnostics**: Active diagnostics for the official **Laravel Installer CLI** (`laravel -V`) and **Artisan CLI** (`php artisan --version`).
+- **Decoupled Architecture**: Built as an independent project target in `RecluseEdit.slnx` outputting directly to `Extensions/Laravel/` and auto-discovered at runtime.
+- **Automated Tests**: Added dedicated unit tests and expanded suite to **54 passing tests** across 10 projects.
+
+---
+
 ## [1.1.0] - 2026-09-09
 
 ### ✨ Added Features

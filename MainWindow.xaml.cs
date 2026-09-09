@@ -197,7 +197,8 @@ public partial class MainWindow : Window
     {
         var dlg = new OpenFileDialog
         {
-            Filter = "All Supported Files (*.html;*.css;*.js;*.ts;*.jsx;*.tsx;*.json;*.xml;*.xaml;*.cs;*.md;*.dart;*.php;*.rb;*.erb;*.py;*.jinja;*.graphql;*.txt)|*.html;*.htm;*.xhtml;*.css;*.scss;*.less;*.js;*.mjs;*.cjs;*.ts;*.mts;*.cts;*.jsx;*.tsx;*.json;*.jsonc;*.xml;*.xaml;*.svg;*.config;*.csproj;*.props;*.targets;*.axaml;*.cs;*.md;*.markdown;*.dart;*.php;*.phtml;*.rb;*.rake;*.gemspec;*.ru;Gemfile;Rakefile;*.erb;*.html.erb;*.py;*.pyw;*.pyi;*.pyd;*.jinja;*.jinja2;*.j2;*.html.jinja;*.djhtml;*.graphql;*.gql;*.txt;*.log|" +
+            Filter = "All Supported Files (*.html;*.css;*.js;*.ts;*.jsx;*.tsx;*.json;*.xml;*.xaml;*.cs;*.md;*.dart;*.php;*.rb;*.erb;*.py;*.jinja;*.blade.php;*.graphql;*.txt)|*.html;*.htm;*.xhtml;*.css;*.scss;*.less;*.js;*.mjs;*.cjs;*.ts;*.mts;*.cts;*.jsx;*.tsx;*.json;*.jsonc;*.xml;*.xaml;*.svg;*.config;*.csproj;*.props;*.targets;*.axaml;*.cs;*.md;*.markdown;*.dart;*.php;*.phtml;*.rb;*.rake;*.gemspec;*.ru;Gemfile;Rakefile;*.erb;*.html.erb;*.py;*.pyw;*.pyi;*.pyd;*.jinja;*.jinja2;*.j2;*.html.jinja;*.djhtml;*.blade.php;artisan;*.graphql;*.gql;*.txt;*.log|" +
+                     "Laravel Blade Templates (*.blade.php)|*.blade.php|" +
                      "Python & Web Templates (*.py;*.pyw;*.jinja;*.jinja2)|*.py;*.pyw;*.pyi;*.pyd;*.jinja;*.jinja2;*.j2;*.html.jinja;*.djhtml|" +
                      "Web & Script Files (*.html;*.css;*.js;*.ts;*.jsx;*.tsx;*.json)|*.html;*.htm;*.xhtml;*.css;*.scss;*.less;*.js;*.mjs;*.cjs;*.ts;*.mts;*.cts;*.jsx;*.tsx;*.json;*.jsonc|" +
                      "React & GraphQL (*.jsx;*.tsx;*.graphql;*.gql)|*.jsx;*.tsx;*.graphql;*.gql|" +
@@ -259,7 +260,8 @@ public partial class MainWindow : Window
         var dlg = new SaveFileDialog
         {
             FileName = doc.FileName.Replace(" *", ""),
-            Filter = "Python Files (*.py)|*.py|" +
+            Filter = "Laravel Blade Templates (*.blade.php)|*.blade.php|" +
+                     "Python Files (*.py)|*.py|" +
                      "Jinja Templates (*.jinja;*.jinja2)|*.jinja;*.jinja2;*.j2;*.html.jinja;*.djhtml|" +
                      "HTML Files (*.html)|*.html|" +
                      "JavaScript Files (*.js)|*.js|" +

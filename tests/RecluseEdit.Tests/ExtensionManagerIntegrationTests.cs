@@ -1,6 +1,7 @@
 using RecluseEdit.Core.Services;
 using RecluseEdit.Extensions.Angular;
 using RecluseEdit.Extensions.Flutter;
+using RecluseEdit.Extensions.Laravel;
 using RecluseEdit.Extensions.Php;
 using RecluseEdit.Extensions.Python;
 using RecluseEdit.Extensions.React;
@@ -20,16 +21,17 @@ public class ExtensionManagerIntegrationTests
 
         var extensionManager = new ExtensionManager(syntaxManager, autocompleteManager, toolchainManager);
 
-        // Load all 6 official extensions
+        // Load all 7 official extensions
         await extensionManager.LoadExtensionAsync(new ReactExtension());
         await extensionManager.LoadExtensionAsync(new AngularExtension());
         await extensionManager.LoadExtensionAsync(new FlutterExtension());
         await extensionManager.LoadExtensionAsync(new PhpExtension());
         await extensionManager.LoadExtensionAsync(new RubyExtension());
         await extensionManager.LoadExtensionAsync(new PythonExtension());
+        await extensionManager.LoadExtensionAsync(new LaravelExtension());
 
-        // Verify loaded count (6 external)
-        Assert.HasCount(6, extensionManager.LoadedExtensions);
+        // Verify loaded count (7 external)
+        Assert.HasCount(7, extensionManager.LoadedExtensions);
 
         // Verify languages registered
         var languages = syntaxManager.SupportedLanguages;
@@ -43,6 +45,8 @@ public class ExtensionManagerIntegrationTests
         Assert.IsTrue(languages.Any(l => l.Id == "erb"));
         Assert.IsTrue(languages.Any(l => l.Id == "python"));
         Assert.IsTrue(languages.Any(l => l.Id == "jinja"));
+        Assert.IsTrue(languages.Any(l => l.Id == "blade"));
+        Assert.IsTrue(languages.Any(l => l.Id == "laravel"));
 
         // Verify toolchains registered
         var checks = toolchainManager.RegisteredChecks;
@@ -60,6 +64,8 @@ public class ExtensionManagerIntegrationTests
         Assert.IsTrue(checks.Any(c => c.Command == "python"));
         Assert.IsTrue(checks.Any(c => c.Command == "pip"));
         Assert.IsTrue(checks.Any(c => c.Command == "django-admin"));
+        Assert.IsTrue(checks.Any(c => c.Command == "laravel"));
+        Assert.IsTrue(checks.Any(c => c.Command == "php artisan"));
 
         // Verify completions available across all languages
         Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "react.inline.completion"));
@@ -72,6 +78,9 @@ public class ExtensionManagerIntegrationTests
         Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "python.flask.django.completion"));
         Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "python.frontends.completion"));
         Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "express.inline.completion"));
+        Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "laravel.blade.completion"));
+        Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "laravel.eloquent.completion"));
+        Assert.IsTrue(autocompleteManager.InlineProviders.Any(p => p.Id == "laravel.routes.completion"));
     }
 
     [TestMethod]
@@ -90,11 +99,13 @@ public class ExtensionManagerIntegrationTests
         toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Python.Toolchains.PythonToolchainCheck());
         toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Python.Toolchains.PipToolchainCheck());
         toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Python.Toolchains.DjangoToolchainCheck());
+        toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Laravel.Toolchains.LaravelCliToolchainCheck());
+        toolchainManager.RegisterCheck(new RecluseEdit.Extensions.Laravel.Toolchains.ArtisanToolchainCheck());
 
         await toolchainManager.RunAllChecksAsync();
         var reports = toolchainManager.Reports;
 
-        Assert.HasCount(11, reports);
+        Assert.HasCount(13, reports);
         foreach (var report in reports)
         {
             Assert.IsFalse(string.IsNullOrWhiteSpace(report.ToolName));
