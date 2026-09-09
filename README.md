@@ -235,6 +235,30 @@ RecluseEdit includes a fully automated GitHub Actions workflow (`.github/workflo
 
 ---
 
+## 🛠️ Troubleshooting & Known Issues
+
+### 🔧 Windows / VS Code Git Error: `index file smaller than expected`
+
+#### Problem
+When developing on Windows alongside IDEs or background file watchers (such as VS Code, Visual Studio, or language server analyzers), running Git commands or pushes may occasionally fail with:
+```text
+fatal: .git/index: index file smaller than expected
+```
+
+#### Cause
+On Windows, NTFS enforces strict file-sharing locks. When background file watchers or IDE status polls query `.git/index` at the exact millisecond Git attempts to atomically replace it via `.git/index.lock`, the atomic rename can be interrupted mid-transaction, leaving the `.git/index` staging cache truncated to `0 bytes`. The underlying Git repository database, commit history, and branches remain completely safe and uncorrupted.
+
+#### Quick 1-Second Resolution
+To safely regenerate the staging index directly from `HEAD` without losing any uncommitted working tree changes, run this command in **PowerShell**:
+
+```powershell
+Remove-Item .git\index -Force; git reset
+```
+
+*(Or in Bash / POSIX shells: `rm -f .git/index && git reset`)*
+
+---
+
 ## 📜 License
 
 Copyright © 2026 **indoctrinatedrecluse**. All rights reserved.
