@@ -655,9 +655,10 @@ public partial class MainWindow : Window
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
         MessageBox.Show(this,
-            "RecluseEdit v1.1.0\n\n" +
+            "RecluseEdit v1.3.0\n\n" +
             "A fast, modern code editor optimized for web applications.\n\n" +
             "Key Features:\n" +
+            "• DeepSeek AI Chat Assistant (Ctrl+Alt+A)\n" +
             "• Web Workspace Explorer (Ctrl+B)\n" +
             "• Dual Autocomplete: Ghost-text (Tab) + IntelliSense popup (Ctrl+Space)\n" +
             "• Built-in Find & Replace (Ctrl+F, Ctrl+H)\n" +
