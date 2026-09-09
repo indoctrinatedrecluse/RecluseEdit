@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [1.2.0] - 2026-09-09
 
 ### ✨ Added Features
 
@@ -140,3 +140,8 @@ The debut release of **RecluseEdit**, a modern, lightweight, high-performance de
 #### 🤖 CI/CD & Delivery
 - **GitHub Actions Workflow**: Automated build and release pipeline (`.github/workflows/release.yml`) triggered on tag pushes (`v*`) to run the 27-test automated test suite and package a portable distribution archive (`RecluseEdit-windows-<tag>.zip`) attached to GitHub Releases.
 - **Git Environment Configuration**: Configured `.gitattributes` to enforce consistent LF/CRLF normalization across development environments and CI runners.
+
+[1.2.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/releases/tag/v1.0.0
+
