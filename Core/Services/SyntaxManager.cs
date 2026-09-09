@@ -98,7 +98,6 @@ public class SyntaxManager
             Id = "markdown",
             DisplayName = "Markdown",
             Extensions = [".md", ".markdown"],
-            HighlightingName = null
             HighlightingName = "Markdown"
         });
 
@@ -118,7 +117,6 @@ public class SyntaxManager
             var jsonDef = CreateJsonHighlightingDefinition();
             RegisterSyntaxDefinition("json", jsonDef);
         }
-        catch
         catch { }
 
         try
@@ -272,13 +270,6 @@ public class SyntaxManager
 
     private static void ApplyDarkThemeColors(IHighlightingDefinition definition)
     {
-        var keywordBrush = new SimpleHighlightingBrush(Color.FromRgb(0x56, 0x9C, 0xD6)); // #569CD6 Blue
-        var stringBrush = new SimpleHighlightingBrush(Color.FromRgb(0xCE, 0x91, 0x78));  // #CE9178 Warm orange
-        var commentBrush = new SimpleHighlightingBrush(Color.FromRgb(0x6A, 0x99, 0x55)); // #6A9955 Green
-        var numberBrush = new SimpleHighlightingBrush(Color.FromRgb(0xB5, 0xCE, 0xA8));  // #B5CEA8 Mint
-        var attributeBrush = new SimpleHighlightingBrush(Color.FromRgb(0x9C, 0xDC, 0xFE)); // #9CDCFE Light cyan
-        var tagBrush = new SimpleHighlightingBrush(Color.FromRgb(0x56, 0x9C, 0xD6));     // #569CD6 Tag
-        var typeBrush = new SimpleHighlightingBrush(Color.FromRgb(0x4E, 0xC9, 0xB0));    // #4EC9B0 Teal
         var keywordBrush = new SimpleHighlightingBrush(Color.FromRgb(0x56, 0x9C, 0xD6));     // #569CD6 Blue
         var controlFlowBrush = new SimpleHighlightingBrush(Color.FromRgb(0xC5, 0x86, 0xC0)); // #C586C0 Magenta
         var functionBrush = new SimpleHighlightingBrush(Color.FromRgb(0xDC, 0xDC, 0xAA));    // #DCDCAA Light yellow
@@ -301,7 +292,6 @@ public class SyntaxManager
         foreach (var color in definition.NamedHighlightingColors)
         {
             var name = color.Name ?? "";
-            if (name.Contains("Comment", StringComparison.OrdinalIgnoreCase))
 
             if (name.Equals("Heading1", StringComparison.OrdinalIgnoreCase)) color.Foreground = heading1Brush;
             else if (name.Equals("Heading2", StringComparison.OrdinalIgnoreCase)) color.Foreground = heading2Brush;
@@ -334,7 +324,6 @@ public class SyntaxManager
             }
             else if (name.Contains("String", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("AttributeValue", StringComparison.OrdinalIgnoreCase) ||
-                     name.Contains("Value", StringComparison.OrdinalIgnoreCase))
                      name.Contains("Value", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("Code", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("Italic", StringComparison.OrdinalIgnoreCase) ||
@@ -343,7 +332,6 @@ public class SyntaxManager
                 color.Foreground = stringBrush;
             }
             else if (name.Contains("Digit", StringComparison.OrdinalIgnoreCase) ||
-                     name.Contains("Number", StringComparison.OrdinalIgnoreCase))
                      name.Contains("Number", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("Units", StringComparison.OrdinalIgnoreCase))
             {
@@ -369,7 +357,6 @@ public class SyntaxManager
             }
             else if (name.Contains("Tag", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("DocType", StringComparison.OrdinalIgnoreCase) ||
-                     name.Contains("XmlDeclaration", StringComparison.OrdinalIgnoreCase))
                      name.Contains("XmlDeclaration", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("Link", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("ListBullet", StringComparison.OrdinalIgnoreCase))
@@ -384,7 +371,6 @@ public class SyntaxManager
                 color.Foreground = keywordBrush;
             }
             else if (name.Contains("Type", StringComparison.OrdinalIgnoreCase) ||
-                     name.Contains("Class", StringComparison.OrdinalIgnoreCase))
                      name.Contains("Class", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("Interface", StringComparison.OrdinalIgnoreCase))
             {

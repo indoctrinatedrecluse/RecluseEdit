@@ -197,9 +197,8 @@ public partial class MainWindow : Window
     {
         var dlg = new OpenFileDialog
         {
-            Filter = "Web Files (*.html;*.htm;*.css;*.js;*.ts;*.json)|*.html;*.htm;*.css;*.js;*.ts;*.json|" +
-                     "Text & Code (*.txt;*.xml;*.cs;*.md)|*.txt;*.xml;*.cs;*.md|" +
-            Filter = "All Supported Files (*.html;*.css;*.js;*.ts;*.jsx;*.tsx;*.json;*.xml;*.xaml;*.cs;*.md;*.dart;*.php;*.rb;*.erb;*.graphql;*.txt)|*.html;*.htm;*.xhtml;*.css;*.scss;*.less;*.js;*.mjs;*.cjs;*.ts;*.mts;*.cts;*.jsx;*.tsx;*.json;*.jsonc;*.xml;*.xaml;*.svg;*.config;*.csproj;*.props;*.targets;*.axaml;*.cs;*.md;*.markdown;*.dart;*.php;*.phtml;*.rb;*.rake;*.gemspec;*.ru;Gemfile;Rakefile;*.erb;*.html.erb;*.graphql;*.gql;*.txt;*.log|" +
+            Filter = "All Supported Files (*.html;*.css;*.js;*.ts;*.jsx;*.tsx;*.json;*.xml;*.xaml;*.cs;*.md;*.dart;*.php;*.rb;*.erb;*.py;*.jinja;*.graphql;*.txt)|*.html;*.htm;*.xhtml;*.css;*.scss;*.less;*.js;*.mjs;*.cjs;*.ts;*.mts;*.cts;*.jsx;*.tsx;*.json;*.jsonc;*.xml;*.xaml;*.svg;*.config;*.csproj;*.props;*.targets;*.axaml;*.cs;*.md;*.markdown;*.dart;*.php;*.phtml;*.rb;*.rake;*.gemspec;*.ru;Gemfile;Rakefile;*.erb;*.html.erb;*.py;*.pyw;*.pyi;*.pyd;*.jinja;*.jinja2;*.j2;*.html.jinja;*.djhtml;*.graphql;*.gql;*.txt;*.log|" +
+                     "Python & Web Templates (*.py;*.pyw;*.jinja;*.jinja2)|*.py;*.pyw;*.pyi;*.pyd;*.jinja;*.jinja2;*.j2;*.html.jinja;*.djhtml|" +
                      "Web & Script Files (*.html;*.css;*.js;*.ts;*.jsx;*.tsx;*.json)|*.html;*.htm;*.xhtml;*.css;*.scss;*.less;*.js;*.mjs;*.cjs;*.ts;*.mts;*.cts;*.jsx;*.tsx;*.json;*.jsonc|" +
                      "React & GraphQL (*.jsx;*.tsx;*.graphql;*.gql)|*.jsx;*.tsx;*.graphql;*.gql|" +
                      "Angular Templates & Code (*.component.html;*.component.ts)|*.component.html;*.component.ts;*.service.ts;*.directive.ts;*.pipe.ts;*.guard.ts|" +
@@ -260,13 +259,14 @@ public partial class MainWindow : Window
         var dlg = new SaveFileDialog
         {
             FileName = doc.FileName.Replace(" *", ""),
-            Filter = "HTML Files (*.html)|*.html|" +
+            Filter = "Python Files (*.py)|*.py|" +
+                     "Jinja Templates (*.jinja;*.jinja2)|*.jinja;*.jinja2;*.j2;*.html.jinja;*.djhtml|" +
+                     "HTML Files (*.html)|*.html|" +
                      "JavaScript Files (*.js)|*.js|" +
                      "TypeScript Files (*.ts)|*.ts|" +
                      "React JSX Files (*.jsx)|*.jsx|" +
                      "React TSX Files (*.tsx)|*.tsx|" +
                      "CSS Files (*.css)|*.css|" +
-                     "TypeScript Files (*.ts)|*.ts|" +
                      "SCSS Files (*.scss)|*.scss|" +
                      "JSON Files (*.json)|*.json|" +
                      "XML / XAML Files (*.xml;*.xaml)|*.xml;*.xaml|" +

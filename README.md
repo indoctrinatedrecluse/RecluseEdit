@@ -105,7 +105,7 @@ dotnet restore RecluseEdit.slnx
 # Build the entire solution (host + all extensions)
 dotnet build RecluseEdit.slnx
 
-# Run all unit and integration tests (43 tests)
+# Run all unit and integration tests (49 tests)
 dotnet test RecluseEdit.slnx
 
 # Launch the editor
@@ -167,7 +167,16 @@ RecluseEdit features a modular, decoupled extension architecture. Each extension
 
 ## 📦 Official Extensions (Separate Build Targets)
 
-RecluseEdit comes with five modular language extensions built as dedicated targets in `RecluseEdit.slnx`:
+RecluseEdit comes with six modular language extensions built as dedicated targets in `RecluseEdit.slnx`:
+
+### 🐍 Python & Full-Stack Web Pack (`RecluseEdit.Extensions.Python`)
+- Supports **Python** (`.py`, `.pyw`, `.pyi`, `.pyd`) and **Jinja2 / Django Templates** (`.jinja`, `.jinja2`, `.j2`, `.html.jinja`, `.djhtml`).
+- **Modern Python 3.12+ Syntax Highlighting**: Custom XSHD definition for decorators (`@app.route`, `@property`), f-strings with `{expr}` interpolation, type hints, dunder methods (`__init__`, `__repr__`), and pattern matching (`match`/`case`).
+- **Jinja2 & Django Templates**: Highlighting and snippets for statements (`{% for %}`, `{% if %}`, `{% block %}`, `{% csrf_token %}`), expressions (`{{ ... }}`), filters (`|upper`, `|safe`), and embedded HTML.
+- **Python Frontends & UI**: Rich snippets and idioms for **Streamlit** (`st.title`, `st.button`, `st.sidebar`, `st.dataframe`), **Gradio** (`gr.Interface`, `gr.Blocks`, `gr.Row`), and **Reflex** (`rx.State`, `rx.vstack`, `rx.button`).
+- **Python Web Backends**: Completions for **Flask** (`@app.route`, `render_template`, `jsonify`), **Django** (`models.Model`, `urlpatterns`, `views.View`, `JsonResponse`), and **FastAPI** (`app = FastAPI()`, `BaseModel`).
+- **Express.js Support**: Route and middleware snippets (`app.get`, `app.post`, `app.use`, `express.json()`, `express.Router()`).
+- **Toolchain Diagnostics**: Active diagnostics and path checks for **Python interpreter** (`python -V`), **Pip** (`pip -V`), and **Django CLI** (`django-admin --version`).
 
 ### ⚛️ React, Redux & GraphQL Pack (`RecluseEdit.Extensions.React`)
 - Supports **React JSX** (`.jsx`), **React TSX** (`.tsx`), and **GraphQL** (`.graphql`, `.gql`).
@@ -212,7 +221,7 @@ RecluseEdit includes a fully automated GitHub Actions workflow (`.github/workflo
 - 🧪 **Full Verification**: Executes the complete test suite (`dotnet test RecluseEdit.slnx -c Release`) across all projects before packaging.
 - 📦 **Bundle & Package**:
   - Compiles the host editor and all extensions in `Release` configuration.
-  - Bundles the main application executable, dependencies, and all five language extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`) under `Extensions/`.
+  - Bundles the main application executable, dependencies, and all six language extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`) under `Extensions/`.
   - Packages the entire distribution into a portable archive: `RecluseEdit-windows-<tag>.zip`.
 - 🚀 **GitHub Release**: Automatically creates a new GitHub Release with the bundled `.zip` asset attached and generates release notes.
 - 🕹️ **Manual Trigger**: Can also be executed manually via the **Actions** tab with custom version tags (`workflow_dispatch`).

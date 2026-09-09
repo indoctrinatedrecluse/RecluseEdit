@@ -26,7 +26,6 @@ public class AngularExtension : IExtension
             Id = "angular-html",
             DisplayName = "Angular HTML Template",
             Extensions = [".component.html"],
-            HighlightingName = "HTML"
             HighlightingName = "AngularHTML"
         });
 
@@ -35,7 +34,6 @@ public class AngularExtension : IExtension
             Id = "angular-ts",
             DisplayName = "Angular TypeScript",
             Extensions = [".component.ts", ".service.ts", ".directive.ts", ".pipe.ts", ".guard.ts"],
-            HighlightingName = "JavaScript"
             HighlightingName = "AngularTS"
         });
 

@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-09-09
+
+### ✨ Added Features
+
+#### 🐍 Python & Full-Stack Web Pack Extension (`RecluseEdit.Extensions.Python`)
+- **First-Class Python & Template Support**: File associations for `.py`, `.pyw`, `.pyi`, `.pyd`, `.jinja`, `.jinja2`, `.j2`, `.html.jinja`, and `.djhtml`.
+- **Custom XSHD Python Syntax Definition**: Highlighting for Python 3.12+ features including decorators (`@app.route`, `@property`, `@classmethod`), f-strings (`f"..."` and `f'...'` with `{expression}` variable interpolation), triple-quoted multiline docstrings (`"""..."""` and `'''...'''`), type annotations (`Any`, `Optional`, `Union`, `List`, `Dict`), dunder attributes/methods (`__init__`, `__repr__`, `__name__`), and pattern matching (`match`/`case`).
+- **Custom XSHD Jinja2 & Django Template Definition**: Highlighting for template statements (`{% for %}`, `{% if %}`, `{% block %}`, `{% extends %}`, `{% include %}`, `{% csrf_token %}`), template expressions (`{{ ... }}`), filter pipes (`|upper`, `|safe`, `|length`), comments (`{# ... #}`), and embedded HTML element/attribute tags.
+- **Python Frontends & UI Completions**: Inline suggestions and snippets for modern Python UI frameworks:
+  - **Streamlit**: `st.title`, `st.header`, `st.button`, `st.dataframe`, `st.sidebar`, `st.plotly_chart`, `st.selectbox`, `st.multiselect`, and metrics.
+  - **Gradio**: `gr.Interface`, `gr.Blocks`, `gr.Row`, `gr.Column`, `gr.Button`, `gr.Textbox`, `gr.Number`, and `gr.Image`.
+  - **Reflex**: `class State(rx.State)`, `def index() -> rx.Component`, `rx.vstack`, and `app = rx.App()`.
+- **Python Web Backends & Templates**:
+  - **Flask**: `app = Flask(__name__)`, `@app.route()`, `@app.get()`, `@app.post()`, `render_template()`, `jsonify()`, `request.get_json()`, and `request.args.get()`.
+  - **Django**: `class Model(models.Model)`, `urlpatterns = [ path(...) ]`, `render()`, `JsonResponse()`, and template tags.
+  - **FastAPI**: `app = FastAPI()`, `BaseModel`, and status code helpers.
+- **Express.js Snippets**: Server bootstrap (`const app = express()`), JSON body parsing middleware, REST endpoint routing (`app.get`, `app.post`, `app.put`, `app.delete`), router modules (`express.Router()`), and global error handling middleware.
+- **Toolchain Diagnostics**: Active diagnostics for the **Python interpreter** (`python -V`), **Pip package manager** (`pip -V`), and **Django CLI** (`django-admin --version`).
+- **Decoupled Architecture**: Fully isolated project target in `RecluseEdit.slnx` built to `Extensions/Python/` and automatically discovered at startup by `ExtensionManager`.
+- **Comprehensive Automated Tests**: Added dedicated unit tests and expanded integration test suite to **49 passing tests** with 0 warnings and 0 errors.
+
+---
+
 ## [1.2.0] - 2026-09-09
 
 ### ✨ Added Features & Polish

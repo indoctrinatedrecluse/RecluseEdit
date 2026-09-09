@@ -26,7 +26,6 @@ public class ReactExtension : IExtension
             Id = "jsx",
             DisplayName = "React JSX",
             Extensions = [".jsx"],
-            HighlightingName = "JavaScript"
             HighlightingName = "ReactJSX"
         });
 
@@ -35,7 +34,6 @@ public class ReactExtension : IExtension
             Id = "tsx",
             DisplayName = "React TSX",
             Extensions = [".tsx"],
-            HighlightingName = "JavaScript"
             HighlightingName = "ReactJSX"
         });
 
@@ -44,7 +42,6 @@ public class ReactExtension : IExtension
             Id = "graphql",
             DisplayName = "GraphQL",
             Extensions = [".graphql", ".gql"],
-            HighlightingName = "JavaScript"
             HighlightingName = "GraphQL"
         });
 
