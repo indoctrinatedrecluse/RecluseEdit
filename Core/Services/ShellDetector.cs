@@ -7,12 +7,20 @@ using RecluseEdit.Core.Models;
 namespace RecluseEdit.Core.Services;
 
 /// <summary>
-/// Detects available shell executables installed on the system and in PATH.
+/// Detects installed and configured shells on the host operating system,
+/// retaining unavailable shells with an IsAvailable = false flag.
 /// </summary>
 public class ShellDetector
 {
+    private readonly ShellSettingsService _settingsService;
+
+    public ShellDetector(ShellSettingsService? settingsService = null)
+    {
+        _settingsService = settingsService ?? new ShellSettingsService();
+    }
+
     /// <summary>
-    /// Scans the operating system and environment to return all available shells.
+    /// Scans the operating system, user settings, and PATH to return the full catalog of shells.
     /// </summary>
     public List<ShellInfo> DetectShells()
     {
@@ -28,17 +36,19 @@ public class ShellDetector
             DetectUnixShells(discovered, seenPaths);
         }
 
-        // Scan system PATH for any additional shell binaries
-        ScanPathForShells(discovered, seenPaths);
+        // Scan system PATH for any additional shell binaries not in canonical catalog
+        ScanPathForAdditionalShells(discovered, seenPaths);
 
-        // Pick default shell
-        if (discovered.Count > 0)
+        // Pick default shell among available shells
+        var defaultShell = discovered.FirstOrDefault(s => s.IsAvailable && s.Id == "pwsh")
+                           ?? discovered.FirstOrDefault(s => s.IsAvailable && s.Id == "powershell")
+                           ?? discovered.FirstOrDefault(s => s.IsAvailable && s.Id == "git-bash")
+                           ?? discovered.FirstOrDefault(s => s.IsAvailable && s.Id == "cmd")
+                           ?? discovered.FirstOrDefault(s => s.IsAvailable)
+                           ?? discovered.FirstOrDefault();
+
+        if (defaultShell != null)
         {
-            var defaultShell = discovered.FirstOrDefault(s => s.Id == "pwsh")
-                               ?? discovered.FirstOrDefault(s => s.Id == "powershell")
-                               ?? discovered.FirstOrDefault(s => s.Id == "git-bash")
-                               ?? discovered.FirstOrDefault(s => s.Id == "cmd")
-                               ?? discovered.First();
             defaultShell.IsDefault = true;
         }
 
@@ -52,55 +62,54 @@ public class ShellDetector
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var system32 = Environment.GetFolderPath(Environment.SpecialFolder.System);
 
-        // 1. PowerShell 7+ (pwsh.exe)
-        var pwshCandidates = new[]
+        // 1. PowerShell 7+
+        RegisterShell(shells, seenPaths, new ShellInfo
         {
+            Id = "pwsh",
+            DisplayName = "PowerShell 7",
+            Icon = "⚡",
+            Arguments = "-NoLogo",
+            ExpectedBinaryNames = ["pwsh.exe", "powershell.exe"],
+            Description = "Cross-platform modern PowerShell 7+"
+        },
+        candidates:
+        [
             Path.Combine(programFiles, "PowerShell", "7", "pwsh.exe"),
             Path.Combine(localAppData, "Microsoft", "PowerShell", "pwsh.exe")
-        };
-        foreach (var p in pwshCandidates)
-        {
-            if (File.Exists(p) && seenPaths.Add(Path.GetFullPath(p)))
-            {
-                shells.Add(new ShellInfo
-                {
-                    Id = "pwsh",
-                    DisplayName = "PowerShell 7",
-                    ExecutablePath = Path.GetFullPath(p),
-                    Arguments = "-NoLogo -NoExit",
-                    Icon = "⚡"
-                });
-                break;
-            }
-        }
+        ],
+        pathBinaries: ["pwsh.exe"]);
 
-        // 2. Windows PowerShell (powershell.exe)
-        var psPath = Path.Combine(system32, "WindowsPowerShell", "v1.0", "powershell.exe");
-        if (File.Exists(psPath) && seenPaths.Add(Path.GetFullPath(psPath)))
+        // 2. Windows PowerShell
+        RegisterShell(shells, seenPaths, new ShellInfo
         {
-            shells.Add(new ShellInfo
-            {
-                Id = "powershell",
-                DisplayName = "Windows PowerShell",
-                ExecutablePath = Path.GetFullPath(psPath),
-                Arguments = "-NoLogo -NoExit",
-                Icon = "⚡"
-            });
-        }
+            Id = "powershell",
+            DisplayName = "Windows PowerShell",
+            Icon = "⚡",
+            Arguments = "-NoLogo",
+            ExpectedBinaryNames = ["powershell.exe", "pwsh.exe"],
+            Description = "Built-in Windows PowerShell 5.1"
+        },
+        candidates:
+        [
+            Path.Combine(system32, "WindowsPowerShell", "v1.0", "powershell.exe")
+        ],
+        pathBinaries: ["powershell.exe"]);
 
-        // 3. Command Prompt (cmd.exe)
-        var cmdPath = Path.Combine(system32, "cmd.exe");
-        if (File.Exists(cmdPath) && seenPaths.Add(Path.GetFullPath(cmdPath)))
+        // 3. Command Prompt
+        RegisterShell(shells, seenPaths, new ShellInfo
         {
-            shells.Add(new ShellInfo
-            {
-                Id = "cmd",
-                DisplayName = "Command Prompt",
-                ExecutablePath = Path.GetFullPath(cmdPath),
-                Arguments = "/K",
-                Icon = ">_"
-            });
-        }
+            Id = "cmd",
+            DisplayName = "Command Prompt",
+            Icon = ">_",
+            Arguments = "",
+            ExpectedBinaryNames = ["cmd.exe"],
+            Description = "Standard Windows Command Processor"
+        },
+        candidates:
+        [
+            Path.Combine(system32, "cmd.exe")
+        ],
+        pathBinaries: ["cmd.exe"]);
 
         // 4. Git Bash
         var gitBashCandidates = new List<string>
@@ -111,7 +120,6 @@ public class ShellDetector
             Path.Combine(localAppData, "Programs", "Git", "bin", "bash.exe")
         };
 
-        // Also resolve Git Bash relative to git.exe in PATH if available
         var gitFromPath = FindInPath("git.exe");
         if (!string.IsNullOrEmpty(gitFromPath))
         {
@@ -127,87 +135,143 @@ public class ShellDetector
             }
         }
 
-        foreach (var p in gitBashCandidates)
+        RegisterShell(shells, seenPaths, new ShellInfo
         {
-            if (File.Exists(p) && seenPaths.Add(Path.GetFullPath(p)))
-            {
-                shells.Add(new ShellInfo
-                {
-                    Id = "git-bash",
-                    DisplayName = "Git Bash",
-                    ExecutablePath = Path.GetFullPath(p),
-                    Arguments = "--login -i",
-                    Icon = "🐚"
-                });
-                break;
-            }
-        }
+            Id = "git-bash",
+            DisplayName = "Git Bash",
+            Icon = "🐚",
+            Arguments = "--login -i",
+            ExpectedBinaryNames = ["bash.exe", "sh.exe", "git-bash.exe"],
+            Description = "Git for Windows Bash terminal"
+        },
+        candidates: gitBashCandidates.ToArray(),
+        pathBinaries: ["bash.exe"]);
 
-        // 5. WSL (wsl.exe)
-        var wslPath = Path.Combine(system32, "wsl.exe");
-        if (File.Exists(wslPath) && seenPaths.Add(Path.GetFullPath(wslPath)))
+        // 5. WSL (Linux)
+        RegisterShell(shells, seenPaths, new ShellInfo
         {
-            shells.Add(new ShellInfo
-            {
-                Id = "wsl",
-                DisplayName = "WSL (Linux)",
-                ExecutablePath = Path.GetFullPath(wslPath),
-                Arguments = "",
-                Icon = "🐧"
-            });
-        }
+            Id = "wsl",
+            DisplayName = "WSL (Linux)",
+            Icon = "🐧",
+            Arguments = "",
+            ExpectedBinaryNames = ["wsl.exe"],
+            Description = "Windows Subsystem for Linux"
+        },
+        candidates:
+        [
+            Path.Combine(system32, "wsl.exe")
+        ],
+        pathBinaries: ["wsl.exe"]);
 
-        // 6. Cygwin & MSYS2
-        var cygwinCandidates = new[]
+        // 6. Cygwin Bash
+        RegisterShell(shells, seenPaths, new ShellInfo
         {
-            (@"C:\cygwin64\bin\bash.exe", "cygwin", "Cygwin Bash"),
-            (@"C:\cygwin\bin\bash.exe", "cygwin", "Cygwin Bash"),
-            (@"C:\msys64\usr\bin\bash.exe", "msys2", "MSYS2 Bash")
-        };
-        foreach (var (path, id, name) in cygwinCandidates)
+            Id = "cygwin",
+            DisplayName = "Cygwin Bash",
+            Icon = "🐚",
+            Arguments = "--login -i",
+            ExpectedBinaryNames = ["bash.exe", "sh.exe"],
+            Description = "Cygwin POSIX environment shell"
+        },
+        candidates:
+        [
+            @"C:\cygwin64\bin\bash.exe",
+            @"C:\cygwin\bin\bash.exe"
+        ],
+        pathBinaries: []);
+
+        // 7. MSYS2 Bash
+        RegisterShell(shells, seenPaths, new ShellInfo
         {
-            if (File.Exists(path) && seenPaths.Add(Path.GetFullPath(path)))
-            {
-                shells.Add(new ShellInfo
-                {
-                    Id = id,
-                    DisplayName = name,
-                    ExecutablePath = Path.GetFullPath(path),
-                    Arguments = "--login -i",
-                    Icon = "🐚"
-                });
-            }
-        }
+            Id = "msys2",
+            DisplayName = "MSYS2 Bash",
+            Icon = "🐚",
+            Arguments = "--login -i",
+            ExpectedBinaryNames = ["bash.exe", "sh.exe"],
+            Description = "MSYS2 software development shell"
+        },
+        candidates:
+        [
+            @"C:\msys64\usr\bin\bash.exe",
+            @"C:\msys\usr\bin\bash.exe"
+        ],
+        pathBinaries: []);
     }
 
     private void DetectUnixShells(List<ShellInfo> shells, HashSet<string> seenPaths)
     {
-        var unixCandidates = new[]
+        var unixDefinitions = new[]
         {
-            ("/bin/zsh", "zsh", "Zsh", "🐚"),
-            ("/usr/bin/zsh", "zsh", "Zsh", "🐚"),
-            ("/bin/bash", "bash", "Bash", "🐚"),
-            ("/usr/bin/bash", "bash", "Bash", "🐚"),
-            ("/bin/sh", "sh", "Sh", ">_")
+            ("zsh", "Zsh", "🐚", "-l -i", new[] { "/bin/zsh", "/usr/bin/zsh" }, new[] { "zsh" }),
+            ("bash", "Bash", "🐚", "-l -i", new[] { "/bin/bash", "/usr/bin/bash" }, new[] { "bash" }),
+            ("sh", "Sh", ">_", "-i", new[] { "/bin/sh", "/usr/bin/sh" }, new[] { "sh" })
         };
 
-        foreach (var (path, id, name, icon) in unixCandidates)
+        foreach (var (id, name, icon, args, candidates, pathBinaries) in unixDefinitions)
         {
-            if (File.Exists(path) && seenPaths.Add(Path.GetFullPath(path)))
+            RegisterShell(shells, seenPaths, new ShellInfo
             {
-                shells.Add(new ShellInfo
-                {
-                    Id = id,
-                    DisplayName = name,
-                    ExecutablePath = path,
-                    Arguments = "-l -i",
-                    Icon = icon
-                });
-            }
+                Id = id,
+                DisplayName = name,
+                Icon = icon,
+                Arguments = args,
+                ExpectedBinaryNames = pathBinaries
+            },
+            candidates,
+            pathBinaries);
         }
     }
 
-    private void ScanPathForShells(List<ShellInfo> shells, HashSet<string> seenPaths)
+    private void RegisterShell(List<ShellInfo> shells, HashSet<string> seenPaths, ShellInfo shell, string[] candidates, string[] pathBinaries)
+    {
+        // 1. Check custom path from settings
+        var customPath = _settingsService.GetCustomPath(shell.Id);
+        if (!string.IsNullOrEmpty(customPath) && File.Exists(customPath))
+        {
+            shell.ExecutablePath = Path.GetFullPath(customPath);
+            shell.IsAvailable = true;
+            shell.IsCustomConfigured = true;
+            seenPaths.Add(shell.ExecutablePath);
+            shells.Add(shell);
+            return;
+        }
+
+        // 2. Check candidate standard paths
+        foreach (var candidate in candidates)
+        {
+            if (File.Exists(candidate))
+            {
+                var full = Path.GetFullPath(candidate);
+                shell.ExecutablePath = full;
+                shell.IsAvailable = true;
+                seenPaths.Add(full);
+                shells.Add(shell);
+                return;
+            }
+        }
+
+        // 3. Check PATH
+        foreach (var bin in pathBinaries)
+        {
+            var fromPath = FindInPath(bin);
+            if (!string.IsNullOrEmpty(fromPath) && File.Exists(fromPath))
+            {
+                var full = Path.GetFullPath(fromPath);
+                shell.ExecutablePath = full;
+                shell.IsAvailable = true;
+                seenPaths.Add(full);
+                shells.Add(shell);
+                return;
+            }
+        }
+
+        // 4. Not found on disk: keep in catalog but mark as unavailable
+        shell.ExecutablePath = candidates.FirstOrDefault() ?? (pathBinaries.FirstOrDefault() ?? "");
+        shell.IsAvailable = false;
+        shells.Add(shell);
+    }
+
+    private void ScanPathForAdditionalShells(List<ShellInfo> shells, HashSet<string> seenPaths)
     {
         var pathEnv = Environment.GetEnvironmentVariable("PATH");
         if (string.IsNullOrWhiteSpace(pathEnv)) return;
@@ -216,8 +280,8 @@ public class ShellDetector
         var dirs = pathEnv.Split(separator, StringSplitOptions.RemoveEmptyEntries);
 
         var targetExes = OperatingSystem.IsWindows()
-            ? new[] { "pwsh.exe", "powershell.exe", "bash.exe", "cmd.exe", "wsl.exe" }
-            : new[] { "pwsh", "zsh", "bash", "sh" };
+            ? new[] { "nu.exe", "fish.exe" }
+            : new[] { "fish", "nu" };
 
         foreach (var dir in dirs)
         {
@@ -229,25 +293,15 @@ public class ShellDetector
                 if (File.Exists(fullPath) && seenPaths.Add(Path.GetFullPath(fullPath)))
                 {
                     var id = Path.GetFileNameWithoutExtension(exe).ToLowerInvariant();
-                    var name = id switch
-                    {
-                        "pwsh" => "PowerShell 7",
-                        "powershell" => "Windows PowerShell",
-                        "bash" => "Bash",
-                        "cmd" => "Command Prompt",
-                        "wsl" => "WSL",
-                        "zsh" => "Zsh",
-                        _ => id
-                    };
-                    var icon = id.Contains("power") ? "⚡" : id.Contains("bash") || id.Contains("zsh") ? "🐚" : id == "wsl" ? "🐧" : ">_";
-
                     shells.Add(new ShellInfo
                     {
                         Id = id,
-                        DisplayName = name,
+                        DisplayName = char.ToUpperInvariant(id[0]) + id[1..],
                         ExecutablePath = Path.GetFullPath(fullPath),
-                        Arguments = id.Contains("power") ? "-NoLogo -NoExit" : id.Contains("bash") ? "--login -i" : id == "cmd" ? "/K" : "",
-                        Icon = icon
+                        Arguments = "-i",
+                        Icon = "🐚",
+                        IsAvailable = true,
+                        ExpectedBinaryNames = [exe]
                     });
                 }
             }

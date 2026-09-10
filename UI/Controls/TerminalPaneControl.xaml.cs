@@ -5,12 +5,14 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using RecluseEdit.Core.Models;
 using RecluseEdit.Core.Services;
+using RecluseEdit.UI.Views;
 
 namespace RecluseEdit.UI.Controls;
 
@@ -24,6 +26,7 @@ public partial class TerminalPaneControl : UserControl
         public int HistoryIndex { get; set; } = -1;
         public string Title => Session.Title;
         public bool IsActive { get; set; }
+        public bool IsClosing { get; set; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -38,13 +41,15 @@ public partial class TerminalPaneControl : UserControl
         }
     }
 
-    private readonly ShellDetector _detector = new();
-    private List<ShellInfo> _detectedShells = new();
+    private readonly ShellSettingsService _settingsService = new();
+    private readonly ShellDetector _detector;
+    private List<ShellInfo> _detectedShells = [];
     private ShellInfo? _defaultShell;
     private int _terminalCounter = 1;
     private string? _workingDirectory;
+    private bool _isUpdatingSelection;
 
-    public ObservableCollection<TerminalTabItem> Tabs { get; } = new();
+    public ObservableCollection<TerminalTabItem> Tabs { get; } = [];
     public TerminalTabItem? ActiveTab { get; private set; }
 
     public int TerminalCount => Tabs.Count;
@@ -54,6 +59,7 @@ public partial class TerminalPaneControl : UserControl
     public TerminalPaneControl()
     {
         InitializeComponent();
+        _detector = new ShellDetector(_settingsService);
         Loaded += OnControlLoaded;
     }
 
@@ -69,20 +75,35 @@ public partial class TerminalPaneControl : UserControl
     {
         if (_detectedShells.Count == 0)
         {
-            _detectedShells = _detector.DetectShells();
-            _defaultShell = _detectedShells.FirstOrDefault(s => s.IsDefault) ?? _detectedShells.FirstOrDefault();
+            RefreshShellsList();
+        }
 
+        UpdateVisualState();
+    }
+
+    private void RefreshShellsList()
+    {
+        _detectedShells = _detector.DetectShells();
+        _defaultShell = _detectedShells.FirstOrDefault(s => s.IsDefault && s.IsAvailable)
+                        ?? _detectedShells.FirstOrDefault(s => s.IsAvailable)
+                        ?? _detectedShells.FirstOrDefault();
+
+        _isUpdatingSelection = true;
+        try
+        {
+            CmbShells.ItemsSource = null;
             CmbShells.ItemsSource = _detectedShells;
             if (_defaultShell != null)
             {
                 CmbShells.SelectedItem = _defaultShell;
             }
-
-            // If only 1 shell is detected, we can still show it in combo or hide
-            CmbShells.Visibility = _detectedShells.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+        }
+        finally
+        {
+            _isUpdatingSelection = false;
         }
 
-        UpdateVisualState();
+        CmbShells.Visibility = _detectedShells.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     public void FocusInput()
@@ -97,12 +118,18 @@ public partial class TerminalPaneControl : UserControl
     {
         if (_detectedShells.Count == 0)
         {
-            _detectedShells = _detector.DetectShells();
-            _defaultShell = _detectedShells.FirstOrDefault(s => s.IsDefault) ?? _detectedShells.FirstOrDefault();
+            RefreshShellsList();
         }
 
         var chosenShell = shell ?? (CmbShells.SelectedItem as ShellInfo) ?? _defaultShell;
         if (chosenShell == null) return;
+
+        // If shell is marked unavailable, launch configuration flow instead of broken session
+        if (!chosenShell.IsAvailable)
+        {
+            PromptConfigureShell(chosenShell);
+            return;
+        }
 
         var title = $"{chosenShell.Icon} {chosenShell.DisplayName} ({_terminalCounter++})";
         var session = new TerminalSession(chosenShell, title, _workingDirectory);
@@ -110,12 +137,12 @@ public partial class TerminalPaneControl : UserControl
 
         session.OutputReceived += text =>
         {
-            Dispatcher.Invoke(() => AppendOutput(tabItem, text));
+            Dispatcher.BeginInvoke(() => AppendOutput(tabItem, text));
         };
 
         session.ProcessExited += code =>
         {
-            Dispatcher.Invoke(() => HandleProcessExited(tabItem, code));
+            Dispatcher.BeginInvoke(() => HandleProcessExited(tabItem, code));
         };
 
         try
@@ -132,6 +159,47 @@ public partial class TerminalPaneControl : UserControl
         SelectTab(tabItem);
 
         TerminalCountChanged?.Invoke(Tabs.Count);
+    }
+
+    public void PromptConfigureShell(ShellInfo shell)
+    {
+        var owner = Window.GetWindow(this);
+        var dialog = new ConfigureShellDialog(shell, owner);
+
+        if (dialog.ShowDialog() == true)
+        {
+            shell.ExecutablePath = dialog.VerifiedPath;
+            shell.IsAvailable = true;
+            shell.IsCustomConfigured = true;
+            _settingsService.SetCustomPath(shell.Id, dialog.VerifiedPath);
+
+            RefreshShellsList();
+
+            _isUpdatingSelection = true;
+            try
+            {
+                CmbShells.SelectedItem = shell;
+            }
+            finally
+            {
+                _isUpdatingSelection = false;
+            }
+
+            CreateTerminal(shell);
+        }
+        else
+        {
+            // Reset selection back to default or active shell
+            _isUpdatingSelection = true;
+            try
+            {
+                CmbShells.SelectedItem = ActiveTab?.Session.Shell ?? _defaultShell;
+            }
+            finally
+            {
+                _isUpdatingSelection = false;
+            }
+        }
     }
 
     private void AppendOutput(TerminalTabItem tab, string text)
@@ -153,6 +221,9 @@ public partial class TerminalPaneControl : UserControl
 
     public void CloseTab(TerminalTabItem tab)
     {
+        if (tab.IsClosing) return;
+        tab.IsClosing = true;
+
         tab.Session.Close();
         var wasActive = tab == ActiveTab;
         Tabs.Remove(tab);
@@ -268,11 +339,29 @@ public partial class TerminalPaneControl : UserControl
         CreateTerminal();
     }
 
+    private void OnConfigureShellClick(object sender, RoutedEventArgs e)
+    {
+        var shell = (CmbShells.SelectedItem as ShellInfo) ?? _defaultShell ?? _detectedShells.FirstOrDefault();
+        if (shell != null)
+        {
+            PromptConfigureShell(shell);
+        }
+    }
+
     private void OnShellSelected(object sender, SelectionChangedEventArgs e)
     {
-        if (CmbShells.SelectedItem is ShellInfo selected && IsLoaded)
+        if (_isUpdatingSelection || !IsLoaded) return;
+
+        if (CmbShells.SelectedItem is ShellInfo selected)
         {
-            CreateTerminal(selected);
+            if (!selected.IsAvailable)
+            {
+                PromptConfigureShell(selected);
+            }
+            else
+            {
+                CreateTerminal(selected);
+            }
         }
     }
 
@@ -305,6 +394,28 @@ public partial class TerminalPaneControl : UserControl
                 ActiveTab.History.Add(input);
             }
             ActiveTab.HistoryIndex = ActiveTab.History.Count;
+
+            var trimmed = input.Trim();
+            if (trimmed.Equals("exit", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.Equals("quit", StringComparison.OrdinalIgnoreCase))
+            {
+                // Send exit to shell process
+                ActiveTab.Session.SendInput(input);
+
+                // Fallback safety timeout (1200ms) to ensure tab closes even if the process takes longer
+                var tabToClose = ActiveTab;
+                Task.Delay(1200).ContinueWith(_ =>
+                {
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        if (Tabs.Contains(tabToClose) && !tabToClose.IsClosing)
+                        {
+                            CloseTab(tabToClose);
+                        }
+                    });
+                });
+                return;
+            }
 
             ActiveTab.Session.SendInput(input);
         }

@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.1] - 2026-09-10
+
+### 🐛 Fixed & Enhanced
+
+#### 💻 Terminal PowerShell Exit Deadlock Fix
+- **Deadlock Elimination**: Fixed an application freeze that occurred when issuing the `exit` command in PowerShell. Replaced `-NoExit` startup argument with `-NoLogo` and converted stream redirect events from synchronous `Dispatcher.Invoke` to non-blocking `Dispatcher.BeginInvoke`.
+- **Background Tree Termination**: Spanned process tree disposal onto background tasks with timeouts, ensuring the WPF UI message pump is never blocked during terminal exit or tab teardown.
+- **Command Safety Timer & Re-entrancy Protection**: Integrated safety close timer for `exit` and `quit` commands alongside `IsClosing` flags on tab models to prevent race conditions during rapid terminal closes.
+
+#### 🐚 Multi-Shell Catalog with Grayed-Out Unavailable Shells
+- **Full Shell Catalog**: `ShellDetector` now returns the complete canonical catalog of supported shells (PowerShell 7+, Windows PowerShell, Command Prompt, Git Bash, WSL Linux, Cygwin Bash, MSYS2 Bash, plus PATH-discovered shells).
+- **Unavailable Shell Dimming**: Shells not detected on disk or PATH are retained in the dropdown selector and styled with dimmed opacity, italic text, and a `(not found)` badge.
+
+#### ⚙️ Custom Executable Configuration & Verification (`ConfigureShellDialog`)
+- **Interactive Configuration Dialog**: Clicking an unavailable shell in the dropdown or clicking the new toolbar gear button (`⚙️`) opens a dedicated Dark+ modal to configure the executable path via manual entry or `OpenFileDialog`.
+- **Automated Binary Verification (`ShellVerifier`)**: Validates candidate executables before accepting: checks file existence, executable format (`.exe`, `.cmd`, `.bat`), expected binary naming, and runs a timed non-interactive probe process.
+- **Clear Diagnostic Feedback**: Rejects invalid binaries with detailed inline diagnostics, or accepts valid binaries, updates availability in real time, and immediately spawns the session.
+- **Persistent User Settings (`ShellSettingsService`)**: Saves custom shell paths in `%APPDATA%\RecluseEdit\terminal_settings.json` so custom configurations persist across restarts.
+
+#### 🧪 Expanded Test Suite
+- Added 5 new automated tests covering shell catalog retention, availability flags, binary acceptance and rejection, settings persistence, and PowerShell clean exit, bringing the test suite to **92 passing tests** with 0 warnings.
+
+---
+
 ## [1.4.0] - 2026-09-09
 
 ### ✨ Added Features

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using RecluseEdit.Core.Models;
 
 namespace RecluseEdit.Core.Services;
@@ -69,7 +70,7 @@ public class TerminalSession : IDisposable
 
         _process.OutputDataReceived += (s, e) =>
         {
-            if (e.Data != null)
+            if (e.Data != null && !_isDisposed)
             {
                 var clean = CleanAnsi(e.Data);
                 OutputReceived?.Invoke(clean + "\n");
@@ -78,7 +79,7 @@ public class TerminalSession : IDisposable
 
         _process.ErrorDataReceived += (s, e) =>
         {
-            if (e.Data != null)
+            if (e.Data != null && !_isDisposed)
             {
                 var clean = CleanAnsi(e.Data);
                 OutputReceived?.Invoke(clean + "\n");
@@ -87,8 +88,12 @@ public class TerminalSession : IDisposable
 
         _process.Exited += (s, e) =>
         {
-            var code = _process?.ExitCode ?? 0;
-            ProcessExited?.Invoke(code);
+            if (!_isDisposed)
+            {
+                var code = 0;
+                try { code = _process?.ExitCode ?? 0; } catch { }
+                ProcessExited?.Invoke(code);
+            }
         };
 
         _process.Start();
@@ -148,24 +153,57 @@ public class TerminalSession : IDisposable
         if (_isDisposed) return;
         _isDisposed = true;
 
-        if (_process != null)
+        // Detach handlers immediately so no cross-thread events fire
+        OutputReceived = null;
+        ProcessExited = null;
+
+        var proc = _process;
+        _process = null;
+
+        if (proc != null)
         {
             try
             {
-                if (!_process.HasExited)
+                proc.CancelOutputRead();
+            }
+            catch { }
+
+            try
+            {
+                proc.CancelErrorRead();
+            }
+            catch { }
+
+            try
+            {
+                proc.StandardInput.Close();
+            }
+            catch { }
+
+            // Terminate process tree asynchronously without blocking the caller/UI thread
+            Task.Run(() =>
+            {
+                try
                 {
-                    _process.Kill(entireProcessTree: true);
+                    if (!proc.HasExited)
+                    {
+                        proc.Kill(entireProcessTree: true);
+                        proc.WaitForExit(1000);
+                    }
                 }
-            }
-            catch
-            {
-                // Process already exited
-            }
-            finally
-            {
-                _process.Dispose();
-                _process = null;
-            }
+                catch
+                {
+                    // Process already exited
+                }
+                finally
+                {
+                    try
+                    {
+                        proc.Dispose();
+                    }
+                    catch { }
+                }
+            });
         }
 
         GC.SuppressFinalize(this);

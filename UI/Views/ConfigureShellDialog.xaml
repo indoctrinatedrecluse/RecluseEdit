@@ -1,0 +1,110 @@
+<Window x:Class="RecluseEdit.UI.Views.ConfigureShellDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Configure Shell Executable - RecluseEdit"
+        Height="400" Width="580"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BgPrimary}"
+        Foreground="{StaticResource FgPrimary}"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- Header -->
+            <RowDefinition Height="*" />    <!-- Content & Fields -->
+            <RowDefinition Height="Auto" /> <!-- Status Alert Box -->
+            <RowDefinition Height="Auto" /> <!-- Footer Buttons -->
+        </Grid.RowDefinitions>
+
+        <!-- 0. Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock x:Name="TxtShellIcon" Text="💻" FontSize="22" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBlock x:Name="TxtShellTitle" Text="Configure Shell" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource FgAccent}" VerticalAlignment="Center" />
+            </StackPanel>
+            <TextBlock x:Name="TxtShellDescription" Text="Specify the path to the shell executable on your system. RecluseEdit will verify it before activating." FontSize="12" Foreground="{StaticResource FgSecondary}" Margin="0,4,0,0" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- 1. Content & Fields -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,12">
+            <!-- Executable Path Field -->
+            <TextBlock Text="Executable Path:" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource FgPrimary}" Margin="0,0,0,6" />
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="TxtExecutablePath" 
+                         Grid.Column="0"
+                         Background="{StaticResource BgSecondary}"
+                         Foreground="#FFFFFF"
+                         CaretBrush="#FFFFFF"
+                         BorderBrush="{StaticResource BorderDark}"
+                         BorderThickness="1"
+                         FontFamily="Consolas, Cascadia Code, Courier New"
+                         FontSize="12"
+                         Padding="8,6"
+                         TextChanged="OnExecutablePathChanged" />
+                <Button Grid.Column="1" 
+                        Content="Browse..." 
+                        Style="{StaticResource ToolbarButtonStyle}" 
+                        Background="{StaticResource BgTertiary}"
+                        Padding="12,5" 
+                        Margin="8,0,0,0" 
+                        Click="OnBrowseClick" />
+            </Grid>
+
+            <!-- Expected Binaries Info -->
+            <Border Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="10,8" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="Verification Details" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource FgSecondary}" Margin="0,0,0,4" />
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <TextBlock Text="Expected Binary Names: " FontSize="11" Foreground="{StaticResource FgMuted}" />
+                        <TextBlock x:Name="TxtExpectedBinaries" Text="bash.exe, sh.exe" FontSize="11" Foreground="{StaticResource AccentBlueHover}" FontFamily="Consolas" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <TextBlock Text="Startup Arguments: " FontSize="11" Foreground="{StaticResource FgMuted}" />
+                        <TextBlock x:Name="TxtStartupArgs" Text="--login -i" FontSize="11" Foreground="{StaticResource FgPrimary}" FontFamily="Consolas" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- 2. Status Alert Box -->
+        <Border x:Name="StatusBorder" Grid.Row="2" CornerRadius="4" Padding="10,8" Margin="0,0,0,14" Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock x:Name="TxtStatusIcon" Text="⚠️" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBlock x:Name="TxtStatusMessage" Text="Status" FontSize="11" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="480" />
+            </StackPanel>
+        </Border>
+
+        <!-- 3. Footer Buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="BtnVerifyAndSave" 
+                    Content="Verify &amp; Save" 
+                    IsDefault="True"
+                    Background="{StaticResource AccentBlue}" 
+                    Foreground="#FFFFFF" 
+                    BorderThickness="0" 
+                    Padding="14,6" 
+                    FontSize="12" 
+                    FontWeight="SemiBold" 
+                    Cursor="Hand" 
+                    Click="OnVerifyAndSaveClick" />
+
+            <Button Content="Cancel" 
+                    IsCancel="True"
+                    Style="{StaticResource ToolbarButtonStyle}" 
+                    Background="{StaticResource BgTertiary}"
+                    Padding="14,6" 
+                    Margin="8,0,0,0" 
+                    FontSize="12" 
+                    Click="OnCancelClick" />
+        </StackPanel>
+    </Grid>
+</Window>
+
