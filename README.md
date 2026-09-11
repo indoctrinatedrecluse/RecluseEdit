@@ -283,7 +283,7 @@ fatal: .git/index: index file smaller than expected
 ```
 
 #### Cause
-On Windows, NTFS enforces strict file-sharing locks. When background file watchers or IDE status polls query `.git/index` at the exact millisecond Git attempts to atomically replace it via `.git/index.lock`, the atomic rename can be interrupted mid-transaction, leaving the `.git/index` staging cache truncated to `0 bytes`. The underlying Git repository database, commit history, and branches remain completely safe and uncorrupted.
+On Windows, NTFS enforces strict file-sharing locks. When background file watchers, IDE status polls, or active **VPN tunnel virtual network drivers & security inspection hooks** (such as WireGuard, OpenVPN, Cisco AnyConnect, or Zscaler) hold or intercept file handles and socket streams at the exact millisecond Git attempts to atomically replace `.git/index` via `.git/index.lock`, the atomic rename can be interrupted mid-transaction, leaving the `.git/index` staging cache truncated to `0 bytes`. The underlying Git repository database, commit history, and branches remain completely safe and uncorrupted.
 
 #### Quick 1-Second Resolution
 To safely regenerate the staging index directly from `HEAD` without losing any uncommitted working tree changes, run this command in **PowerShell**:
