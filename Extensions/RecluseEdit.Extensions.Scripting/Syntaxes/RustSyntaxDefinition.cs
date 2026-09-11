@@ -224,3 +224,4 @@ public static class RustSyntaxDefinition
         return HighlightingLoader.Load(xmlReader, HighlightingManager.Instance);
     }
 }
+

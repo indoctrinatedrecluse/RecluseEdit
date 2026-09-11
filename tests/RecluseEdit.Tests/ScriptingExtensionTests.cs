@@ -290,3 +290,4 @@ public sealed class ScriptingExtensionTests
         Assert.IsTrue(bashReport.Status is ToolchainStatus.Available or ToolchainStatus.Warning or ToolchainStatus.Missing);
     }
 }
+

@@ -216,3 +216,4 @@ public static class PowerShellSyntaxDefinition
         return HighlightingLoader.Load(xmlReader, HighlightingManager.Instance);
     }
 }
+

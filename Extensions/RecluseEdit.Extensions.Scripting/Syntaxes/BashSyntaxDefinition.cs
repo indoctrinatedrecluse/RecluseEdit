@@ -218,3 +218,4 @@ public static class BashSyntaxDefinition
         return HighlightingLoader.Load(xmlReader, HighlightingManager.Instance);
     }
 }
+

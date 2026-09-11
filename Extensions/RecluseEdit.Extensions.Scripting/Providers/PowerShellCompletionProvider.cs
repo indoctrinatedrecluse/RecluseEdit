@@ -46,3 +46,4 @@ public class PowerShellCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+

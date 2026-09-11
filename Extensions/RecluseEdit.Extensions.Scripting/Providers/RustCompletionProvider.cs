@@ -55,3 +55,4 @@ public class RustCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+

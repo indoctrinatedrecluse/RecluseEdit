@@ -45,3 +45,4 @@ public class BashCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+

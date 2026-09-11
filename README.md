@@ -15,7 +15,7 @@
 - 🗂️ **Web Workspace Explorer**: Open entire project directories (`Ctrl+Shift+O`), browse files via a collapsible tree sidebar (`Ctrl+B`), and double-click to open.
 - 🤖 **DeepSeek AI Chat Assistant**: Collapsible right-pane conversational AI panel (<kbd>Ctrl+Alt+A</kbd>) with real-time streaming, configurable API endpoints & keys, secure file read/write permissions, and interactive confirmation prompts before running terminal commands.
 - 📑 **Multi-File Tabbed Workspace**: Seamlessly open, edit, and switch between multiple tabs. Middle-click tab to close, and right-click for tab context actions (*Close Others*, *Close to Right*, *Copy Path*, *Reveal in Explorer*).
-- 🎨 **Exhaustive High-Fidelity Syntax Highlighting**: Custom, dedicated XSHD syntax definitions across all supported languages (Markdown, modern ECMAScript/TypeScript with template literals and control flow, CSS3/SCSS/LESS with CSS variables and pseudo-classes, PHP 8+ with attributes and match expressions, React JSX/TSX, GraphQL, Angular HTML templates, Angular TypeScript, Dart 3, Ruby on Rails, JSON, and XML/XAML), beautifully tuned with a rich VS Code Dark+ color palette.
+- 🎨 **Exhaustive High-Fidelity Syntax Highlighting**: Custom, dedicated XSHD syntax definitions across all supported languages (Markdown, modern ECMAScript/TypeScript with template literals and control flow, CSS3/SCSS/LESS with CSS variables and pseudo-classes, PHP 8+ with attributes and match expressions, React JSX/TSX, GraphQL, Angular HTML templates, Angular TypeScript, Dart 3, Ruby on Rails, Go, Python, Rust, Lua, PowerShell, Bash, JSON, and XML/XAML), beautifully tuned with a rich VS Code Dark+ color palette.
 - ⚡ **Dual Autocomplete System**:
   - **Inline Ghost Text**: Intelligent suggestions inline at the caret in faded italic text (<kbd>Tab</kbd> to accept, <kbd>Esc</kbd> to dismiss).
   - **IntelliSense Popup**: Rich completion list with tags, CSS properties, and JS APIs (<kbd>Ctrl+Space</kbd>).
@@ -107,7 +107,7 @@ dotnet restore RecluseEdit.slnx
 # Build the entire solution (host + all extensions)
 dotnet build RecluseEdit.slnx
 
-# Run all unit and integration tests (49 tests)
+# Run all unit and integration tests (103 tests)
 dotnet test RecluseEdit.slnx
 
 # Launch the editor
@@ -169,7 +169,7 @@ RecluseEdit features a modular, decoupled extension architecture. Each extension
 
 ## 📦 Official Extensions (Separate Build Targets)
 
-RecluseEdit comes with nine modular extensions built as dedicated targets in `RecluseEdit.slnx`:
+RecluseEdit comes with ten modular extensions built as dedicated targets in `RecluseEdit.slnx`:
 
 ### 🤖 DeepSeek AI Chat Assistant Pack (`RecluseEdit.Extensions.DeepSeek`)
 - **Right Pane AI Interface**: Integrated collapsible right-side dock (<kbd>Ctrl+Alt+A</kbd>) styled seamlessly in dark theme, with live conversation history, auto-scroll, message bubbles, and status updates.
@@ -240,6 +240,20 @@ RecluseEdit comes with nine modular extensions built as dedicated targets in `Re
 - **Ruby Idioms & Blocks**: `def`, `class`, `module`, `attr_accessor`, `each do |item|`, `map do |item|`, `begin ... rescue StandardError`.
 - **Rails & ActiveRecord Snippets**: `class User < ApplicationRecord`, `has_many`, `belongs_to`, `validates`, `before_action`, `resources`, `render json:`, and ERB tags (`<%= ... %>`, `<% ... %>`).
 - **Toolchain Diagnostics**: Actively verifies **Ruby runtime** (`ruby`), **Bundler** (`bundle`), and **Rails CLI** (`rails`).
+ 
+### 📜 Scripting & Systems Language Pack (`RecluseEdit.Extensions.Scripting`)
+- Supports **Rust** (`.rs`), **Lua** (`.lua`), **PowerShell** (`.ps1`, `.psm1`, `.psd1`), and **Bash / POSIX Shell** (`.sh`, `.bash`, `.zsh`, `.ksh`, `.command`).
+- **Custom XSHD Syntax Highlighting**:
+  - **Rust**: Highlighting for lifetimes (`'a`), macros (`println!`, `vec!`), attributes (`#[derive(...)]`), raw strings (`r#"..."#`), byte strings, standard types, and doc comments (`///`, `//!`).
+  - **Lua**: Highlighting for multiline block comments (`--[[ ... ]]`), multiline literal strings (`[[ ... ]]`), standard library tables (`string`, `table`, `math`, `io`, etc.), and operators (`..`, `~=`, `//`, `#`).
+  - **PowerShell**: Highlighting for Verb-Noun cmdlets (`Get-Process`, `Invoke-WebRequest`), parameters (`-Path`, `-Force`), type accelerators (`[string]`, `[hashtable]`), and environment variables (`$env:PATH`, `$_`).
+  - **Bash**: Highlighting for shebangs (`#!/usr/bin/env bash`), parameter expansion (`${VAR:-default}`, `$@`), shell builtins, Unix utilities (`grep`, `awk`, `sed`, `curl`), and test brackets (`[[ ]]`).
+- **Contextual Autocomplete & Snippet Providers**:
+  - `RustCompletionProvider`: Functions, pattern matching (`match`, `if let`), tests, structs, enums, derive macros, and standard collections.
+  - `LuaCompletionProvider`: Local and member functions, `for pairs`/`ipairs` loops, and `pcall` safe invocation.
+  - `PowerShellCompletionProvider`: Advanced cmdlets with `[CmdletBinding()]` and `param()` blocks, `try/catch`, and loop templates.
+  - `BashCompletionProvider`: Strict mode templates (`set -euo pipefail`), file testing conditions, and traps.
+- **Toolchain Diagnostics**: Actively detects compiler and shell runtimes: `rustc`, `lua`/`luajit`, `pwsh`/`powershell`, and `bash`.
 
 ---
 
@@ -251,7 +265,7 @@ RecluseEdit includes a fully automated GitHub Actions workflow (`.github/workflo
 - 🧪 **Full Verification**: Executes the complete test suite (`dotnet test RecluseEdit.slnx -c Release`) across all projects before packaging.
 - 📦 **Bundle & Package**:
   - Compiles the host editor and all extensions in `Release` configuration.
-  - Bundles the main application executable, dependencies, and all nine extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`, `Go`, and `DeepSeek`) under `Extensions/`.
+  - Bundles the main application executable, dependencies, and all ten extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`, `Go`, `Scripting`, and `DeepSeek`) under `Extensions/`.
   - Packages the entire distribution into a portable archive: `RecluseEdit-windows-<tag>.zip`.
 - 🚀 **GitHub Release**: Automatically creates a new GitHub Release with the bundled `.zip` asset attached and generates release notes.
 - 🕹️ **Manual Trigger**: Can also be executed manually via the **Actions** tab with custom version tags (`workflow_dispatch`).

@@ -47,3 +47,4 @@ public class LuaCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+
