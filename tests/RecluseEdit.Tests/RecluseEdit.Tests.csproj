@@ -28,6 +28,7 @@
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Laravel\RecluseEdit.Extensions.Laravel.csproj" />
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Go\RecluseEdit.Extensions.Go.csproj" />
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.DeepSeek\RecluseEdit.Extensions.DeepSeek.csproj" />
+    <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Scripting\RecluseEdit.Extensions.Scripting.csproj" />
   </ItemGroup>
 
 </Project>

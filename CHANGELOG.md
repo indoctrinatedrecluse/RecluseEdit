@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### ✨ Added Features
+
+#### 📜 Scripting & Systems Language Pack (`RecluseEdit.Extensions.Scripting`)
+- **Multi-Language Support**: Comprehensive official extension adding first-class language support for **Rust**, **Lua**, **PowerShell**, and **Bash** in a single high-performance package.
+- **Dark+ AvalonEdit XML Syntax Highlighting Definitions (XSHD)**:
+  - **Rust (`.rs`)**: Highlighting for lifetimes (`'a`), macros (`println!`, `vec!`, `panic!`), attributes (`#[derive(...)]`), raw strings (`r#"..."#`), byte strings, types, and operators (`::`, `->`, `=>`).
+  - **Lua (`.lua`)**: Highlighting for block comments, multiline literal strings (`[[ ... ]]`), standard libraries (`string`, `table`, `math`, `io`, `os`, `coroutine`, `utf8`), special variables (`_G`, `self`), and operators (`..`, `~=`, `//`, `#`).
+  - **PowerShell (`.ps1`, `.psm1`, `.psd1`)**: Highlighting for cmdlet Verb-Noun pairs (`Get-Process`, `Invoke-WebRequest`), parameters (`-Path`, `-Force`), type accelerators (`[string]`, `[hashtable]`), variables (`$env:PATH`, `$_`), and comparison operators (`-eq`, `-match`, `-replace`).
+  - **Bash / POSIX Shell (`.sh`, `.bash`, `.zsh`, `.ksh`, `.command`)**: Highlighting for shebang lines (`#!/usr/bin/env bash`), parameter expansion (`$VAR`, `${VAR:-default}`), shell builtins, Unix utilities (`grep`, `awk`, `sed`, `curl`, `chmod`), and test brackets (`[[ ]]`).
+- **Contextual Autocomplete & Snippet Providers**:
+  - `RustCompletionProvider`: Functions, pattern matching (`match`, `if let`, `while let`), tests, structs, enums, derive macros, and standard collections.
+  - `LuaCompletionProvider`: Local and member functions, `for pairs`/`ipairs` loops, modules with metatables, and `pcall` error handling.
+  - `PowerShellCompletionProvider`: Advanced cmdlet functions with `[CmdletBinding()]`, `param()` blocks, loops, and `try/catch/finally`.
+  - `BashCompletionProvider`: Strict mode templates (`set -euo pipefail`), functions, conditionals, loops, heredocs, and error trapping (`trap`).
+- **Toolchain Environment Diagnostics**:
+  - Probes and status reporting for `rustc`, `lua`/`luajit`, `pwsh`/`powershell`, and `bash`.
+- **Expanded Test Suite**:
+  - Added 11 automated unit and integration tests covering syntax rules, completions, and toolchain checks, expanding the test suite to **103 passing tests** with 0 warnings.
+
+---
+
 ## [1.4.1] - 2026-09-10
 
 ### 🐛 Fixed & Enhanced
