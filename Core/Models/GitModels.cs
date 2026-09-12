@@ -65,3 +65,4 @@ public class DiffHunk
     public int NewLineCount { get; set; }
     public DiffHunkType Type { get; set; }
 }
+

@@ -138,3 +138,4 @@ public partial class RestClientPanelView : UserControl
         return $"{bytes / (1024.0 * 1024.0):F2} MB";
     }
 }
+

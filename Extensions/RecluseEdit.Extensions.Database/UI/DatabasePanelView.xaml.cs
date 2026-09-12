@@ -216,3 +216,4 @@ public partial class DatabasePanelView : UserControl
         return field;
     }
 }
+

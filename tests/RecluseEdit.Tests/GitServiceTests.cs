@@ -105,3 +105,4 @@ public sealed class GitServiceTests
         Assert.AreEqual(DiffHunkType.Deleted, hunks[2].Type);
     }
 }
+

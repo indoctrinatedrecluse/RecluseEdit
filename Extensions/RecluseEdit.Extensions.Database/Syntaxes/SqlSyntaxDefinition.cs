@@ -213,3 +213,4 @@ public static class SqlSyntaxDefinition
         return HighlightingLoader.Load(xmlReader, HighlightingManager.Instance);
     }
 }
+

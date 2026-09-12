@@ -827,9 +827,12 @@ public partial class MainWindow : Window
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
         MessageBox.Show(this,
-            "RecluseEdit v2.0.0\n\n" +
+            "RecluseEdit v2.1.0\n\n" +
             "A fast, modern code editor optimized for web applications.\n\n" +
             "Key Features:\n" +
+            "• Git Diff Gutter Margin & Source Control Panel (Ctrl+Shift+G)\n" +
+            "• Database & SQL Explorer Pack with SQLite runner & CSV export\n" +
+            "• REST Client & API Workbench with response formatter & metrics\n" +
             "• Universal Command Palette (Ctrl+Shift+P, F1, Ctrl+P, Ctrl+G)\n" +
             "• Multi-Cursor & Multiline Column Editing (Ctrl+Alt+Up/Down, Alt+Drag)\n" +
             "• Developer Line Manipulation (Ctrl+/, Alt+Up/Down, Shift+Alt+Down, Ctrl+Shift+K)\n" +

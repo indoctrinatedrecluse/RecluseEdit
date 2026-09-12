@@ -95,3 +95,4 @@ public static class HttpSyntaxDefinition
         return HighlightingLoader.Load(xmlReader, HighlightingManager.Instance);
     }
 }
+

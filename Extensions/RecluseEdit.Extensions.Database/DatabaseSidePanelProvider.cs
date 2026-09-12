@@ -15,3 +15,4 @@ public class DatabaseSidePanelProvider : ISidePanelProvider
         return new DatabasePanelView();
     }
 }
+

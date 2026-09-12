@@ -50,3 +50,4 @@ public class HttpCompletionProvider : IInlineCompletionProvider
         return Task.FromResult<string?>(null);
     }
 }
+

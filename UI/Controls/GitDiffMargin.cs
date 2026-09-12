@@ -106,3 +106,4 @@ public class GitDiffMargin : AbstractMargin
         return null;
     }
 }
+
