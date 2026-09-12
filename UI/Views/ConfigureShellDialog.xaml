@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Configure Shell Executable - RecluseEdit"
+        Icon="pack://application:,,,/Assets/app.ico"
         Height="400" Width="580"
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource BgPrimary}"

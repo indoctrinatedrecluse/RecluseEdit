@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### ✨ Added Features
+
+#### 🎨 Custom Application Icon & Window Branding
+- **Custom Application Icon**: Designed and integrated a bespoke brand icon featuring a glowing neon cyan & violet monogram `R` intertwined with code brackets `< / >` and subtle circuit traces on a dark squircle badge.
+- **Multi-Resolution Windows Executable Icon (`.ico`)**: Generated a crisp multi-tier Windows icon (`Assets/app.ico`) embedding 16x16, 24x24, 32x32, 48x48, 64x64, 128x128, and 256x256 resolution frames. Configured `<ApplicationIcon>` in `RecluseEdit.csproj` for native Windows Explorer, desktop shortcut, Alt+Tab, and taskbar rendering.
+- **WPF Window Icon Integration**: Bound assembly resource icon (`pack://application:,,,/Assets/app.ico`) to `MainWindow`, `ExtensionManagerWindow`, and `ConfigureShellDialog` for consistent visual presentation across all application surfaces.
+- **High-Resolution Asset**: Bundled 512x512 high-resolution master asset (`Assets/app.png`) as an embedded assembly resource.
+
+---
+
 ## [1.5.0] - 2026-09-11
 
 ### ✨ Added Features
@@ -243,6 +255,7 @@ The debut release of **RecluseEdit**, a modern, lightweight, high-performance de
 - **GitHub Actions Workflow**: Automated build and release pipeline (`.github/workflows/release.yml`) triggered on tag pushes (`v*`) to run the 27-test automated test suite and package a portable distribution archive (`RecluseEdit-windows-<tag>.zip`) attached to GitHub Releases.
 - **Git Environment Configuration**: Configured `.gitattributes` to enforce consistent LF/CRLF normalization across development environments and CI runners.
 
+[Unreleased]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.5.0...HEAD
 [1.5.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.3.0...v1.4.0

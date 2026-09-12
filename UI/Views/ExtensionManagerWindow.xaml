@@ -6,6 +6,7 @@
         xmlns:models="clr-namespace:RecluseEdit.Sdk.Models;assembly=RecluseEdit.Sdk"
         mc:Ignorable="d"
         Title="Extension &amp; Toolchain Manager - RecluseEdit" 
+        Icon="pack://application:,,,/Assets/app.ico"
         Height="540" Width="720"
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource BgPrimary}"

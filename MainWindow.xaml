@@ -8,6 +8,7 @@
         xmlns:models="clr-namespace:RecluseEdit.Core.Models"
         mc:Ignorable="d"
         Title="RecluseEdit - Web Application Editor" 
+        Icon="pack://application:,,,/Assets/app.ico"
         Height="760" Width="1180"
         MinHeight="450" MinWidth="650"
         WindowStartupLocation="CenterScreen"
