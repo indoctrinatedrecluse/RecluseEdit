@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Microsoft.Win32;
 using RecluseEdit.Core.Models;
 using RecluseEdit.Core.Services;
@@ -32,6 +33,8 @@ public partial class MainWindow : Window
     public static readonly RoutedUICommand CommandPaletteCommand = new("Command Palette", "CommandPalette", typeof(MainWindow));
     public static readonly RoutedUICommand QuickOpenCommand = new("Quick Open", "QuickOpen", typeof(MainWindow));
     public static readonly RoutedUICommand GoToLineCommand = new("Go to Line", "GoToLine", typeof(MainWindow));
+    public static readonly RoutedUICommand ExplorerCommand = new("Explorer", "Explorer", typeof(MainWindow));
+    public static readonly RoutedUICommand SourceControlCommand = new("Source Control", "SourceControl", typeof(MainWindow));
 
     private readonly SyntaxManager _syntaxManager;
     private readonly AutocompleteManager _autocompleteManager;
@@ -40,6 +43,10 @@ public partial class MainWindow : Window
     private readonly DocumentManager _documentManager;
     private readonly WorkspaceManager _workspaceManager;
     private readonly CommandRegistry _commandRegistry;
+
+    private readonly List<ISidePanelProvider> _registeredSidePanels = [];
+    private readonly Dictionary<string, FrameworkElement> _sidePanelViews = [];
+    private string? _activeSidePanelId;
 
     private GridLength _lastSidebarWidth = new(240);
     private GridLength _lastRightPaneWidth = new(380);
@@ -78,6 +85,10 @@ public partial class MainWindow : Window
         CommandBindings.Add(new CommandBinding(CommandPaletteCommand, (_, _) => OpenCommandPalette(">")));
         CommandBindings.Add(new CommandBinding(QuickOpenCommand, (_, _) => OpenCommandPalette("")));
         CommandBindings.Add(new CommandBinding(GoToLineCommand, (_, _) => OpenGoToLine()));
+        CommandBindings.Add(new CommandBinding(ExplorerCommand, (_, _) => SwitchSidebarView(true)));
+        CommandBindings.Add(new CommandBinding(SourceControlCommand, (_, _) => SwitchSidebarView(false)));
+
+        SourceControlPane.FileSelected += OnSourceControlFileSelected;
 
         InitializeCommandPalette();
 
@@ -151,6 +162,10 @@ public partial class MainWindow : Window
             WorkspaceTreeView.ItemsSource = _workspaceManager.RootItem.Children;
             TerminalPane.SetWorkingDirectory(_workspaceManager.RootPath);
 
+            SourceControlPane.WorkspacePath = _workspaceManager.RootPath;
+            EditorHost.WorkspacePath = _workspaceManager.RootPath;
+            _ = EditorHost.RefreshGitDiffAsync();
+
             // Ensure sidebar is visible
             if (ColSidebar.Width.Value == 0)
             {
@@ -161,6 +176,9 @@ public partial class MainWindow : Window
         {
             TxtWorkspaceName.Text = "EXPLORER";
             WorkspaceTreeView.ItemsSource = null;
+            SourceControlPane.WorkspacePath = null;
+            EditorHost.WorkspacePath = null;
+            _ = EditorHost.RefreshGitDiffAsync();
         }
     }
 
@@ -211,6 +229,56 @@ public partial class MainWindow : Window
     }
 
     private void OnToggleSidebarClick(object sender, RoutedEventArgs e) => ToggleSidebar();
+
+    private void OnActivityExplorerClick(object sender, RoutedEventArgs e) => SwitchSidebarView(true);
+    private void OnActivitySourceControlClick(object sender, RoutedEventArgs e) => SwitchSidebarView(false);
+    private void OnMenuExplorerClick(object sender, RoutedEventArgs e) => SwitchSidebarView(true);
+    private void OnMenuSourceControlClick(object sender, RoutedEventArgs e) => SwitchSidebarView(false);
+
+    public void SwitchSidebarView(bool showExplorer)
+    {
+        if (ColSidebar.Width.Value <= 10)
+        {
+            ColSidebar.MinWidth = 140;
+            ColSidebar.Width = _lastSidebarWidth.Value > 50 ? _lastSidebarWidth : new GridLength(240);
+            Splitter.Visibility = Visibility.Visible;
+            MenuSidebar.IsChecked = true;
+        }
+
+        if (showExplorer)
+        {
+            ViewExplorer.Visibility = Visibility.Visible;
+            SourceControlPane.Visibility = Visibility.Collapsed;
+            BtnActivityExplorer.Background = (Brush)FindResource("BgSecondary");
+            BtnActivitySourceControl.Background = Brushes.Transparent;
+        }
+        else
+        {
+            ViewExplorer.Visibility = Visibility.Collapsed;
+            SourceControlPane.Visibility = Visibility.Visible;
+            BtnActivityExplorer.Background = Brushes.Transparent;
+            BtnActivitySourceControl.Background = (Brush)FindResource("BgSecondary");
+            SourceControlPane.WorkspacePath = _workspaceManager.RootPath;
+        }
+    }
+
+    private void OnSourceControlFileSelected(string relativePath)
+    {
+        if (string.IsNullOrEmpty(_workspaceManager.RootPath)) return;
+        string fullPath = Path.Combine(_workspaceManager.RootPath, relativePath);
+        if (File.Exists(fullPath))
+        {
+            try
+            {
+                var doc = _documentManager.OpenDocument(fullPath);
+                StatusMessage.Text = $"Opened {doc.FileName}";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, $"Failed to open file:\n{ex.Message}", "RecluseEdit", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
 
     public void ToggleRightPane()
     {
@@ -285,10 +353,54 @@ public partial class MainWindow : Window
     {
         Dispatcher.Invoke(() =>
         {
-            TxtRightPaneTitle.Text = panel.Title.ToUpperInvariant();
-            TxtRightPaneIcon.Text = panel.Icon ?? "🤖";
-            RightPaneHost.Content = panel.CreateView(_extensionManager.WorkspaceContext);
+            if (_registeredSidePanels.Any(p => p.Id == panel.Id)) return;
+            _registeredSidePanels.Add(panel);
+
+            var tabBtn = new Button
+            {
+                Style = (Style)FindResource("ToolbarButtonStyle"),
+                Content = $"{panel.Icon ?? "⚡"} {panel.Title}",
+                Padding = new Thickness(8, 3, 8, 3),
+                Margin = new Thickness(2, 0, 2, 0),
+                Tag = panel
+            };
+            tabBtn.Click += (s, e) => ActivateSidePanel(panel);
+            RightPaneTabs.Children.Add(tabBtn);
+
+            if (_registeredSidePanels.Count == 1 || _activeSidePanelId == null)
+            {
+                ActivateSidePanel(panel);
+            }
         });
+    }
+
+    private void ActivateSidePanel(ISidePanelProvider panel)
+    {
+        _activeSidePanelId = panel.Id;
+        if (!_sidePanelViews.TryGetValue(panel.Id, out var view))
+        {
+            view = panel.CreateView(_extensionManager.WorkspaceContext);
+            _sidePanelViews[panel.Id] = view;
+        }
+        RightPaneHost.Content = view;
+
+        foreach (var child in RightPaneTabs.Children)
+        {
+            if (child is Button btn && btn.Tag is ISidePanelProvider p)
+            {
+                btn.Background = p.Id == panel.Id ? (Brush)FindResource("BgSecondary") : Brushes.Transparent;
+            }
+        }
+
+        if (ColRightPane.Width.Value < 100)
+        {
+            ColRightPane.MinWidth = 260;
+            ColRightPane.Width = _lastRightPaneWidth.Value > 100 ? _lastRightPaneWidth : new GridLength(380);
+            RightSplitter.Visibility = Visibility.Visible;
+            RightPaneBorder.Visibility = Visibility.Visible;
+            MenuRightPane.IsChecked = true;
+            BtnToggleAiChat.IsChecked = true;
+        }
     }
 
     #endregion
@@ -352,6 +464,8 @@ public partial class MainWindow : Window
         {
             _documentManager.SaveDocument(doc);
             StatusMessage.Text = $"Saved {doc.FileName}";
+            _ = EditorHost.RefreshGitDiffAsync();
+            _ = SourceControlPane.RefreshAsync();
             return true;
         }
         catch (Exception ex)
@@ -400,6 +514,8 @@ public partial class MainWindow : Window
             {
                 _documentManager.SaveDocument(doc, dlg.FileName);
                 StatusMessage.Text = $"Saved as {doc.FileName}";
+                _ = EditorHost.RefreshGitDiffAsync();
+                _ = SourceControlPane.RefreshAsync();
                 return true;
             }
             catch (Exception ex)
@@ -429,6 +545,8 @@ public partial class MainWindow : Window
         }
 
         StatusMessage.Text = savedCount > 0 ? $"Saved {savedCount} document(s)" : "All documents up to date";
+        _ = EditorHost.RefreshGitDiffAsync();
+        _ = SourceControlPane.RefreshAsync();
     }
 
     private void CloseActiveFile()

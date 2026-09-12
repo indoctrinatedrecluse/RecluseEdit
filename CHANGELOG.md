@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ Added Features
+
+#### 🌿 Git Diff Gutter Indicators & Source Control Panel (`Ctrl+Shift+G`)
+- **Live Diff Margin Indicators**: Added interactive AvalonEdit gutter indicators rendering real-time line additions (green bar), modifications (blue bar), and deletions (red triangle indicator) calculated directly against Git `HEAD`.
+- **Activity Bar Navigation**: Added 46px VS Code-style left Activity Bar dock allowing seamless switching between 📁 **Explorer** (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>) and 🌿 **Source Control** (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd>).
+- **Dedicated Source Control Panel**:
+  - Live branch status badge with remote sync metrics (`ahead` / `behind` commit counters).
+  - Commit message composer with <kbd>Ctrl+Enter</kbd> fast commit action.
+  - Segregated collapsible lists for **Staged Changes** and **Changes** (working tree).
+  - One-click Stage (+), Unstage (-), Discard/Restore changes, and Commit & Push actions.
+- **Dynamic Right Dock Tabs**: Multi-side-panel tab header supporting simultaneous docking of DeepSeek AI, Database Explorer, and REST Client workbench.
+
+#### 🗄️ Database & SQL Explorer Pack (`RecluseEdit.Extensions.Database`)
+- **Dialect-Agnostic SQL Syntax Highlighting**: Custom XSHD grammar supporting ANSI SQL, SQLite, PostgreSQL, MySQL, and T-SQL in Dark+ palette.
+- **Inline SQL Completions**: Ghost-text completions for `SELECT`, `INSERT INTO`, `UPDATE`, `DELETE FROM`, `CREATE TABLE IF NOT EXISTS`, `ALTER TABLE`, `INNER JOIN`, `LEFT JOIN`, `CREATE INDEX`, and transaction blocks.
+- **Interactive Database Side Panel**: Dedicated right dock panel with SQLite file picker, live schema inspector showing tables and column types, multi-line query editor with <kbd>Ctrl+Enter</kbd> execution, responsive DataGrid for tabular query results, and one-click **CSV Export**.
+- **Database Toolchain Checks**: Automatic diagnostics and detection for `sqlite3`, PostgreSQL (`psql`), and MySQL (`mysql`) CLI tools.
+
+#### ⚡ REST Client & API Workbench Pack (`RecluseEdit.Extensions.RestClient`)
+- **HTTP / REST Syntax Highlighting**: Dedicated XSHD grammar for `.http` and `.rest` files highlighting HTTP verbs, boundaries (`###`), headers, variables (`{{...}}`), URLs, and JSON payloads.
+- **Inline HTTP Completions**: Suggestions for request headers (`Content-Type: application/json`, `Authorization: Bearer`), HTTP verbs, and request templates.
+- **Integrated API Workbench Dock**: Dedicated right dock panel with HTTP method dropdown (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS`), URL bar, <kbd>Ctrl+Enter</kbd> send action, status code badge (green 2xx, yellow 3xx, orange 4xx, red 5xx), latency metrics (ms), size counter, request headers/payload tabs, and formatted JSON response viewer with one-click clipboard copying.
+- **cURL Toolchain Check**: Active verification for `curl` CLI on system `PATH`.
+
+### 🧪 Automated Testing
+- Added automated test suites for `GitService` (status parsing, staged/unstaged separation, diff hunk extraction), `DatabaseExtension` (syntax, completion, toolchains, panel), and `RestClientExtension` (syntax, HTTP parser, JSON formatter, completions, toolchain).
+- Total automated test suite expanded to **134 passing tests** with 0 warnings.
+
 ---
 
 ## [2.0.0] - 2026-09-12

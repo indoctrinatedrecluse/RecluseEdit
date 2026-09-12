@@ -11,5 +11,7 @@
   <Project Path="extensions/RecluseEdit.Extensions.Go/RecluseEdit.Extensions.Go.csproj" />
   <Project Path="extensions/RecluseEdit.Extensions.DeepSeek/RecluseEdit.Extensions.DeepSeek.csproj" />
   <Project Path="extensions/RecluseEdit.Extensions.Scripting/RecluseEdit.Extensions.Scripting.csproj" />
+  <Project Path="extensions/RecluseEdit.Extensions.Database/RecluseEdit.Extensions.Database.csproj" />
+  <Project Path="extensions/RecluseEdit.Extensions.RestClient/RecluseEdit.Extensions.RestClient.csproj" />
   <Project Path="tests/RecluseEdit.Tests/RecluseEdit.Tests.csproj" />
 </Solution>

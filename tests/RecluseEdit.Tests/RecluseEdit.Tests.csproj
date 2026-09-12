@@ -29,6 +29,8 @@
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Go\RecluseEdit.Extensions.Go.csproj" />
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.DeepSeek\RecluseEdit.Extensions.DeepSeek.csproj" />
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Scripting\RecluseEdit.Extensions.Scripting.csproj" />
+    <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Database\RecluseEdit.Extensions.Database.csproj" />
+    <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.RestClient\RecluseEdit.Extensions.RestClient.csproj" />
   </ItemGroup>
 
 </Project>

@@ -20,12 +20,15 @@ public partial class EditorControl : UserControl
 {
     private readonly GhostTextRenderer _ghostRenderer;
     private readonly BracketHighlightRenderer _bracketRenderer;
+    private readonly GitDiffMargin _gitDiffMargin;
+    private readonly GitService _gitService = new();
     private CancellationTokenSource? _suggestionCts;
     private DocumentModel? _documentModel;
     private CompletionWindow? _completionWindow;
     private FoldingManager? _foldingManager;
     private XmlFoldingStrategy? _xmlFoldingStrategy;
 
+    public string? WorkspacePath { get; set; }
     public TextEditor UnderlyingEditor => Editor;
     public FindReplaceControl FindReplaceBar => FindReplace;
 
@@ -68,6 +71,7 @@ public partial class EditorControl : UserControl
                 _documentModel.Document.TextChanged += OnDocumentTextChanged;
                 UpdateSyntaxHighlighting();
                 UpdateFolding();
+                _ = RefreshGitDiffAsync();
             }
             else
             {
@@ -79,6 +83,7 @@ public partial class EditorControl : UserControl
                 Editor.Document = null;
             }
 
+            _gitDiffMargin.Hunks = [];
             _ghostRenderer.Clear();
             _bracketRenderer.Clear();
             FindReplace.Visibility = Visibility.Collapsed;
@@ -88,6 +93,9 @@ public partial class EditorControl : UserControl
     public EditorControl()
     {
         InitializeComponent();
+
+        _gitDiffMargin = new GitDiffMargin();
+        Editor.TextArea.LeftMargins.Add(_gitDiffMargin);
 
         FindReplace.Editor = Editor;
 
@@ -156,6 +164,30 @@ public partial class EditorControl : UserControl
                 UpdateSyntaxHighlighting();
                 UpdateFolding();
             });
+        }
+        else if (e.PropertyName is nameof(DocumentModel.FilePath) or nameof(DocumentModel.IsDirty))
+        {
+            _ = RefreshGitDiffAsync();
+        }
+    }
+
+    public async Task RefreshGitDiffAsync()
+    {
+        if (string.IsNullOrEmpty(WorkspacePath) || _documentModel == null || string.IsNullOrEmpty(_documentModel.FilePath))
+        {
+            Dispatcher.Invoke(() => _gitDiffMargin.Hunks = []);
+            return;
+        }
+
+        try
+        {
+            string relativePath = System.IO.Path.GetRelativePath(WorkspacePath, _documentModel.FilePath);
+            var hunks = await _gitService.GetFileDiffHunksAsync(WorkspacePath, relativePath);
+            Dispatcher.Invoke(() => _gitDiffMargin.Hunks = hunks);
+        }
+        catch
+        {
+            Dispatcher.Invoke(() => _gitDiffMargin.Hunks = []);
         }
     }
 

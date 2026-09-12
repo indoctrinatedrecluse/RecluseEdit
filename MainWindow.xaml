@@ -31,6 +31,8 @@
         <KeyBinding Key="F1" Command="{x:Static local:MainWindow.CommandPaletteCommand}" />
         <KeyBinding Modifiers="Control" Key="P" Command="{x:Static local:MainWindow.QuickOpenCommand}" />
         <KeyBinding Modifiers="Control" Key="G" Command="{x:Static local:MainWindow.GoToLineCommand}" />
+        <KeyBinding Modifiers="Control+Shift" Key="E" Command="{x:Static local:MainWindow.ExplorerCommand}" />
+        <KeyBinding Modifiers="Control+Shift" Key="G" Command="{x:Static local:MainWindow.SourceControlCommand}" />
     </Window.InputBindings>
 
     <Grid>
@@ -89,8 +91,11 @@
             <MenuItem Header="_View">
                 <MenuItem Header="_Command Palette..." InputGestureText="Ctrl+Shift+P" Click="OnCommandPaletteClick" />
                 <Separator Background="{StaticResource BorderDark}" />
+                <MenuItem Header="_Explorer" InputGestureText="Ctrl+Shift+E" Click="OnMenuExplorerClick" />
+                <MenuItem Header="_Source Control" InputGestureText="Ctrl+Shift+G" Click="OnMenuSourceControlClick" />
+                <Separator Background="{StaticResource BorderDark}" />
                 <MenuItem x:Name="MenuSidebar" Header="Toggle _Sidebar" InputGestureText="Ctrl+B" IsCheckable="True" IsChecked="True" Click="OnToggleSidebarClick" />
-                <MenuItem x:Name="MenuRightPane" Header="Toggle _AI Chat" InputGestureText="Ctrl+Alt+A" IsCheckable="True" IsChecked="True" Click="OnToggleAiChatClick" />
+                <MenuItem x:Name="MenuRightPane" Header="Toggle _AI Chat / Side Panels" InputGestureText="Ctrl+Alt+A" IsCheckable="True" IsChecked="True" Click="OnToggleAiChatClick" />
                 <MenuItem x:Name="MenuTerminal" Header="Toggle _Terminal" InputGestureText="Ctrl+`" IsCheckable="True" IsChecked="True" Click="OnToggleTerminalClick" />
                 <MenuItem x:Name="MenuWordWrap" Header="Word _Wrap" IsCheckable="True" Click="OnToggleWordWrapClick" />
                 <MenuItem x:Name="MenuLineNumbers" Header="_Line Numbers" IsCheckable="True" IsChecked="True" Click="OnToggleLineNumbersClick" />
@@ -256,58 +261,85 @@
         <!-- 3. Workspace / Editor Viewport -->
         <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="ColSidebar" Width="240" MinWidth="140" />
-                <ColumnDefinition x:Name="ColSplitter" Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition x:Name="ColRightSplitter" Width="Auto" />
-                <ColumnDefinition x:Name="ColRightPane" Width="380" MinWidth="260" />
+                <ColumnDefinition Width="46" /> <!-- 0. Activity Bar -->
+                <ColumnDefinition x:Name="ColSidebar" Width="240" MinWidth="140" /> <!-- 1. Sidebar -->
+                <ColumnDefinition x:Name="ColSplitter" Width="Auto" /> <!-- 2. Left Splitter -->
+                <ColumnDefinition Width="*" /> <!-- 3. Editor & Terminal -->
+                <ColumnDefinition x:Name="ColRightSplitter" Width="Auto" /> <!-- 4. Right Splitter -->
+                <ColumnDefinition x:Name="ColRightPane" Width="380" MinWidth="260" /> <!-- 5. Side Panels -->
             </Grid.ColumnDefinitions>
 
-            <!-- Left: Workspace Explorer Sidebar -->
-            <Border Grid.Column="0" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,1,0">
+            <!-- 0. Activity Bar -->
+            <Border Grid.Column="0" Background="{StaticResource BgTertiary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,1,0">
+                <StackPanel Orientation="Vertical">
+                    <Button x:Name="BtnActivityExplorer" 
+                            Style="{StaticResource ToolbarButtonStyle}" 
+                            Width="44" Height="42" Padding="0" 
+                            ToolTip="Explorer (Ctrl+Shift+E)" 
+                            Click="OnActivityExplorerClick">
+                        <TextBlock Text="📁" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Button>
+                    <Button x:Name="BtnActivitySourceControl" 
+                            Style="{StaticResource ToolbarButtonStyle}" 
+                            Width="44" Height="42" Padding="0" 
+                            ToolTip="Source Control (Ctrl+Shift+G)" 
+                            Click="OnActivitySourceControlClick">
+                        <TextBlock Text="🌿" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- 1. Left Sidebar: Explorer or Source Control -->
+            <Border Grid.Column="1" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,1,0">
                 <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
+                    <!-- Explorer View -->
+                    <Grid x:Name="ViewExplorer" Visibility="Visible">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
 
-                    <!-- Sidebar Header -->
-                    <Border Grid.Row="0" Background="{StaticResource BgTertiary}" Padding="8,6" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
+                        <!-- Sidebar Header -->
+                        <Border Grid.Row="0" Background="{StaticResource BgTertiary}" Padding="8,6" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
 
-                            <TextBlock x:Name="TxtWorkspaceName" Text="EXPLORER" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource FgSecondary}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                <TextBlock x:Name="TxtWorkspaceName" Text="EXPLORER" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource FgSecondary}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
 
-                            <Button Grid.Column="1" Style="{StaticResource ToolbarButtonStyle}" Content="🔄" Width="22" Height="22" Padding="0" ToolTip="Refresh Workspace" Click="OnRefreshWorkspaceClick" />
-                            <Button Grid.Column="2" Style="{StaticResource ToolbarButtonStyle}" Content="📁" Width="22" Height="22" Padding="0" ToolTip="Open Folder" Click="OnOpenFolderClick" />
-                        </Grid>
-                    </Border>
+                                <Button Grid.Column="1" Style="{StaticResource ToolbarButtonStyle}" Content="🔄" Width="22" Height="22" Padding="0" ToolTip="Refresh Workspace" Click="OnRefreshWorkspaceClick" />
+                                <Button Grid.Column="2" Style="{StaticResource ToolbarButtonStyle}" Content="📁" Width="22" Height="22" Padding="0" ToolTip="Open Folder" Click="OnOpenFolderClick" />
+                            </Grid>
+                        </Border>
 
-                    <!-- Sidebar File Tree -->
-                    <TreeView x:Name="WorkspaceTreeView" Grid.Row="1" 
-                              SelectedItemChanged="OnWorkspaceItemSelectionChanged"
-                              MouseDoubleClick="OnWorkspaceTreeDoubleClick">
-                        <TreeView.ItemTemplate>
-                            <HierarchicalDataTemplate DataType="{x:Type models:FileSystemItem}" ItemsSource="{Binding Children}">
-                                <StackPanel Orientation="Horizontal" Margin="0,1">
-                                    <TextBlock Text="{Binding Icon}" Margin="0,0,6,0" FontSize="13" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Name}" FontSize="12" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </HierarchicalDataTemplate>
-                        </TreeView.ItemTemplate>
-                    </TreeView>
+                        <!-- Sidebar File Tree -->
+                        <TreeView x:Name="WorkspaceTreeView" Grid.Row="1" 
+                                  SelectedItemChanged="OnWorkspaceItemSelectionChanged"
+                                  MouseDoubleClick="OnWorkspaceTreeDoubleClick">
+                            <TreeView.ItemTemplate>
+                                <HierarchicalDataTemplate DataType="{x:Type models:FileSystemItem}" ItemsSource="{Binding Children}">
+                                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                                        <TextBlock Text="{Binding Icon}" Margin="0,0,6,0" FontSize="13" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Name}" FontSize="12" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </HierarchicalDataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
+                    </Grid>
+
+                    <!-- Source Control View -->
+                    <controls:SourceControlPanel x:Name="SourceControlPane" Visibility="Collapsed" />
                 </Grid>
             </Border>
 
-            <!-- Splitter between Sidebar & Editor -->
-            <GridSplitter x:Name="Splitter" Grid.Column="1" Style="{StaticResource VerticalSplitterStyle}" />
+            <!-- 2. Splitter between Sidebar & Editor -->
+            <GridSplitter x:Name="Splitter" Grid.Column="2" Style="{StaticResource VerticalSplitterStyle}" />
 
-            <!-- Center: Editor & Terminal Area -->
-            <Grid Grid.Column="2">
+            <!-- 3. Center: Editor & Terminal Area -->
+            <Grid Grid.Column="3">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition x:Name="RowTerminalSplitter" Height="Auto" />
@@ -360,29 +392,30 @@
                 <controls:TerminalPaneControl x:Name="TerminalPane" Grid.Row="2" />
             </Grid>
 
-            <!-- Splitter between Editor & Right Pane -->
-            <GridSplitter x:Name="RightSplitter" Grid.Column="3" Style="{StaticResource VerticalSplitterStyle}" />
+            <!-- 4. Splitter between Editor & Right Pane -->
+            <GridSplitter x:Name="RightSplitter" Grid.Column="4" Style="{StaticResource VerticalSplitterStyle}" />
 
-            <!-- Right: AI Chat / Side Panel Host -->
-            <Border x:Name="RightPaneBorder" Grid.Column="4" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1,0,0,0">
+            <!-- 5. Right: Side Panels Host (AI Chat, Database, REST Client) -->
+            <Border x:Name="RightPaneBorder" Grid.Column="5" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1,0,0,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <!-- Right Pane Header -->
-                    <Border Grid.Row="0" Background="{StaticResource BgTertiary}" Padding="10,6" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
+                    <!-- Right Pane Header with Tab Buttons -->
+                    <Border Grid.Row="0" Background="{StaticResource BgTertiary}" Padding="8,4" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock x:Name="TxtRightPaneIcon" Text="🤖" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                <TextBlock x:Name="TxtRightPaneTitle" Text="AI CHAT" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource FgSecondary}" VerticalAlignment="Center" />
-                            </StackPanel>
-                            <Button Grid.Column="1" Style="{StaticResource ToolbarButtonStyle}" Content="✕" Width="22" Height="22" Padding="0" ToolTip="Close Panel (Ctrl+Alt+A)" Click="OnCloseRightPaneClick" />
+                            
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                <StackPanel x:Name="RightPaneTabs" Orientation="Horizontal" VerticalAlignment="Center" />
+                            </ScrollViewer>
+                            
+                            <Button Grid.Column="1" Style="{StaticResource ToolbarButtonStyle}" Content="✕" Width="22" Height="22" Padding="0" ToolTip="Close Panel (Ctrl+Alt+A)" Click="OnCloseRightPaneClick" Margin="4,0,0,0" />
                         </Grid>
                     </Border>
 
@@ -390,9 +423,9 @@
                     <ContentControl x:Name="RightPaneHost" Grid.Row="1">
                         <Border Padding="20" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="🤖" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,12" />
-                                <TextBlock Text="DeepSeek AI Assistant" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource FgPrimary}" HorizontalAlignment="Center" Margin="0,0,0,6" />
-                                <TextBlock Text="Initializing AI Extension..." FontSize="12" Foreground="{StaticResource FgMuted}" HorizontalAlignment="Center" />
+                                <TextBlock Text="⚡" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,12" />
+                                <TextBlock Text="RecluseEdit Side Panels" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource FgPrimary}" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                                <TextBlock Text="Initializing Extensions..." FontSize="12" Foreground="{StaticResource FgMuted}" HorizontalAlignment="Center" />
                             </StackPanel>
                         </Border>
                     </ContentControl>

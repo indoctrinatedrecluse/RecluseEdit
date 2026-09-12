@@ -12,13 +12,14 @@
 
 ## 🎯 Key Objectives & Features
 
+- 🌿 **Git Diff Gutter Indicators & Source Control Panel**: Interactive editor gutter margin displaying live line additions (green), modifications (blue), and deletions (red triangle) computed directly against Git `HEAD`. Dedicated Source Control panel (<kbd>Ctrl+Shift+G</kbd>) with Activity Bar navigation, branch & ahead/behind counters, commit message composer (<kbd>Ctrl+Enter</kbd>), one-click staging/unstaging, and discard changes.
 - ⚡ **Universal Command Palette**: Modal fuzzy command launcher (<kbd>Ctrl+Shift+P</kbd>, <kbd>F1</kbd>) to search and execute any command, quick-open workspace files and tabs (<kbd>Ctrl+P</kbd>), jump to line numbers (<kbd>Ctrl+G</kbd>), and query help commands (`?`).
 - ✂️ **Advanced Line & Multiline Editing**: Move lines up/down (<kbd>Alt+&uarr;/&darr;</kbd>), duplicate lines (<kbd>Shift+Alt+&uarr;/&darr;</kbd>), toggle comments (<kbd>Ctrl+/</kbd>), delete lines (<kbd>Ctrl+Shift+K</kbd>), join lines (<kbd>Ctrl+J</kbd>), transform case (<kbd>Ctrl+Shift+U</kbd>, <kbd>Ctrl+U</kbd>), sort lines, trim trailing whitespace, and rectangular column cursor editing (<kbd>Ctrl+Alt+&uarr;/&darr;</kbd>).
 - 🗂️ **Web Workspace Explorer**: Open entire project directories (`Ctrl+Shift+O`), browse files via a collapsible tree sidebar (`Ctrl+B`), and double-click to open.
 - 🤖 **DeepSeek AI Chat Assistant**: Collapsible right-pane conversational AI panel (<kbd>Ctrl+Alt+A</kbd>) with real-time streaming, configurable API endpoints & keys, secure file read/write permissions, and interactive confirmation prompts before running terminal commands.
 - 💻 **Integrated Multi-Terminal Dock**: Persistent multi-tab terminal (<kbd>Ctrl+`</kbd>) supporting PowerShell, CMD, Git Bash, WSL, and custom verified executables.
 - 📑 **Multi-File Tabbed Workspace**: Seamlessly open, edit, and switch between multiple tabs. Middle-click tab to close, and right-click for tab context actions (*Close Others*, *Close to Right*, *Copy Path*, *Reveal in Explorer*).
-- 🎨 **Exhaustive High-Fidelity Syntax Highlighting**: Custom, dedicated XSHD syntax definitions across all supported languages (Markdown, modern ECMAScript/TypeScript with template literals and control flow, CSS3/SCSS/LESS with CSS variables and pseudo-classes, PHP 8+ with attributes and match expressions, React JSX/TSX, GraphQL, Angular HTML templates, Angular TypeScript, Dart 3, Ruby on Rails, Go, Python, Rust, Lua, PowerShell, Bash, JSON, and XML/XAML), beautifully tuned with a rich VS Code Dark+ color palette.
+- 🎨 **Exhaustive High-Fidelity Syntax Highlighting**: Custom, dedicated XSHD syntax definitions across all supported languages (SQL, HTTP/REST, Markdown, modern ECMAScript/TypeScript, CSS3/SCSS/LESS, PHP 8+, React JSX/TSX, GraphQL, Angular HTML templates, Angular TypeScript, Dart 3, Ruby on Rails, Go, Python, Rust, Lua, PowerShell, Bash, JSON, and XML/XAML), beautifully tuned with a rich VS Code Dark+ color palette.
 - ⚡ **Dual Autocomplete System**:
   - **Inline Ghost Text**: Intelligent suggestions inline at the caret in faded italic text (<kbd>Tab</kbd> to accept, <kbd>Esc</kbd> to dismiss).
   - **IntelliSense Popup**: Rich completion list with tags, CSS properties, and JS APIs (<kbd>Ctrl+Space</kbd>).
@@ -26,8 +27,8 @@
 - 🔍 **Built-In Find & Replace Overlay**: Floating top-right search panel with Next (<kbd>Enter</kbd>), Previous (<kbd>Shift+Enter</kbd>), Match Case, and Replace All (<kbd>Ctrl+F</kbd>, <kbd>Ctrl+H</kbd>).
 - 📐 **Code Folding & Live Bracket Matching**: Expand/collapse blocks and sections for HTML/XML and live accent border highlighting for matching pairs of `()`, `[]`, and `{}` as the caret moves.
 - 🔢 **Visual Line Numbers & Formatting**: Customizable line-number gutter, word wrapping toggle, and font scaling with <kbd>Ctrl</kbd> + <kbd>MouseWheel</kbd>.
-- 🔌 **Pluggable Extension Architecture**: Dynamic plugin discovery from the `Extensions/` directory with separate project build targets, side panel UI integration, and a dedicated UI manager (`Extensions -> Manage Extensions...`).
-- 🌙 **Modern Dark UI**: VS Code-inspired sleek dark theme (`#1E1E1E`), complete with menu bar, quick-action toolbar, and informative status bar.
+- 🔌 **Pluggable Extension Architecture**: Dynamic plugin discovery from the `Extensions/` directory with separate project build targets, multi-side-panel UI dock integration, and a dedicated UI manager (`Extensions -> Manage Extensions...`).
+- 🌙 **Modern Dark UI**: VS Code-inspired sleek dark theme (`#1E1E1E`), complete with Activity Bar sidebar, menu bar, quick-action toolbar, and informative status bar.
 
 ---
 
@@ -38,6 +39,8 @@
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> / <kbd>F1</kbd> | Universal Command Palette (Commands Mode `>`) |
 | <kbd>Ctrl</kbd> + <kbd>P</kbd> | Quick Open (Search Files & Open Tabs) |
 | <kbd>Ctrl</kbd> + <kbd>G</kbd> | Go to Line & Column (`:line[:col]`) |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>E</kbd> | Focus Explorer Activity Bar |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>G</kbd> | Focus Source Control Activity Bar |
 | <kbd>Ctrl</kbd> + <kbd>K</kbd>, <kbd>Ctrl</kbd> + <kbd>S</kbd> | Keyboard Shortcuts Reference Window |
 | <kbd>Ctrl</kbd> + <kbd>/</kbd> | Toggle Line Comment (`//`, `#`, `--`, etc.) |
 | <kbd>Alt</kbd> + <kbd>&uarr;</kbd> / <kbd>&darr;</kbd> | Move Line / Selection Up / Down |
@@ -54,7 +57,7 @@
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | Save As |
 | <kbd>Ctrl</kbd> + <kbd>W</kbd> | Close Active Tab |
 | <kbd>Ctrl</kbd> + <kbd>`</kbd> | Toggle Terminal Panel |
-| <kbd>Ctrl</kbd> + <kbd>B</kbd> | Toggle Workspace Explorer Sidebar |
+| <kbd>Ctrl</kbd> + <kbd>B</kbd> | Toggle Sidebar (Explorer / Source Control) |
 | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>A</kbd> | Toggle DeepSeek AI Chat Right Pane |
 | <kbd>Ctrl</kbd> + <kbd>F</kbd> | Find in Document |
 | <kbd>Ctrl</kbd> + <kbd>H</kbd> | Find & Replace in Document |
@@ -185,7 +188,7 @@ RecluseEdit features a modular, decoupled extension architecture. Each extension
 
 ## 📦 Official Extensions (Separate Build Targets)
 
-RecluseEdit comes with ten modular extensions built as dedicated targets in `RecluseEdit.slnx`:
+RecluseEdit comes with twelve modular extensions built as dedicated targets in `RecluseEdit.slnx`:
 
 ### 🤖 DeepSeek AI Chat Assistant Pack (`RecluseEdit.Extensions.DeepSeek`)
 - **Right Pane AI Interface**: Integrated collapsible right-side dock (<kbd>Ctrl+Alt+A</kbd>) styled seamlessly in dark theme, with live conversation history, auto-scroll, message bubbles, and status updates.
@@ -271,6 +274,20 @@ RecluseEdit comes with ten modular extensions built as dedicated targets in `Rec
   - `BashCompletionProvider`: Strict mode templates (`set -euo pipefail`), file testing conditions, and traps.
 - **Toolchain Diagnostics**: Actively detects compiler and shell runtimes: `rustc`, `lua`/`luajit`, `pwsh`/`powershell`, and `bash`.
 
+### 🗄️ Database & SQL Explorer Pack (`RecluseEdit.Extensions.Database`)
+- Supports **SQL** (`.sql`) across ANSI SQL, SQLite, PostgreSQL, MySQL, and T-SQL dialects.
+- **Custom SQL XSHD Syntax Highlighting**: Dark+ colorization for keywords (`SELECT`, `INSERT`, `UPDATE`, `DELETE`, `JOIN`, `GROUP BY`, `TRANSACTION`), functions (`COUNT`, `COALESCE`, `NOW`), data types (`VARCHAR`, `INTEGER`, `TIMESTAMP`, `JSON`), comments (`--`, `/* ... */`), and dialect-specific identifiers (`` `backtick` ``, `[bracket]`, `"quoted"`).
+- **Interactive Database Side Panel**: Dedicated tab in the right dock with SQLite database file picker, live schema inspector showing tables and column types, interactive multi-line query editor with <kbd>Ctrl+Enter</kbd> execution, responsive DataGrid for tabular query results, and one-click **CSV Export**.
+- **SQL Inline Completion**: Snippets and statements for `SELECT`, `INSERT INTO`, `UPDATE`, `DELETE FROM`, `CREATE TABLE IF NOT EXISTS`, `ALTER TABLE`, `INNER JOIN`, `LEFT JOIN`, `CREATE INDEX`, and transaction blocks.
+- **Toolchain Diagnostics**: Verifies `sqlite3`, PostgreSQL (`psql`), and MySQL (`mysql`) CLI utilities on system `PATH`.
+
+### ⚡ REST Client & API Workbench Pack (`RecluseEdit.Extensions.RestClient`)
+- Supports **HTTP / REST** request files (`.http`, `.rest`).
+- **Custom HTTP Syntax Highlighting**: Dark+ highlighting for HTTP methods (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`), request boundaries (`###`), request headers (`Content-Type`, `Authorization`), variables (`{{...}}`), URLs, and JSON body payloads.
+- **Integrated API Workbench Dock**: Dedicated right dock panel with HTTP method dropdown, request URL bar, <kbd>Ctrl+Enter</kbd> execution, real-time HTTP client engine with timing / latency metrics (ms) and content-length counters, status code pill indicators (green 2xx, yellow 3xx, orange 4xx, red 5xx), request headers & body editor tabs, and syntax-formatted JSON response viewer with one-click clipboard copying.
+- **HTTP Inline Completion**: Snippets for request headers (`Content-Type: application/json`, `Authorization: Bearer`), methods, and request templates.
+- **Toolchain Diagnostics**: Verifies `curl` CLI on system `PATH`.
+
 ---
 
 ## 🤖 Automated CI/CD & GitHub Releases
@@ -281,7 +298,7 @@ RecluseEdit includes a fully automated GitHub Actions workflow (`.github/workflo
 - 🧪 **Full Verification**: Executes the complete test suite (`dotnet test RecluseEdit.slnx -c Release`) across all projects before packaging.
 - 📦 **Bundle & Package**:
   - Compiles the host editor and all extensions in `Release` configuration.
-  - Bundles the main application executable, dependencies, and all ten extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`, `Go`, `Scripting`, and `DeepSeek`) under `Extensions/`.
+  - Bundles the main application executable, dependencies, and all twelve extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`, `Go`, `Scripting`, `DeepSeek`, `Database`, and `RestClient`) under `Extensions/`.
   - Packages the entire distribution into a portable archive: `RecluseEdit-windows-<tag>.zip`.
 - 🚀 **GitHub Release**: Automatically creates a new GitHub Release with the bundled `.zip` asset attached and generates release notes.
 - 🕹️ **Manual Trigger**: Can also be executed manually via the **Actions** tab with custom version tags (`workflow_dispatch`).
@@ -309,6 +326,22 @@ Remove-Item .git\index -Force; git reset
 ```
 
 *(Or in Bash / POSIX shells: `rm -f .git/index && git reset`)*
+
+---
+
+## 🗺️ Planned Roadmap & SDK Evolution (TODO)
+
+The following architectural evolutions and modular APIs are planned for future releases:
+
+### 1. Modular Document Formatters (`IDocumentFormatter`)
+- **Pluggable Code Prettification**: Introduce `IDocumentFormatter` to `RecluseEdit.Sdk` to allow extensions to register external CLI formatters or in-process engine formatters.
+- **Format on Save**: Configurable auto-formatting pipeline invoked transparently before write operations.
+- **Language Prettifiers**: Out-of-the-box integration adapters for `Prettier` (JS/TS/JSON/CSS/HTML/Markdown), `black`/`ruff` (Python), `gofmt`/`goimports` (Go), `sql-formatter` (SQL), `dart format` (Dart/Flutter), and `rustfmt` (Rust).
+
+### 2. Extensible Multi-Model AI Hub (`IAiProvider`) & Diagnostic Providers
+- **Multi-Model Provider Abstraction**: Evolve `RecluseEdit.Extensions.DeepSeek` into a pluggable multi-model provider architecture with `IAiProvider`, enabling runtime switching between DeepSeek, OpenAI (GPT-4o), Anthropic (Claude 3.5 Sonnet), Google Gemini 2.5, and local offline Ollama models.
+- **Custom Status Bar Contributions (`IStatusBarProvider`)**: Allow extensions to dynamically inject interactive status bar indicators (e.g., active database connection, Git ahead/behind counters, API server latency, language server health).
+- **Diagnostic & Problem Markers (`IDiagnosticProvider`)**: Standardized error/warning/info squiggles and a centralized "Problems" dock, aggregating real-time compiler and linter outputs directly in the editor buffer.
 
 ---
 
