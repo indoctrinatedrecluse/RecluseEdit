@@ -27,6 +27,10 @@
         <KeyBinding Modifiers="Control" Key="H" Command="{x:Static local:MainWindow.ReplaceCommand}" />
         <KeyBinding Modifiers="Control+Alt" Key="A" Command="{x:Static local:MainWindow.ToggleAiChatCommand}" />
         <KeyBinding Modifiers="Control" Key="OemTilde" Command="{x:Static local:MainWindow.ToggleTerminalCommand}" />
+        <KeyBinding Modifiers="Control+Shift" Key="P" Command="{x:Static local:MainWindow.CommandPaletteCommand}" />
+        <KeyBinding Key="F1" Command="{x:Static local:MainWindow.CommandPaletteCommand}" />
+        <KeyBinding Modifiers="Control" Key="P" Command="{x:Static local:MainWindow.QuickOpenCommand}" />
+        <KeyBinding Modifiers="Control" Key="G" Command="{x:Static local:MainWindow.GoToLineCommand}" />
     </Window.InputBindings>
 
     <Grid>
@@ -65,8 +69,26 @@
                 <Separator Background="{StaticResource BorderDark}" />
                 <MenuItem Header="_Find..." InputGestureText="Ctrl+F" Click="OnFindClick" />
                 <MenuItem Header="_Replace..." InputGestureText="Ctrl+H" Click="OnReplaceClick" />
+                <MenuItem Header="_Go to Line..." InputGestureText="Ctrl+G" Click="OnGoToLineClick" />
+                <Separator Background="{StaticResource BorderDark}" />
+                <MenuItem Header="_Line Operations">
+                    <MenuItem Header="Toggle Line _Comment" InputGestureText="Ctrl+/" Click="OnToggleCommentClick" />
+                    <MenuItem Header="_Move Line Up" InputGestureText="Alt+Up" Click="OnMoveLineUpClick" />
+                    <MenuItem Header="Move Line _Down" InputGestureText="Alt+Down" Click="OnMoveLineDownClick" />
+                    <MenuItem Header="_Duplicate Line Down" InputGestureText="Shift+Alt+Down" Click="OnDuplicateLineDownClick" />
+                    <MenuItem Header="Duplicate Line _Up" InputGestureText="Shift+Alt+Up" Click="OnDuplicateLineUpClick" />
+                    <MenuItem Header="_Delete Line" InputGestureText="Ctrl+Shift+K" Click="OnDeleteLineClick" />
+                    <MenuItem Header="_Join Lines" InputGestureText="Ctrl+J" Click="OnJoinLinesClick" />
+                    <Separator Background="{StaticResource BorderDark}" />
+                    <MenuItem Header="Transform to _UPPERCASE" InputGestureText="Ctrl+Shift+U" Click="OnTransformUppercaseClick" />
+                    <MenuItem Header="Transform to _lowercase" InputGestureText="Ctrl+U" Click="OnTransformLowercaseClick" />
+                    <MenuItem Header="_Sort Lines" Click="OnSortLinesClick" />
+                    <MenuItem Header="_Trim Trailing Whitespace" Click="OnTrimTrailingWhitespaceClick" />
+                </MenuItem>
             </MenuItem>
             <MenuItem Header="_View">
+                <MenuItem Header="_Command Palette..." InputGestureText="Ctrl+Shift+P" Click="OnCommandPaletteClick" />
+                <Separator Background="{StaticResource BorderDark}" />
                 <MenuItem x:Name="MenuSidebar" Header="Toggle _Sidebar" InputGestureText="Ctrl+B" IsCheckable="True" IsChecked="True" Click="OnToggleSidebarClick" />
                 <MenuItem x:Name="MenuRightPane" Header="Toggle _AI Chat" InputGestureText="Ctrl+Alt+A" IsCheckable="True" IsChecked="True" Click="OnToggleAiChatClick" />
                 <MenuItem x:Name="MenuTerminal" Header="Toggle _Terminal" InputGestureText="Ctrl+`" IsCheckable="True" IsChecked="True" Click="OnToggleTerminalClick" />
@@ -78,6 +100,8 @@
                 <MenuItem Header="Open Extensions _Folder" Click="OnOpenExtensionsFolderClick" />
             </MenuItem>
             <MenuItem Header="_Help">
+                <MenuItem Header="_Keyboard Shortcuts" InputGestureText="Ctrl+K, Ctrl+S" Click="OnKeyboardShortcutsClick" />
+                <Separator Background="{StaticResource BorderDark}" />
                 <MenuItem Header="_About RecluseEdit" Click="OnAboutClick" />
             </MenuItem>
         </Menu>
@@ -407,5 +431,13 @@
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>
+
+        <!-- Universal Command Palette Overlay -->
+        <controls:CommandPaletteControl x:Name="CommandPalette"
+                                        Grid.Row="0" Grid.RowSpan="5"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Top"
+                                        Margin="0,35,0,0"
+                                        Visibility="Collapsed" />
     </Grid>
 </Window>

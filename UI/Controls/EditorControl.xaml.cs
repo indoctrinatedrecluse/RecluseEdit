@@ -267,7 +267,107 @@ public partial class EditorControl : UserControl
             return;
         }
 
-        // 4. Tab accepts ghost-text inline completion
+        // 4. Ctrl+/ toggles line comment
+        if ((e.Key is Key.OemQuestion or Key.Divide) && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            EditorOperations.ToggleLineComment(Editor, _documentModel?.Language?.Id);
+            e.Handled = true;
+            return;
+        }
+
+        // 5. Alt+Up / Alt+Down moves lines
+        if (e.Key == Key.Up && Keyboard.Modifiers == ModifierKeys.Alt)
+        {
+            EditorOperations.MoveLinesUp(Editor);
+            e.Handled = true;
+            return;
+        }
+        if (e.Key == Key.Down && Keyboard.Modifiers == ModifierKeys.Alt)
+        {
+            EditorOperations.MoveLinesDown(Editor);
+            e.Handled = true;
+            return;
+        }
+
+        // 6. Shift+Alt+Down / Shift+Alt+Up or Ctrl+D duplicates lines
+        if (e.Key == Key.Down && Keyboard.Modifiers == (ModifierKeys.Shift | ModifierKeys.Alt))
+        {
+            EditorOperations.DuplicateLinesDown(Editor);
+            e.Handled = true;
+            return;
+        }
+        if (e.Key == Key.Up && Keyboard.Modifiers == (ModifierKeys.Shift | ModifierKeys.Alt))
+        {
+            EditorOperations.DuplicateLinesUp(Editor);
+            e.Handled = true;
+            return;
+        }
+        if (e.Key == Key.D && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            EditorOperations.DuplicateLinesDown(Editor);
+            e.Handled = true;
+            return;
+        }
+
+        // 7. Ctrl+Shift+K deletes line(s)
+        if (e.Key == Key.K && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+        {
+            EditorOperations.DeleteLines(Editor);
+            e.Handled = true;
+            return;
+        }
+
+        // 8. Ctrl+J joins lines
+        if (e.Key == Key.J && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            EditorOperations.JoinLines(Editor);
+            e.Handled = true;
+            return;
+        }
+
+        // 9. Ctrl+Shift+U / Ctrl+U case transformations
+        if (e.Key == Key.U && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+        {
+            EditorOperations.TransformToUppercase(Editor);
+            e.Handled = true;
+            return;
+        }
+        if (e.Key == Key.U && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            EditorOperations.TransformToLowercase(Editor);
+            e.Handled = true;
+            return;
+        }
+
+        // 10. Ctrl+Alt+Down / Ctrl+Alt+Up column cursors
+        if (e.Key == Key.Down && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt))
+        {
+            EditorOperations.AddColumnCursorDown(Editor);
+            e.Handled = true;
+            return;
+        }
+        if (e.Key == Key.Up && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt))
+        {
+            EditorOperations.AddColumnCursorUp(Editor);
+            e.Handled = true;
+            return;
+        }
+
+        // 11. Multiline / Column Backspace and Delete
+        if (e.Key == Key.Back && Editor.TextArea.Selection is ICSharpCode.AvalonEdit.Editing.RectangleSelection rectSelBack)
+        {
+            e.Handled = true;
+            HandleRectangleBackspace(rectSelBack);
+            return;
+        }
+        if (e.Key == Key.Delete && Editor.TextArea.Selection is ICSharpCode.AvalonEdit.Editing.RectangleSelection rectSelDel)
+        {
+            e.Handled = true;
+            HandleRectangleDelete(rectSelDel);
+            return;
+        }
+
+        // 12. Tab accepts ghost-text inline completion
         if (e.Key == Key.Tab && _ghostRenderer.HasSuggestion && _completionWindow == null)
         {
             e.Handled = true;
@@ -283,7 +383,7 @@ public partial class EditorControl : UserControl
             return;
         }
 
-        // 5. Escape dismisses ghost text
+        // 13. Escape dismisses ghost text
         if (e.Key == Key.Escape && _ghostRenderer.HasSuggestion)
         {
             e.Handled = true;
@@ -291,12 +391,93 @@ public partial class EditorControl : UserControl
             return;
         }
 
-        // 6. Clear ghost text on navigation
+        // 14. Clear ghost text on navigation
         if (e.Key is Key.Back or Key.Delete or Key.Enter or Key.Return or Key.Left or Key.Right or Key.Up or Key.Down)
         {
             _ghostRenderer.Clear();
         }
     }
+
+    private void HandleRectangleBackspace(ICSharpCode.AvalonEdit.Editing.RectangleSelection rectSel)
+    {
+        if (Editor.Document == null) return;
+
+        using (Editor.Document.RunUpdate())
+        {
+            if (rectSel.StartPosition.VisualColumn != rectSel.EndPosition.VisualColumn)
+            {
+                rectSel.ReplaceSelectionWithText(string.Empty);
+            }
+            else
+            {
+                var segments = rectSel.Segments.OrderByDescending(s => s.StartOffset).ToList();
+                int deletedCount = 0;
+                foreach (var seg in segments)
+                {
+                    var line = Editor.Document.GetLineByOffset(seg.StartOffset);
+                    int colInLine = seg.StartOffset - line.Offset;
+                    if (colInLine > 0)
+                    {
+                        Editor.Document.Remove(seg.StartOffset - 1, 1);
+                        deletedCount++;
+                    }
+                }
+
+                int top = Math.Min(rectSel.StartPosition.Line, rectSel.EndPosition.Line);
+                int bottom = Math.Max(rectSel.StartPosition.Line, rectSel.EndPosition.Line);
+                int col = rectSel.StartPosition.Column;
+                int visCol = rectSel.StartPosition.VisualColumn;
+
+                if (deletedCount > 0 && col > 1)
+                {
+                    int newCol = col - 1;
+                    int newVisCol = Math.Max(1, visCol - 1);
+                    var newStart = new ICSharpCode.AvalonEdit.TextViewPosition(top, newCol, newVisCol);
+                    var newEnd = new ICSharpCode.AvalonEdit.TextViewPosition(bottom, newCol, newVisCol);
+                    Editor.TextArea.Selection = new ICSharpCode.AvalonEdit.Editing.RectangleSelection(Editor.TextArea, newStart, newEnd);
+                    Editor.TextArea.Caret.Position = newEnd;
+                }
+            }
+        }
+    }
+
+    private void HandleRectangleDelete(ICSharpCode.AvalonEdit.Editing.RectangleSelection rectSel)
+    {
+        if (Editor.Document == null) return;
+
+        using (Editor.Document.RunUpdate())
+        {
+            if (rectSel.StartPosition.VisualColumn != rectSel.EndPosition.VisualColumn)
+            {
+                rectSel.ReplaceSelectionWithText(string.Empty);
+            }
+            else
+            {
+                var segments = rectSel.Segments.OrderByDescending(s => s.StartOffset).ToList();
+                foreach (var seg in segments)
+                {
+                    var line = Editor.Document.GetLineByOffset(seg.StartOffset);
+                    if (seg.StartOffset < line.Offset + line.Length)
+                    {
+                        Editor.Document.Remove(seg.StartOffset, 1);
+                    }
+                }
+            }
+        }
+    }
+
+    public void ToggleLineComment() => EditorOperations.ToggleLineComment(Editor, _documentModel?.Language?.Id);
+    public void MoveLinesUp() => EditorOperations.MoveLinesUp(Editor);
+    public void MoveLinesDown() => EditorOperations.MoveLinesDown(Editor);
+    public void DuplicateLinesDown() => EditorOperations.DuplicateLinesDown(Editor);
+    public void DuplicateLinesUp() => EditorOperations.DuplicateLinesUp(Editor);
+    public void DeleteLines() => EditorOperations.DeleteLines(Editor);
+    public void JoinLines() => EditorOperations.JoinLines(Editor);
+    public void TransformToUppercase() => EditorOperations.TransformToUppercase(Editor);
+    public void TransformToLowercase() => EditorOperations.TransformToLowercase(Editor);
+    public void SortLines() => EditorOperations.SortLines(Editor);
+    public void TrimTrailingWhitespace() => EditorOperations.TrimTrailingWhitespace(Editor);
+    public void GoToLine(int line, int col = 1) => EditorOperations.GoToLine(Editor, line, col);
 
     private void OnTextEntering(object sender, TextCompositionEventArgs e)
     {

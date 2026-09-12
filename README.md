@@ -12,8 +12,11 @@
 
 ## 🎯 Key Objectives & Features
 
+- ⚡ **Universal Command Palette**: Modal fuzzy command launcher (<kbd>Ctrl+Shift+P</kbd>, <kbd>F1</kbd>) to search and execute any command, quick-open workspace files and tabs (<kbd>Ctrl+P</kbd>), jump to line numbers (<kbd>Ctrl+G</kbd>), and query help commands (`?`).
+- ✂️ **Advanced Line & Multiline Editing**: Move lines up/down (<kbd>Alt+&uarr;/&darr;</kbd>), duplicate lines (<kbd>Shift+Alt+&uarr;/&darr;</kbd>), toggle comments (<kbd>Ctrl+/</kbd>), delete lines (<kbd>Ctrl+Shift+K</kbd>), join lines (<kbd>Ctrl+J</kbd>), transform case (<kbd>Ctrl+Shift+U</kbd>, <kbd>Ctrl+U</kbd>), sort lines, trim trailing whitespace, and rectangular column cursor editing (<kbd>Ctrl+Alt+&uarr;/&darr;</kbd>).
 - 🗂️ **Web Workspace Explorer**: Open entire project directories (`Ctrl+Shift+O`), browse files via a collapsible tree sidebar (`Ctrl+B`), and double-click to open.
 - 🤖 **DeepSeek AI Chat Assistant**: Collapsible right-pane conversational AI panel (<kbd>Ctrl+Alt+A</kbd>) with real-time streaming, configurable API endpoints & keys, secure file read/write permissions, and interactive confirmation prompts before running terminal commands.
+- 💻 **Integrated Multi-Terminal Dock**: Persistent multi-tab terminal (<kbd>Ctrl+`</kbd>) supporting PowerShell, CMD, Git Bash, WSL, and custom verified executables.
 - 📑 **Multi-File Tabbed Workspace**: Seamlessly open, edit, and switch between multiple tabs. Middle-click tab to close, and right-click for tab context actions (*Close Others*, *Close to Right*, *Copy Path*, *Reveal in Explorer*).
 - 🎨 **Exhaustive High-Fidelity Syntax Highlighting**: Custom, dedicated XSHD syntax definitions across all supported languages (Markdown, modern ECMAScript/TypeScript with template literals and control flow, CSS3/SCSS/LESS with CSS variables and pseudo-classes, PHP 8+ with attributes and match expressions, React JSX/TSX, GraphQL, Angular HTML templates, Angular TypeScript, Dart 3, Ruby on Rails, Go, Python, Rust, Lua, PowerShell, Bash, JSON, and XML/XAML), beautifully tuned with a rich VS Code Dark+ color palette.
 - ⚡ **Dual Autocomplete System**:
@@ -32,19 +35,32 @@
 
 | Shortcut | Action |
 | :--- | :--- |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> / <kbd>F1</kbd> | Universal Command Palette (Commands Mode `>`) |
+| <kbd>Ctrl</kbd> + <kbd>P</kbd> | Quick Open (Search Files & Open Tabs) |
+| <kbd>Ctrl</kbd> + <kbd>G</kbd> | Go to Line & Column (`:line[:col]`) |
+| <kbd>Ctrl</kbd> + <kbd>K</kbd>, <kbd>Ctrl</kbd> + <kbd>S</kbd> | Keyboard Shortcuts Reference Window |
+| <kbd>Ctrl</kbd> + <kbd>/</kbd> | Toggle Line Comment (`//`, `#`, `--`, etc.) |
+| <kbd>Alt</kbd> + <kbd>&uarr;</kbd> / <kbd>&darr;</kbd> | Move Line / Selection Up / Down |
+| <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>&uarr;</kbd> / <kbd>&darr;</kbd> | Duplicate Line / Selection Up / Down |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>K</kbd> | Delete Current Line(s) |
+| <kbd>Ctrl</kbd> + <kbd>J</kbd> | Join Lines |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>U</kbd> | Transform Selection to Uppercase |
+| <kbd>Ctrl</kbd> + <kbd>U</kbd> | Transform Selection to Lowercase |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>&uarr;</kbd> / <kbd>&darr;</kbd> | Add Column / Box Selection Cursor |
 | <kbd>Ctrl</kbd> + <kbd>N</kbd> | New File |
 | <kbd>Ctrl</kbd> + <kbd>O</kbd> | Open File |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>O</kbd> | Open Workspace Folder |
 | <kbd>Ctrl</kbd> + <kbd>S</kbd> | Save File |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | Save As |
 | <kbd>Ctrl</kbd> + <kbd>W</kbd> | Close Active Tab |
+| <kbd>Ctrl</kbd> + <kbd>`</kbd> | Toggle Terminal Panel |
 | <kbd>Ctrl</kbd> + <kbd>B</kbd> | Toggle Workspace Explorer Sidebar |
 | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>A</kbd> | Toggle DeepSeek AI Chat Right Pane |
 | <kbd>Ctrl</kbd> + <kbd>F</kbd> | Find in Document |
 | <kbd>Ctrl</kbd> + <kbd>H</kbd> | Find & Replace in Document |
 | <kbd>Ctrl</kbd> + <kbd>Space</kbd> | Trigger IntelliSense Completion Popup |
 | <kbd>Tab</kbd> | Accept Inline Ghost Text Suggestion |
-| <kbd>Esc</kbd> | Dismiss Ghost Text / Close Find Overlay |
+| <kbd>Esc</kbd> | Dismiss Ghost Text / Close Overlay / Command Palette |
 | <kbd>Ctrl</kbd> + <kbd>MouseWheel</kbd> | Zoom In / Out Editor Font Size |
 
 ---
@@ -107,7 +123,7 @@ dotnet restore RecluseEdit.slnx
 # Build the entire solution (host + all extensions)
 dotnet build RecluseEdit.slnx
 
-# Run all unit and integration tests (103 tests)
+# Run all unit and integration tests (119 tests)
 dotnet test RecluseEdit.slnx
 
 # Launch the editor

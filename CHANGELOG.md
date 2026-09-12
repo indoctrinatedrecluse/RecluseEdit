@@ -11,11 +11,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ✨ Added Features
 
+#### ⚡ Universal Command Palette (`Ctrl+Shift+P`, `F1`, `Ctrl+P`, `Ctrl+G`)
+- **Modern Modal Search Overlay**: Implemented a centered VS Code Dark+ styled command palette with smooth drop shadow, subtle borders, real-time keyboard navigation, and fuzzy search filtering.
+- **Prefix-Based Mode Switching**:
+  - **Command Mode (`>`)** (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> or <kbd>F1</kbd>): Search and execute all editor actions across File, Edit, Line, View, Extensions, Terminal, DeepSeek AI, and Help menus.
+  - **Quick Open Mode (default)** (<kbd>Ctrl</kbd>+<kbd>P</kbd>): Fast file and tab switcher across all open tabs and workspace files.
+  - **Go To Line Mode (`:`)** (<kbd>Ctrl</kbd>+<kbd>G</kbd>): Jump to any target line and column (`:line` or `:line:col`) with real-time feedback and validation.
+  - **Help Mode (`?`)**: Discovers available prefix modes and shortcut hints.
+- **Dynamic File Enumeration**: Queries workspace directories asynchronously to index and surface workspace files for instant navigation.
+
+#### ✂️ Core QoL Editor & Multiline Editing Operations
+- **Toggle Comments (<kbd>Ctrl</kbd>+<kbd>/</kbd>)**: Context-aware line comment toggling supporting `//` (C/C++, C#, JS, TS, Go, Rust, Dart, PHP), `#` (Python, Ruby, Bash, PowerShell), `--` (Lua, SQL), and fallback multi-line blocks.
+- **Move Lines Up / Down (<kbd>Alt</kbd>+<kbd>&uarr;</kbd>, <kbd>Alt</kbd>+<kbd>&darr;</kbd>)**: Move current line or multiline block up or down with automatic caret repositioning.
+- **Duplicate Lines (<kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>&uarr;</kbd>, <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>&darr;</kbd>)**: Duplicate active line or selection above or below.
+- **Delete Line (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>)**: Atomically deletes entire current line and newline.
+- **Join Lines (<kbd>Ctrl</kbd>+<kbd>J</kbd>)**: Merges the current line with the next, stripping leading whitespace and inserting a single separator space.
+- **Case Transformations (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>U</kbd>, <kbd>Ctrl</kbd>+<kbd>U</kbd>)**: Converts selection or active word to UPPERCASE or lowercase.
+- **Sort Lines**: Alphabetically sorts selected lines in ascending order.
+- **Trim Trailing Whitespace**: Automatically cleans all trailing spaces and tabs across the document while preserving caret position.
+- **Column / Box Selection Cursor Editing (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>&uarr;</kbd>, <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>&darr;</kbd>)**: Expands box selection vertically for multi-line column typing, backspacing, and deletion.
+- **Go To Line Dialog**: Standalone dark dialog accessible via **Edit &rarr; Go to Line...** or <kbd>Ctrl</kbd>+<kbd>G</kbd>.
+
+#### ⌨️ Searchable Keyboard Shortcuts Reference Window
+- **Interactive Shortcuts Window**: New dedicated Dark+ window accessible via **Help &rarr; Keyboard Shortcuts** or <kbd>Ctrl</kbd>+<kbd>K</kbd>, <kbd>Ctrl</kbd>+<kbd>S</kbd>.
+- **Search & Filter**: Real-time filtering across shortcut combinations, command titles, descriptions, and categories (`Editor`, `Navigation`, `File`, `View`, `AI & Terminal`, etc.).
+- **Line Operations Menu**: Added dedicated `Line Operations` submenu under `Edit` menu with all keyboard mappings visible.
+
 #### 🎨 Custom Application Icon & Window Branding
 - **Custom Application Icon**: Designed and integrated a bespoke brand icon featuring a glowing neon cyan & violet monogram `R` intertwined with code brackets `< / >` and subtle circuit traces on a dark squircle badge.
 - **Multi-Resolution Windows Executable Icon (`.ico`)**: Generated a crisp multi-tier Windows icon (`Assets/app.ico`) embedding 16x16, 24x24, 32x32, 48x48, 64x64, 128x128, and 256x256 resolution frames. Configured `<ApplicationIcon>` in `RecluseEdit.csproj` for native Windows Explorer, desktop shortcut, Alt+Tab, and taskbar rendering.
-- **WPF Window Icon Integration**: Bound assembly resource icon (`pack://application:,,,/Assets/app.ico`) to `MainWindow`, `ExtensionManagerWindow`, and `ConfigureShellDialog` for consistent visual presentation across all application surfaces.
+- **WPF Window Icon Integration**: Bound assembly resource icon (`pack://application:,,,/Assets/app.ico`) to `MainWindow`, `ExtensionManagerWindow`, `ConfigureShellDialog`, `KeyboardShortcutsWindow`, and `GoToLineDialog` for consistent visual presentation across all application surfaces.
 - **High-Resolution Asset**: Bundled 512x512 high-resolution master asset (`Assets/app.png`) as an embedded assembly resource.
+
+### 🧪 Automated Testing
+- Added 16 new automated unit tests covering `EditorOperations` (line movements, duplications, deletions, comment toggling, joins, case transforms, trims) and `CommandRegistry` (mode matching, search filtering, line jumping), increasing test suite to **119 passing tests** with 0 warnings.
 
 ---
 

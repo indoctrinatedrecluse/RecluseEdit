@@ -29,6 +29,9 @@ public partial class MainWindow : Window
     public static readonly RoutedUICommand ToggleTerminalCommand = new("Toggle Terminal", "ToggleTerminal", typeof(MainWindow));
     public static readonly RoutedUICommand FindCommand = new("Find", "Find", typeof(MainWindow));
     public static readonly RoutedUICommand ReplaceCommand = new("Replace", "Replace", typeof(MainWindow));
+    public static readonly RoutedUICommand CommandPaletteCommand = new("Command Palette", "CommandPalette", typeof(MainWindow));
+    public static readonly RoutedUICommand QuickOpenCommand = new("Quick Open", "QuickOpen", typeof(MainWindow));
+    public static readonly RoutedUICommand GoToLineCommand = new("Go to Line", "GoToLine", typeof(MainWindow));
 
     private readonly SyntaxManager _syntaxManager;
     private readonly AutocompleteManager _autocompleteManager;
@@ -36,6 +39,7 @@ public partial class MainWindow : Window
     private readonly ExtensionManager _extensionManager;
     private readonly DocumentManager _documentManager;
     private readonly WorkspaceManager _workspaceManager;
+    private readonly CommandRegistry _commandRegistry;
 
     private GridLength _lastSidebarWidth = new(240);
     private GridLength _lastRightPaneWidth = new(380);
@@ -52,9 +56,12 @@ public partial class MainWindow : Window
         _documentManager = new DocumentManager(_syntaxManager);
         var workspaceContext = new WorkspaceContext(_workspaceManager, _documentManager);
         _extensionManager = new ExtensionManager(_syntaxManager, _autocompleteManager, _toolchainManager, workspaceContext);
+        _commandRegistry = new CommandRegistry();
 
         EditorHost.SyntaxManager = _syntaxManager;
         EditorHost.AutocompleteManager = _autocompleteManager;
+        CommandPalette.CommandRegistry = _commandRegistry;
+        CommandPalette.Closed += () => EditorHost.Focus();
 
         // Command bindings
         CommandBindings.Add(new CommandBinding(NewFileCommand, (_, _) => CreateNewFile()));
@@ -68,6 +75,11 @@ public partial class MainWindow : Window
         CommandBindings.Add(new CommandBinding(ToggleTerminalCommand, (_, _) => ToggleTerminal()));
         CommandBindings.Add(new CommandBinding(FindCommand, (_, _) => EditorHost.OpenFind()));
         CommandBindings.Add(new CommandBinding(ReplaceCommand, (_, _) => EditorHost.OpenReplace()));
+        CommandBindings.Add(new CommandBinding(CommandPaletteCommand, (_, _) => OpenCommandPalette(">")));
+        CommandBindings.Add(new CommandBinding(QuickOpenCommand, (_, _) => OpenCommandPalette("")));
+        CommandBindings.Add(new CommandBinding(GoToLineCommand, (_, _) => OpenGoToLine()));
+
+        InitializeCommandPalette();
 
         TerminalPane.ClosePaneRequested += () => ToggleTerminal(false);
 
@@ -700,6 +712,9 @@ public partial class MainWindow : Window
             "RecluseEdit v1.5.0\n\n" +
             "A fast, modern code editor optimized for web applications.\n\n" +
             "Key Features:\n" +
+            "• Universal Command Palette (Ctrl+Shift+P, F1, Ctrl+P, Ctrl+G)\n" +
+            "• Multi-Cursor & Multiline Column Editing (Ctrl+Alt+Up/Down, Alt+Drag)\n" +
+            "• Developer Line Manipulation (Ctrl+/, Alt+Up/Down, Shift+Alt+Down, Ctrl+Shift+K)\n" +
             "• Integrated Multi-Shell Terminal (Ctrl+`)\n" +
             "• DeepSeek AI Chat Assistant (Ctrl+Alt+A)\n" +
             "• Web Workspace Explorer (Ctrl+B)\n" +
@@ -714,6 +729,148 @@ public partial class MainWindow : Window
             "About RecluseEdit",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
+    }
+
+    public void OpenCommandPalette(string mode = ">")
+    {
+        CommandPalette.Show(mode);
+    }
+
+    public void OpenGoToLine()
+    {
+        var doc = _documentManager.ActiveDocument;
+        int currentLine = doc?.CaretLine ?? 1;
+        int maxLines = doc?.Document.LineCount ?? 1;
+
+        var dlg = new GoToLineDialog(currentLine, maxLines) { Owner = this };
+        if (dlg.ShowDialog() == true)
+        {
+            EditorHost.GoToLine(dlg.LineNumber, dlg.ColumnNumber);
+        }
+    }
+
+    public void ShowKeyboardShortcuts()
+    {
+        var win = new KeyboardShortcutsWindow { Owner = this };
+        win.ShowDialog();
+    }
+
+    private void OnCommandPaletteClick(object sender, RoutedEventArgs e) => OpenCommandPalette(">");
+    private void OnGoToLineClick(object sender, RoutedEventArgs e) => OpenGoToLine();
+    private void OnKeyboardShortcutsClick(object sender, RoutedEventArgs e) => ShowKeyboardShortcuts();
+
+    private void OnToggleCommentClick(object sender, RoutedEventArgs e) => EditorHost.ToggleLineComment();
+    private void OnMoveLineUpClick(object sender, RoutedEventArgs e) => EditorHost.MoveLinesUp();
+    private void OnMoveLineDownClick(object sender, RoutedEventArgs e) => EditorHost.MoveLinesDown();
+    private void OnDuplicateLineDownClick(object sender, RoutedEventArgs e) => EditorHost.DuplicateLinesDown();
+    private void OnDuplicateLineUpClick(object sender, RoutedEventArgs e) => EditorHost.DuplicateLinesUp();
+    private void OnDeleteLineClick(object sender, RoutedEventArgs e) => EditorHost.DeleteLines();
+    private void OnJoinLinesClick(object sender, RoutedEventArgs e) => EditorHost.JoinLines();
+    private void OnTransformUppercaseClick(object sender, RoutedEventArgs e) => EditorHost.TransformToUppercase();
+    private void OnTransformLowercaseClick(object sender, RoutedEventArgs e) => EditorHost.TransformToLowercase();
+    private void OnSortLinesClick(object sender, RoutedEventArgs e) => EditorHost.SortLines();
+    private void OnTrimTrailingWhitespaceClick(object sender, RoutedEventArgs e) => EditorHost.TrimTrailingWhitespace();
+
+    private void InitializeCommandPalette()
+    {
+        _commandRegistry.LineJumpHandler = (line, col) => EditorHost.GoToLine(line, col);
+
+        _commandRegistry.FileProvider = () =>
+        {
+            var items = new List<CommandItem>();
+            foreach (var doc in _documentManager.Documents)
+            {
+                items.Add(new CommandItem
+                {
+                    Id = $"tab.{doc.FilePath}",
+                    Title = doc.FileName,
+                    Category = "Open Tabs",
+                    Description = doc.FilePath,
+                    Icon = "📑",
+                    Action = () => _documentManager.ActiveDocument = doc
+                });
+            }
+
+            if (_workspaceManager.HasWorkspace && !string.IsNullOrEmpty(_workspaceManager.RootPath) && Directory.Exists(_workspaceManager.RootPath))
+            {
+                try
+                {
+                    var files = Directory.EnumerateFiles(_workspaceManager.RootPath, "*.*", SearchOption.AllDirectories)
+                        .Where(f => !f.Contains("\\.git\\") && !f.Contains("\\bin\\") && !f.Contains("\\obj\\"))
+                        .Take(150);
+
+                    foreach (var f in files)
+                    {
+                        var rel = Path.GetRelativePath(_workspaceManager.RootPath, f);
+                        items.Add(new CommandItem
+                        {
+                            Id = $"file.{f}",
+                            Title = Path.GetFileName(f),
+                            Category = "Workspace",
+                            Description = rel,
+                            Icon = "📄",
+                            Action = () => _documentManager.OpenDocument(f)
+                        });
+                    }
+                }
+                catch { }
+            }
+
+            return items;
+        };
+
+        _commandRegistry.RegisterRange(
+        [
+            // File
+            new() { Id = "file.new", Title = "New File", Category = "File", InputGestureText = "Ctrl+N", Icon = "📄", Action = () => CreateNewFile() },
+            new() { Id = "file.open", Title = "Open File...", Category = "File", InputGestureText = "Ctrl+O", Icon = "📂", Action = () => OpenFileDialog() },
+            new() { Id = "file.openFolder", Title = "Open Folder / Workspace...", Category = "File", InputGestureText = "Ctrl+Shift+O", Icon = "📁", Action = () => OpenFolderDialog() },
+            new() { Id = "file.save", Title = "Save Active File", Category = "File", InputGestureText = "Ctrl+S", Icon = "💾", Action = () => SaveActiveFile() },
+            new() { Id = "file.saveAs", Title = "Save As...", Category = "File", InputGestureText = "Ctrl+Shift+S", Icon = "💾", Action = () => SaveActiveFileAs() },
+            new() { Id = "file.saveAll", Title = "Save All Files", Category = "File", Icon = "💾", Action = () => SaveAllFiles() },
+            new() { Id = "file.close", Title = "Close Active Tab", Category = "File", InputGestureText = "Ctrl+W", Icon = "✖️", Action = () => CloseActiveFile() },
+            new() { Id = "file.closeAll", Title = "Close All Tabs", Category = "File", Icon = "✖️", Action = () => OnCloseAllTabsClick(this, new RoutedEventArgs()) },
+            new() { Id = "file.exit", Title = "Exit Application", Category = "File", Icon = "🚪", Action = () => Close() },
+
+            // Edit & Lines
+            new() { Id = "edit.undo", Title = "Undo", Category = "Edit", InputGestureText = "Ctrl+Z", Icon = "↩️", Action = () => EditorHost.UnderlyingEditor.Undo() },
+            new() { Id = "edit.redo", Title = "Redo", Category = "Edit", InputGestureText = "Ctrl+Y", Icon = "↪️", Action = () => EditorHost.UnderlyingEditor.Redo() },
+            new() { Id = "edit.cut", Title = "Cut", Category = "Edit", InputGestureText = "Ctrl+X", Icon = "✂️", Action = () => EditorHost.UnderlyingEditor.Cut() },
+            new() { Id = "edit.copy", Title = "Copy", Category = "Edit", InputGestureText = "Ctrl+C", Icon = "📋", Action = () => EditorHost.UnderlyingEditor.Copy() },
+            new() { Id = "edit.paste", Title = "Paste", Category = "Edit", InputGestureText = "Ctrl+V", Icon = "📋", Action = () => EditorHost.UnderlyingEditor.Paste() },
+            new() { Id = "edit.selectAll", Title = "Select All", Category = "Edit", InputGestureText = "Ctrl+A", Icon = "🔲", Action = () => EditorHost.UnderlyingEditor.SelectAll() },
+            new() { Id = "edit.find", Title = "Find in Document", Category = "Edit", InputGestureText = "Ctrl+F", Icon = "🔍", Action = () => EditorHost.OpenFind() },
+            new() { Id = "edit.replace", Title = "Replace in Document", Category = "Edit", InputGestureText = "Ctrl+H", Icon = "🔄", Action = () => EditorHost.OpenReplace() },
+            new() { Id = "edit.gotoLine", Title = "Go to Line...", Category = "Edit", InputGestureText = "Ctrl+G", Icon = "📍", Action = OpenGoToLine },
+
+            // Line Operations
+            new() { Id = "line.comment", Title = "Toggle Line Comment", Category = "Line Operations", InputGestureText = "Ctrl+/", Icon = "💬", Action = () => EditorHost.ToggleLineComment() },
+            new() { Id = "line.moveUp", Title = "Move Line Up", Category = "Line Operations", InputGestureText = "Alt+Up", Icon = "⬆️", Action = () => EditorHost.MoveLinesUp() },
+            new() { Id = "line.moveDown", Title = "Move Line Down", Category = "Line Operations", InputGestureText = "Alt+Down", Icon = "⬇️", Action = () => EditorHost.MoveLinesDown() },
+            new() { Id = "line.duplicateDown", Title = "Duplicate Line Down", Category = "Line Operations", InputGestureText = "Shift+Alt+Down", Icon = "📑", Action = () => EditorHost.DuplicateLinesDown() },
+            new() { Id = "line.duplicateUp", Title = "Duplicate Line Up", Category = "Line Operations", InputGestureText = "Shift+Alt+Up", Icon = "📑", Action = () => EditorHost.DuplicateLinesUp() },
+            new() { Id = "line.delete", Title = "Delete Line(s)", Category = "Line Operations", InputGestureText = "Ctrl+Shift+K", Icon = "🗑️", Action = () => EditorHost.DeleteLines() },
+            new() { Id = "line.join", Title = "Join Next Line", Category = "Line Operations", InputGestureText = "Ctrl+J", Icon = "🔗", Action = () => EditorHost.JoinLines() },
+            new() { Id = "line.uppercase", Title = "Transform to UPPERCASE", Category = "Line Operations", InputGestureText = "Ctrl+Shift+U", Icon = "🔠", Action = () => EditorHost.TransformToUppercase() },
+            new() { Id = "line.lowercase", Title = "Transform to lowercase", Category = "Line Operations", InputGestureText = "Ctrl+U", Icon = "🔡", Action = () => EditorHost.TransformToLowercase() },
+            new() { Id = "line.sort", Title = "Sort Lines Alphabetically", Category = "Line Operations", Icon = "📶", Action = () => EditorHost.SortLines() },
+            new() { Id = "line.trim", Title = "Trim Trailing Whitespace", Category = "Line Operations", Icon = "✂️", Action = () => EditorHost.TrimTrailingWhitespace() },
+
+            // View & UI
+            new() { Id = "view.commandPalette", Title = "Command Palette", Category = "View", InputGestureText = "Ctrl+Shift+P", Icon = "🚀", Action = () => OpenCommandPalette(">") },
+            new() { Id = "view.quickOpen", Title = "Quick Open File", Category = "View", InputGestureText = "Ctrl+P", Icon = "📁", Action = () => OpenCommandPalette("") },
+            new() { Id = "view.toggleSidebar", Title = "Toggle Workspace Explorer Sidebar", Category = "View", InputGestureText = "Ctrl+B", Icon = "☰", Action = () => ToggleSidebar() },
+            new() { Id = "view.toggleAi", Title = "Toggle DeepSeek AI Chat Panel", Category = "View", InputGestureText = "Ctrl+Alt+A", Icon = "🤖", Action = () => ToggleRightPane() },
+            new() { Id = "view.toggleTerminal", Title = "Toggle Integrated Terminal", Category = "View", InputGestureText = "Ctrl+`", Icon = "💻", Action = () => ToggleTerminal() },
+            new() { Id = "view.toggleWrap", Title = "Toggle Word Wrap", Category = "View", Icon = "↩️", Action = () => { EditorHost.ToggleWordWrap(!EditorHost.UnderlyingEditor.WordWrap); BtnWordWrap.IsChecked = EditorHost.UnderlyingEditor.WordWrap; MenuWordWrap.IsChecked = EditorHost.UnderlyingEditor.WordWrap; } },
+            new() { Id = "view.toggleLineNumbers", Title = "Toggle Line Numbers", Category = "View", Icon = "🔢", Action = () => { EditorHost.ToggleLineNumbers(!EditorHost.UnderlyingEditor.ShowLineNumbers); BtnLineNumbers.IsChecked = EditorHost.UnderlyingEditor.ShowLineNumbers; MenuLineNumbers.IsChecked = EditorHost.UnderlyingEditor.ShowLineNumbers; } },
+
+            // Extensions & Help
+            new() { Id = "ext.manage", Title = "Manage Extensions & Toolchains...", Category = "Extensions", Icon = "🧩", Action = () => OnManageExtensionsClick(this, new RoutedEventArgs()) },
+            new() { Id = "ext.openFolder", Title = "Open Extensions Folder", Category = "Extensions", Icon = "📁", Action = () => OnOpenExtensionsFolderClick(this, new RoutedEventArgs()) },
+            new() { Id = "help.shortcuts", Title = "Keyboard Shortcuts Reference", Category = "Help", InputGestureText = "Ctrl+K, Ctrl+S", Icon = "⌨️", Action = ShowKeyboardShortcuts },
+            new() { Id = "help.about", Title = "About RecluseEdit", Category = "Help", Icon = "ℹ️", Action = () => OnAboutClick(this, new RoutedEventArgs()) }
+        ]);
     }
 
     protected override void OnClosing(CancelEventArgs e)
