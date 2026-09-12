@@ -98,3 +98,4 @@ public partial class KeyboardShortcutsWindow : Window
         Close();
     }
 }
+

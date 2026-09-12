@@ -151,3 +151,4 @@ public partial class CommandPaletteControl : UserControl
         }
     }
 }
+

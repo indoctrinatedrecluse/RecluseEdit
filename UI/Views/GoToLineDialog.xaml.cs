@@ -81,3 +81,4 @@ public partial class GoToLineDialog : Window
         }
     }
 }
+

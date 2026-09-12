@@ -7,6 +7,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <DefaultItemExcludes>$(DefaultItemExcludes);RecluseEdit.Sdk\**;extensions\RecluseEdit.Extensions.*\**;tests\**</DefaultItemExcludes>
   </PropertyGroup>
 

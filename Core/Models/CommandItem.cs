@@ -15,3 +15,4 @@ public class CommandItem
 
     public override string ToString() => string.IsNullOrWhiteSpace(Category) ? Title : $"{Category}: {Title}";
 }
+

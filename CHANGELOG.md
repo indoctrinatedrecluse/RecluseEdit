@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [2.0.0] - 2026-09-12
+
 ### ✨ Added Features
 
 #### ⚡ Universal Command Palette (`Ctrl+Shift+P`, `F1`, `Ctrl+P`, `Ctrl+G`)
@@ -284,7 +288,8 @@ The debut release of **RecluseEdit**, a modern, lightweight, high-performance de
 - **GitHub Actions Workflow**: Automated build and release pipeline (`.github/workflows/release.yml`) triggered on tag pushes (`v*`) to run the 27-test automated test suite and package a portable distribution archive (`RecluseEdit-windows-<tag>.zip`) attached to GitHub Releases.
 - **Git Environment Configuration**: Configured `.gitattributes` to enforce consistent LF/CRLF normalization across development environments and CI runners.
 
-[Unreleased]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.5.0...v2.0.0
 [1.5.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.3.0...v1.4.0

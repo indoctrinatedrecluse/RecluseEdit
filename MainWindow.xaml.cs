@@ -709,7 +709,7 @@ public partial class MainWindow : Window
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
         MessageBox.Show(this,
-            "RecluseEdit v1.5.0\n\n" +
+            "RecluseEdit v2.0.0\n\n" +
             "A fast, modern code editor optimized for web applications.\n\n" +
             "Key Features:\n" +
             "• Universal Command Palette (Ctrl+Shift+P, F1, Ctrl+P, Ctrl+G)\n" +
