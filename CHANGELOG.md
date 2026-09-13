@@ -11,6 +11,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.0] - 2026-09-13
+
+### 🚀 Major Release: Live Preview, Formatting Pipeline, Project Scaffolding & Web Console
+
+#### 🌐 1. Chromium-Powered Live Web & Markdown Preview (`Ctrl+Shift+V`)
+- **Embedded WebView2 Engine**: Integrated `Microsoft.Web.WebView2` for high-fidelity split-pane live preview with real-time DOM rendering.
+- **Debounced Keystroke Sync**: 300ms debounced text-change synchronization with immediate refresh button and navigation reload.
+- **Relative Asset Resolution**: Injected `<base href="file://...">` header allowing local CSS, JS, fonts, and images to resolve naturally.
+- **Responsive Viewport Switcher**: Quickly test responsive layouts across standard viewports:
+  - **Responsive**: 100% fluid container width.
+  - **Mobile**: 375px (iPhone / Pixel).
+  - **Tablet**: 768px (iPad portrait).
+  - **Desktop**: 1200px (Desktop / Laptop).
+- **GitHub Dark-Themed Markdown Rendering**: Full-featured Markdown renderer with GitHub Dark typography, tables, alerts (`> [!NOTE]`, `> [!TIP]`, `> [!WARN]`), task lists, syntax-highlighted code blocks, and scroll sync.
+
+#### 🎨 2. Document Formatting & Syntax Diagnostics Pipeline (`Shift+Alt+F`)
+- **Extensible `IDocumentFormatter` SDK**: Pluggable formatting architecture allowing extensions to register custom language prettifiers.
+- **Built-in Pure C# Formatters**:
+  - **JSON**: Formatted with configurable indentation (2/4 spaces or tabs) and escaping.
+  - **CSS / SCSS / LESS**: Clean bracket placement, property indentation, and selector spacing.
+  - **HTML / XML / XAML**: Hierarchical tag indentation with intelligent self-closing void tag handling.
+  - **SQL**: Standardized capitalization of SQL clauses (`SELECT`, `FROM`, `WHERE`, `ORDER BY`, `JOIN`, `GROUP BY`) with structured line breaks.
+  - **JavaScript / TypeScript**: Automated bracket indentation and multi-line alignment.
+  - **Markdown**: Heading whitespace normalization, code block preservation, and list cleanup.
+- **Format on Save**: Option under `Edit -> Format on Save` to automatically prettify files upon saving.
+- **Real-Time Syntax Diagnostics (`DiagnosticService`)**:
+  - JSON parser syntax validation with exact line/column error localization.
+  - Bracket, brace, and parenthesis balance verification with stack tracking.
+  - HTML tag mismatch and unclosed element auditing.
+
+#### 🚀 3. Project Scaffolding Wizard (`Ctrl+Shift+N`)
+- **Template Generation Wizard (`NewProjectDialog`)**: Interactive modal accessible via `File -> New Project...` (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>N</kbd>) with category filtering, template description, and project naming.
+- **7 Production-Ready Templates**:
+  - **Static Web Starter**: HTML5, CSS3 with responsive grid, and JavaScript counter demo.
+  - **Vite + React 19 + TypeScript**: Modern React 19 with JSX, state hook, and Vite dev server.
+  - **Vite + Vue 3 + TypeScript**: Vue 3 SFC with `<script setup lang="ts">`, Composition API, and Vite.
+  - **Vite + Svelte 5 + TypeScript**: Svelte 5 with modern Runes (`$state`, `$derived`) and Vite.
+  - **Vite + SolidJS + TypeScript**: SolidJS fine-grained reactivity with signals and Vite.
+  - **Fastify Microservice API**: High-performance Node.js/TypeScript backend service with Fastify routing and schema validation.
+  - **Markdown Documentation Site**: Multi-page structured technical docs with `getting-started.md`, `architecture.md`, and `api-reference.md`.
+- **Integrated Workspace & Git Initialization**: Automatically initializes Git repository (`git init`), opens the new workspace in Explorer, and loads the entrypoint file directly into the editor and Live Preview.
+
+#### 💻 4. Integrated Web Developer Console & Problems Dock
+- **Multi-Tab Bottom Dock**: Consolidated bottom pane docking **Terminal** (<kbd>Ctrl+`</kbd>), **Web Console**, and **Problems**.
+- **Injected Console Bridge (`LivePreviewBridge`)**: JavaScript shim capturing `console.log`, `console.info`, `console.warn`, `console.error`, unhandled runtime exceptions, and unhandled promise rejections directly into the IDE.
+- **Filterable Web Console Viewer (`WebConsoleControl`)**: Severity filtering (All, Info, Warnings, Errors), message search filter, timestamps, and one-click clear.
+- **Centralized Problems View (`ProblemsPanelControl`)**: Aggregated file diagnostics with severity icons, line/column coordinates, and double-click navigation that jumps directly to the erroneous line in the code editor.
+
+### 🧪 Automated Testing
+- Added unit test suites for `DocumentFormattingServiceTests`, `DiagnosticServiceTests`, `ProjectScaffoldingServiceTests`, and `LivePreviewBridgeTests`.
+- All **175 automated unit tests** passing with **0 warnings and 0 errors** across all 17 projects in the solution.
+
+---
+
 ## [2.2.0] - 2026-09-13
 
 ### ✨ Added Features
@@ -345,7 +399,8 @@ The debut release of **RecluseEdit**, a modern, lightweight, high-performance de
 - **GitHub Actions Workflow**: Automated build and release pipeline (`.github/workflows/release.yml`) triggered on tag pushes (`v*`) to run the 27-test automated test suite and package a portable distribution archive (`RecluseEdit-windows-<tag>.zip`) attached to GitHub Releases.
 - **Git Environment Configuration**: Configured `.gitattributes` to enforce consistent LF/CRLF normalization across development environments and CI runners.
 
-[Unreleased]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v2.2.0...v3.0.0
 [2.2.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v1.5.0...v2.0.0

@@ -1,0 +1,145 @@
+<UserControl x:Class="RecluseEdit.UI.Controls.WebConsoleControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="250" d:DesignWidth="700"
+             Background="#1E1E1E">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Console Action Toolbar -->
+        <Border Grid.Row="0" Background="#252526" BorderBrush="#333333" BorderThickness="0,0,0,1">
+            <Grid Margin="8,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Filter Mode Radios -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Web Console" Foreground="#D4D4D4" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0" FontSize="11"/>
+                    <RadioButton x:Name="FilterAllBtn" Content="All" IsChecked="True" Style="{DynamicResource FilterRadioStyle}" Click="OnFilterChanged" Tag="All"/>
+                    <RadioButton x:Name="FilterInfoBtn" Content="Info" Style="{DynamicResource FilterRadioStyle}" Click="OnFilterChanged" Tag="Info"/>
+                    <RadioButton x:Name="FilterWarnBtn" Content="Warnings" Style="{DynamicResource FilterRadioStyle}" Click="OnFilterChanged" Tag="Warn"/>
+                    <RadioButton x:Name="FilterErrBtn" Content="Errors" Style="{DynamicResource FilterRadioStyle}" Click="OnFilterChanged" Tag="Error"/>
+                </StackPanel>
+
+                <!-- Filter Search Box -->
+                <TextBox x:Name="SearchBox" Grid.Column="1" Margin="12,4" Height="22" Background="#1E1E1E" Foreground="#CCCCCC" 
+                         BorderBrush="#3A3D41" BorderThickness="1" Padding="6,1" VerticalContentAlignment="Center" FontSize="11"
+                         TextChanged="OnSearchTextChanged"/>
+
+                <!-- Clear & Copy Buttons -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock x:Name="CountLabel" Text="0 items" Foreground="#888888" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11"/>
+                    <Button Content="📋 Copy" Click="OnCopyClick" Style="{DynamicResource SmallBtnStyle}" Margin="0,0,4,0"/>
+                    <Button Content="🗑️ Clear" Click="OnClearClick" Style="{DynamicResource SmallBtnStyle}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Log List -->
+        <ListBox x:Name="LogListBox" Grid.Row="1" Background="#181818" BorderThickness="0" 
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Padding" Value="6,3"/>
+                    <Setter Property="Margin" Value="0,1"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#2A2D2E"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="70"/>
+                            <ColumnDefinition Width="46"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Timestamp -->
+                        <TextBlock Grid.Column="0" Text="{Binding FormattedTime}" Foreground="#666666" FontFamily="Consolas" FontSize="11" VerticalAlignment="Center"/>
+
+                        <!-- Level Badge -->
+                        <Border Grid.Column="1" Background="#2D2D30" CornerRadius="3" Padding="4,1" Margin="2,0" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding BadgeText}" Foreground="{Binding BadgeBrush}" FontWeight="Bold" FontSize="10" FontFamily="Consolas"/>
+                        </Border>
+
+                        <!-- Message -->
+                        <TextBlock Grid.Column="2" Text="{Binding Message}" Foreground="#D4D4D4" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Margin="6,0,0,0"/>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+
+    <UserControl.Resources>
+        <Style x:Key="FilterRadioStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#888888"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="b" Background="Transparent" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="#37373D"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SmallBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#2D2D30"/>
+            <Setter Property="Foreground" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#3E3E42"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="#3E3E42"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+</UserControl>

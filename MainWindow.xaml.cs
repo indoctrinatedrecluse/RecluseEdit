@@ -10,6 +10,7 @@ using RecluseEdit.Core.Models;
 using RecluseEdit.Core.Services;
 using RecluseEdit.Sdk;
 using RecluseEdit.Sdk.Models;
+using RecluseEdit.UI.Dialogs;
 using RecluseEdit.UI.Views;
 
 namespace RecluseEdit;
@@ -35,6 +36,9 @@ public partial class MainWindow : Window
     public static readonly RoutedUICommand GoToLineCommand = new("Go to Line", "GoToLine", typeof(MainWindow));
     public static readonly RoutedUICommand ExplorerCommand = new("Explorer", "Explorer", typeof(MainWindow));
     public static readonly RoutedUICommand SourceControlCommand = new("Source Control", "SourceControl", typeof(MainWindow));
+    public static readonly RoutedUICommand NewProjectCommand = new("New Project", "NewProject", typeof(MainWindow));
+    public static readonly RoutedUICommand FormatDocumentCommand = new("Format Document", "FormatDocument", typeof(MainWindow));
+    public static readonly RoutedUICommand ToggleLivePreviewCommand = new("Toggle Live Preview", "ToggleLivePreview", typeof(MainWindow));
 
     private readonly SyntaxManager _syntaxManager;
     private readonly AutocompleteManager _autocompleteManager;
@@ -43,6 +47,12 @@ public partial class MainWindow : Window
     private readonly DocumentManager _documentManager;
     private readonly WorkspaceManager _workspaceManager;
     private readonly CommandRegistry _commandRegistry;
+    private readonly DocumentFormattingService _formattingService = new();
+    private readonly DiagnosticService _diagnosticService = new();
+    private readonly ProjectScaffoldingService _scaffoldingService = new();
+    private bool _formatOnSave = false;
+    private bool _isLivePreviewOpen = false;
+    private GridLength _lastPreviewWidth = new(1, GridUnitType.Star);
 
     private readonly List<ISidePanelProvider> _registeredSidePanels = [];
     private readonly Dictionary<string, FrameworkElement> _sidePanelViews = [];
@@ -72,6 +82,7 @@ public partial class MainWindow : Window
 
         // Command bindings
         CommandBindings.Add(new CommandBinding(NewFileCommand, (_, _) => CreateNewFile()));
+        CommandBindings.Add(new CommandBinding(NewProjectCommand, (_, _) => OpenNewProjectDialog()));
         CommandBindings.Add(new CommandBinding(OpenFileCommand, (_, _) => OpenFileDialog()));
         CommandBindings.Add(new CommandBinding(OpenFolderCommand, (_, _) => OpenFolderDialog()));
         CommandBindings.Add(new CommandBinding(SaveFileCommand, (_, _) => SaveActiveFile()));
@@ -87,12 +98,25 @@ public partial class MainWindow : Window
         CommandBindings.Add(new CommandBinding(GoToLineCommand, (_, _) => OpenGoToLine()));
         CommandBindings.Add(new CommandBinding(ExplorerCommand, (_, _) => SwitchSidebarView(true)));
         CommandBindings.Add(new CommandBinding(SourceControlCommand, (_, _) => SwitchSidebarView(false)));
+        CommandBindings.Add(new CommandBinding(FormatDocumentCommand, (_, _) => FormatActiveDocument()));
+        CommandBindings.Add(new CommandBinding(ToggleLivePreviewCommand, (_, _) => ToggleLivePreview()));
 
         SourceControlPane.FileSelected += OnSourceControlFileSelected;
 
         InitializeCommandPalette();
 
         TerminalPane.ClosePaneRequested += () => ToggleTerminal(false);
+        LivePreviewPane.ConsoleMessageReceived += (log) => Dispatcher.Invoke(() => WebConsolePane.AddLog(log));
+        LivePreviewPane.CloseRequested += () => ToggleLivePreview(false);
+
+        ProblemsPane.ProblemNavigated += (diag) => NavigateToProblem(diag);
+        ProblemsPane.RefreshRequested += () => UpdateDiagnostics();
+
+        EditorHost.UnderlyingEditor.TextChanged += (_, _) =>
+        {
+            if (_isLivePreviewOpen) UpdateLivePreview();
+            UpdateDiagnostics();
+        };
 
         // Document events
         _documentManager.ActiveDocumentChanged += OnActiveDocumentChanged;
@@ -455,6 +479,11 @@ public partial class MainWindow : Window
         var doc = _documentManager.ActiveDocument;
         if (doc == null) return false;
 
+        if (_formatOnSave)
+        {
+            FormatActiveDocument();
+        }
+
         if (string.IsNullOrEmpty(doc.FilePath))
         {
             return SaveActiveFileAs();
@@ -479,6 +508,11 @@ public partial class MainWindow : Window
     {
         var doc = _documentManager.ActiveDocument;
         if (doc == null) return false;
+
+        if (_formatOnSave)
+        {
+            FormatActiveDocument();
+        }
 
         var dlg = new SaveFileDialog
         {
@@ -681,6 +715,9 @@ public partial class MainWindow : Window
 
             CmbLanguage.SelectedItem = document.Language;
             Title = $"{document.FileName} - RecluseEdit";
+
+            if (_isLivePreviewOpen) UpdateLivePreview();
+            UpdateDiagnostics();
         }
         else
         {
@@ -692,6 +729,8 @@ public partial class MainWindow : Window
             StatusLength.Text = "No open files";
             StatusLanguage.Text = "--";
             Title = "RecluseEdit";
+
+            ProblemsPane.ClearProblems();
         }
     }
 
@@ -827,9 +866,13 @@ public partial class MainWindow : Window
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
         MessageBox.Show(this,
-            "RecluseEdit v2.2.0\n\n" +
+            "RecluseEdit v3.0.0\n\n" +
             "A fast, modern code editor optimized for web applications.\n\n" +
             "Key Features:\n" +
+            "• Chromium-Powered Live Web & Markdown Preview (Ctrl+Shift+V)\n" +
+            "• Document Formatting & Linting Pipeline (Shift+Alt+F)\n" +
+            "• Project Scaffolding Wizard (Ctrl+Shift+N)\n" +
+            "• Integrated Web Developer Console & Problems Dock\n" +
             "• Frontend Frameworks Pack (Vue 3 SFC, Svelte 5 Runes, Astro, Solid, Next, Remix)\n" +
             "• Node Backend & Microservices Pack (NestJS, Fastify, Koa, Socket.io)\n" +
             "• Git Diff Gutter Margin & Source Control Panel (Ctrl+Shift+G)\n" +
@@ -894,6 +937,160 @@ public partial class MainWindow : Window
     private void OnSortLinesClick(object sender, RoutedEventArgs e) => EditorHost.SortLines();
     private void OnTrimTrailingWhitespaceClick(object sender, RoutedEventArgs e) => EditorHost.TrimTrailingWhitespace();
 
+    #region Live Preview, Formatting, Diagnostics & Project Scaffolding
+
+    public void OpenNewProjectDialog()
+    {
+        var parentDir = _workspaceManager.HasWorkspace ? _workspaceManager.RootPath : null;
+        var dlg = new NewProjectDialog(_scaffoldingService, parentDir) { Owner = this };
+        if (dlg.ShowDialog() == true && !string.IsNullOrEmpty(dlg.CreatedProjectPath))
+        {
+            _workspaceManager.OpenWorkspace(dlg.CreatedProjectPath);
+            StatusMessage.Text = $"Opened workspace: {Path.GetFileName(dlg.CreatedProjectPath)}";
+            if (!string.IsNullOrEmpty(dlg.EntrypointFile) && File.Exists(dlg.EntrypointFile))
+            {
+                _documentManager.OpenDocument(dlg.EntrypointFile);
+            }
+            ToggleLivePreview(true);
+        }
+    }
+
+    private void OnNewProjectClick(object sender, RoutedEventArgs e) => OpenNewProjectDialog();
+
+    public void FormatActiveDocument()
+    {
+        var doc = _documentManager.ActiveDocument;
+        if (doc == null) return;
+
+        var text = EditorHost.UnderlyingEditor.Text;
+        if (string.IsNullOrEmpty(text)) return;
+
+        var formatted = _formattingService.FormatDocument(text, doc.Language.Id, doc.FilePath ?? string.Empty);
+        if (formatted != text)
+        {
+            var caret = EditorHost.UnderlyingEditor.CaretOffset;
+            EditorHost.UnderlyingEditor.Document.Text = formatted;
+            EditorHost.UnderlyingEditor.CaretOffset = Math.Min(caret, EditorHost.UnderlyingEditor.Document.TextLength);
+            StatusMessage.Text = $"Formatted {doc.FileName}";
+        }
+    }
+
+    private void OnFormatDocumentClick(object sender, RoutedEventArgs e) => FormatActiveDocument();
+
+    private void OnToggleFormatOnSaveClick(object sender, RoutedEventArgs e)
+    {
+        _formatOnSave = MenuFormatOnSave.IsChecked;
+        StatusMessage.Text = $"Format on Save: {(_formatOnSave ? "Enabled" : "Disabled")}";
+    }
+
+    public void ToggleLivePreview(bool? explicitState = null)
+    {
+        _isLivePreviewOpen = explicitState ?? !_isLivePreviewOpen;
+        MenuLivePreview.IsChecked = _isLivePreviewOpen;
+        BtnLivePreview.IsChecked = _isLivePreviewOpen;
+
+        if (_isLivePreviewOpen)
+        {
+            ColPreviewSplitter.Width = GridLength.Auto;
+            PreviewSplitter.Visibility = Visibility.Visible;
+            LivePreviewPane.Visibility = Visibility.Visible;
+            ColPreviewPane.Width = _lastPreviewWidth.Value > 50 ? _lastPreviewWidth : new GridLength(1, GridUnitType.Star);
+            UpdateLivePreview();
+        }
+        else
+        {
+            if (ColPreviewPane.Width.Value > 50) _lastPreviewWidth = ColPreviewPane.Width;
+            ColPreviewPane.Width = new GridLength(0);
+            PreviewSplitter.Visibility = Visibility.Collapsed;
+            LivePreviewPane.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void OnToggleLivePreviewClick(object sender, RoutedEventArgs e) => ToggleLivePreview();
+
+    private void UpdateLivePreview()
+    {
+        if (!_isLivePreviewOpen) return;
+        var doc = _documentManager.ActiveDocument;
+        if (doc == null) return;
+
+        var ext = Path.GetExtension(doc.FilePath)?.ToLowerInvariant() ?? "";
+        bool isMarkdown = doc.Language.Id == "markdown" || ext is ".md" or ".markdown";
+        LivePreviewPane.UpdateContent(EditorHost.UnderlyingEditor.Text, doc.FilePath ?? string.Empty, isMarkdown);
+    }
+
+    private void UpdateDiagnostics()
+    {
+        var doc = _documentManager.ActiveDocument;
+        if (doc == null)
+        {
+            ProblemsPane.ClearProblems();
+            return;
+        }
+
+        var items = _diagnosticService.AnalyzeDocument(EditorHost.UnderlyingEditor.Text, doc.Language.Id, doc.FilePath ?? string.Empty);
+        ProblemsPane.SetProblems(items);
+    }
+
+    private void NavigateToProblem(DiagnosticItem diag)
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(diag.FilePath) && File.Exists(diag.FilePath) &&
+                _documentManager.ActiveDocument?.FilePath != diag.FilePath)
+            {
+                _documentManager.OpenDocument(diag.FilePath);
+            }
+
+            if (diag.LineNumber > 0 && diag.LineNumber <= EditorHost.UnderlyingEditor.Document.LineCount)
+            {
+                var line = EditorHost.UnderlyingEditor.Document.GetLineByNumber(diag.LineNumber);
+                int offset = line.Offset + Math.Min(Math.Max(0, diag.ColumnNumber - 1), line.Length);
+                EditorHost.UnderlyingEditor.CaretOffset = offset;
+                EditorHost.UnderlyingEditor.ScrollTo(diag.LineNumber, diag.ColumnNumber);
+                EditorHost.Focus();
+            }
+        }
+        catch
+        {
+            // Ignore bounds failure
+        }
+    }
+
+    private void OnBottomTabChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioButton rb && rb.Tag is string tag)
+        {
+            TerminalPane.Visibility = tag == "Terminal" ? Visibility.Visible : Visibility.Collapsed;
+            WebConsolePane.Visibility = tag == "Console" ? Visibility.Visible : Visibility.Collapsed;
+            ProblemsPane.Visibility = tag == "Problems" ? Visibility.Visible : Visibility.Collapsed;
+
+            if (RowTerminalPane.Height.Value < 50)
+            {
+                ToggleTerminal(true);
+            }
+        }
+    }
+
+    private void OnCloseBottomDockClick(object sender, RoutedEventArgs e)
+    {
+        ToggleTerminal(false);
+    }
+
+    private void OnMenuWebConsoleClick(object sender, RoutedEventArgs e)
+    {
+        TabBottomConsole.IsChecked = true;
+        OnBottomTabChanged(TabBottomConsole, new RoutedEventArgs());
+    }
+
+    private void OnMenuProblemsClick(object sender, RoutedEventArgs e)
+    {
+        TabBottomProblems.IsChecked = true;
+        OnBottomTabChanged(TabBottomProblems, new RoutedEventArgs());
+    }
+
+    #endregion
+
     private void InitializeCommandPalette()
     {
         _commandRegistry.LineJumpHandler = (line, col) => EditorHost.GoToLine(line, col);
@@ -946,6 +1143,7 @@ public partial class MainWindow : Window
         [
             // File
             new() { Id = "file.new", Title = "New File", Category = "File", InputGestureText = "Ctrl+N", Icon = "📄", Action = () => CreateNewFile() },
+            new() { Id = "file.newProject", Title = "New Project from Template...", Category = "File", InputGestureText = "Ctrl+Shift+N", Icon = "🛠️", Action = () => OpenNewProjectDialog() },
             new() { Id = "file.open", Title = "Open File...", Category = "File", InputGestureText = "Ctrl+O", Icon = "📂", Action = () => OpenFileDialog() },
             new() { Id = "file.openFolder", Title = "Open Folder / Workspace...", Category = "File", InputGestureText = "Ctrl+Shift+O", Icon = "📁", Action = () => OpenFolderDialog() },
             new() { Id = "file.save", Title = "Save Active File", Category = "File", InputGestureText = "Ctrl+S", Icon = "💾", Action = () => SaveActiveFile() },
@@ -956,6 +1154,7 @@ public partial class MainWindow : Window
             new() { Id = "file.exit", Title = "Exit Application", Category = "File", Icon = "🚪", Action = () => Close() },
 
             // Edit & Lines
+            new() { Id = "edit.format", Title = "Format Document", Category = "Edit", InputGestureText = "Shift+Alt+F", Icon = "✨", Action = () => FormatActiveDocument() },
             new() { Id = "edit.undo", Title = "Undo", Category = "Edit", InputGestureText = "Ctrl+Z", Icon = "↩️", Action = () => EditorHost.UnderlyingEditor.Undo() },
             new() { Id = "edit.redo", Title = "Redo", Category = "Edit", InputGestureText = "Ctrl+Y", Icon = "↪️", Action = () => EditorHost.UnderlyingEditor.Redo() },
             new() { Id = "edit.cut", Title = "Cut", Category = "Edit", InputGestureText = "Ctrl+X", Icon = "✂️", Action = () => EditorHost.UnderlyingEditor.Cut() },
@@ -982,6 +1181,9 @@ public partial class MainWindow : Window
             // View & UI
             new() { Id = "view.commandPalette", Title = "Command Palette", Category = "View", InputGestureText = "Ctrl+Shift+P", Icon = "🚀", Action = () => OpenCommandPalette(">") },
             new() { Id = "view.quickOpen", Title = "Quick Open File", Category = "View", InputGestureText = "Ctrl+P", Icon = "📁", Action = () => OpenCommandPalette("") },
+            new() { Id = "view.toggleLivePreview", Title = "Toggle Live Web & Markdown Preview", Category = "View", InputGestureText = "Ctrl+Shift+V", Icon = "🌐", Action = () => ToggleLivePreview() },
+            new() { Id = "view.showConsole", Title = "Show Web Developer Console", Category = "View", Icon = "🌐", Action = () => OnMenuWebConsoleClick(this, new RoutedEventArgs()) },
+            new() { Id = "view.showProblems", Title = "Show Problems Dock", Category = "View", Icon = "⚠️", Action = () => OnMenuProblemsClick(this, new RoutedEventArgs()) },
             new() { Id = "view.toggleSidebar", Title = "Toggle Workspace Explorer Sidebar", Category = "View", InputGestureText = "Ctrl+B", Icon = "☰", Action = () => ToggleSidebar() },
             new() { Id = "view.toggleAi", Title = "Toggle DeepSeek AI Chat Panel", Category = "View", InputGestureText = "Ctrl+Alt+A", Icon = "🤖", Action = () => ToggleRightPane() },
             new() { Id = "view.toggleTerminal", Title = "Toggle Integrated Terminal", Category = "View", InputGestureText = "Ctrl+`", Icon = "💻", Action = () => ToggleTerminal() },

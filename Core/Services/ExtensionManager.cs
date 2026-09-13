@@ -19,10 +19,12 @@ public class ExtensionManager : IExtensionHost
     private readonly IWorkspaceContext _workspaceContext;
     private readonly List<IExtension> _loadedExtensions = [];
     private readonly List<ISidePanelProvider> _sidePanels = [];
+    private readonly List<IDocumentFormatter> _formatters = [];
     private readonly List<string> _logs = [];
 
     public IReadOnlyList<IExtension> LoadedExtensions => _loadedExtensions.AsReadOnly();
     public IReadOnlyList<ISidePanelProvider> RegisteredSidePanels => _sidePanels.AsReadOnly();
+    public IReadOnlyList<IDocumentFormatter> RegisteredFormatters => _formatters.AsReadOnly();
     public IWorkspaceContext WorkspaceContext => _workspaceContext;
     public IReadOnlyList<string> Logs => _logs.AsReadOnly();
     public ToolchainManager ToolchainManager => _toolchainManager;
@@ -165,6 +167,15 @@ public class ExtensionManager : IExtensionHost
             _sidePanels.Add(panelProvider);
             Log($"Registered side panel '{panelProvider.Title}' ({panelProvider.Id})");
             SidePanelRegistered?.Invoke(panelProvider);
+        }
+    }
+
+    public void RegisterDocumentFormatter(IDocumentFormatter formatter)
+    {
+        if (!_formatters.Any(f => f.FormatterId == formatter.FormatterId))
+        {
+            _formatters.Add(formatter);
+            Log($"Registered document formatter '{formatter.DisplayName}' ({formatter.FormatterId})");
         }
     }
 

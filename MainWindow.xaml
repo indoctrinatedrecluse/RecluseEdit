@@ -15,8 +15,38 @@
         Background="{StaticResource BgPrimary}"
         Foreground="{StaticResource FgPrimary}">
 
+    <Window.Resources>
+        <Style x:Key="BottomTabRadioStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{StaticResource FgSecondary}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Margin" Value="2,1" />
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="b" Background="Transparent" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="{StaticResource BgPrimary}" />
+                                <Setter Property="Foreground" Value="{StaticResource FgPrimary}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="{StaticResource BgHover}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Window.InputBindings>
         <KeyBinding Modifiers="Control" Key="N" Command="{x:Static local:MainWindow.NewFileCommand}" />
+        <KeyBinding Modifiers="Control+Shift" Key="N" Command="{x:Static local:MainWindow.NewProjectCommand}" />
         <KeyBinding Modifiers="Control" Key="O" Command="{x:Static local:MainWindow.OpenFileCommand}" />
         <KeyBinding Modifiers="Control+Shift" Key="O" Command="{x:Static local:MainWindow.OpenFolderCommand}" />
         <KeyBinding Modifiers="Control" Key="S" Command="{x:Static local:MainWindow.SaveFileCommand}" />
@@ -33,6 +63,8 @@
         <KeyBinding Modifiers="Control" Key="G" Command="{x:Static local:MainWindow.GoToLineCommand}" />
         <KeyBinding Modifiers="Control+Shift" Key="E" Command="{x:Static local:MainWindow.ExplorerCommand}" />
         <KeyBinding Modifiers="Control+Shift" Key="G" Command="{x:Static local:MainWindow.SourceControlCommand}" />
+        <KeyBinding Modifiers="Shift+Alt" Key="F" Command="{x:Static local:MainWindow.FormatDocumentCommand}" />
+        <KeyBinding Modifiers="Control+Shift" Key="V" Command="{x:Static local:MainWindow.ToggleLivePreviewCommand}" />
     </Window.InputBindings>
 
     <Grid>
@@ -47,6 +79,7 @@
         <!-- 0. Menu Bar -->
         <Menu Grid.Row="0" Background="{StaticResource BgTertiary}">
             <MenuItem Header="_File">
+                <MenuItem Header="New _Project..." InputGestureText="Ctrl+Shift+N" Click="OnNewProjectClick" />
                 <MenuItem Header="_New File" InputGestureText="Ctrl+N" Click="OnNewFileClick" />
                 <MenuItem Header="_Open File..." InputGestureText="Ctrl+O" Click="OnOpenFileClick" />
                 <MenuItem Header="Open _Folder..." InputGestureText="Ctrl+Shift+O" Click="OnOpenFolderClick" />
@@ -73,6 +106,9 @@
                 <MenuItem Header="_Replace..." InputGestureText="Ctrl+H" Click="OnReplaceClick" />
                 <MenuItem Header="_Go to Line..." InputGestureText="Ctrl+G" Click="OnGoToLineClick" />
                 <Separator Background="{StaticResource BorderDark}" />
+                <MenuItem Header="_Format Document" InputGestureText="Shift+Alt+F" Click="OnFormatDocumentClick" />
+                <MenuItem x:Name="MenuFormatOnSave" Header="Format on _Save" IsCheckable="True" IsChecked="False" Click="OnToggleFormatOnSaveClick" />
+                <Separator Background="{StaticResource BorderDark}" />
                 <MenuItem Header="_Line Operations">
                     <MenuItem Header="Toggle Line _Comment" InputGestureText="Ctrl+/" Click="OnToggleCommentClick" />
                     <MenuItem Header="_Move Line Up" InputGestureText="Alt+Up" Click="OnMoveLineUpClick" />
@@ -90,6 +126,10 @@
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="_Command Palette..." InputGestureText="Ctrl+Shift+P" Click="OnCommandPaletteClick" />
+                <Separator Background="{StaticResource BorderDark}" />
+                <MenuItem x:Name="MenuLivePreview" Header="Live _Preview" InputGestureText="Ctrl+Shift+V" IsCheckable="True" IsChecked="False" Click="OnToggleLivePreviewClick" />
+                <MenuItem Header="_Web Console" Click="OnMenuWebConsoleClick" />
+                <MenuItem Header="_Problems" Click="OnMenuProblemsClick" />
                 <Separator Background="{StaticResource BorderDark}" />
                 <MenuItem Header="_Explorer" InputGestureText="Ctrl+Shift+E" Click="OnMenuExplorerClick" />
                 <MenuItem Header="_Source Control" InputGestureText="Ctrl+Shift+G" Click="OnMenuSourceControlClick" />
@@ -181,6 +221,19 @@
                                          Padding="8,4" Margin="2,1"
                                          FontSize="12"
                                          Click="OnToolbarTerminalClick" />
+
+                <Primitives:ToggleButton xmlns:Primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
+                                         x:Name="BtnLivePreview" 
+                                         Content="🌐 Live Preview" 
+                                         IsChecked="False"
+                                         ToolTip="Toggle Live Preview (Ctrl+Shift+V)"
+                                         Padding="8,4" Margin="2,1"
+                                         FontSize="12"
+                                         Click="OnToggleLivePreviewClick" />
+
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnFormatDocumentClick" ToolTip="Format Document (Shift+Alt+F)">
+                    <TextBlock Text="✨ Format" />
+                </Button>
 
                 <Rectangle Width="1" Fill="{StaticResource BorderDark}" Margin="6,2" />
 
@@ -346,50 +399,101 @@
                     <RowDefinition x:Name="RowTerminalPane" Height="220" MinHeight="100" />
                 </Grid.RowDefinitions>
 
-                <!-- Top: Editor Host & Empty State -->
+                <!-- Top: Editor Host & Split Live Preview -->
                 <Grid Grid.Row="0">
-                    <controls:EditorControl x:Name="EditorHost" Visibility="Visible" />
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition x:Name="ColPreviewSplitter" Width="Auto" />
+                        <ColumnDefinition x:Name="ColPreviewPane" Width="0" MinWidth="0" />
+                    </Grid.ColumnDefinitions>
 
-                    <!-- Empty State when no tabs are open -->
-                    <Border x:Name="EmptyStateOverlay" Background="{StaticResource BgPrimary}" Visibility="Collapsed">
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock Text="RecluseEdit" 
-                                       FontSize="28" 
-                                       FontWeight="Bold" 
-                                       Foreground="{StaticResource FgSecondary}" 
-                                       HorizontalAlignment="Center" 
-                                       Margin="0,0,0,8" />
-                            <TextBlock Text="Web Application Code Editor" 
-                                       FontSize="14" 
-                                       Foreground="{StaticResource FgMuted}" 
-                                       HorizontalAlignment="Center" 
-                                       Margin="0,0,0,24" />
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <Button Style="{StaticResource ToolbarButtonStyle}" 
-                                        Content="Create New File (Ctrl+N)" 
-                                        Padding="12,6" 
-                                        Margin="4,0" 
-                                        Click="OnNewFileClick" />
-                                <Button Style="{StaticResource ToolbarButtonStyle}" 
-                                        Content="Open File (Ctrl+O)" 
-                                        Padding="12,6" 
-                                        Margin="4,0" 
-                                        Click="OnOpenFileClick" />
-                                <Button Style="{StaticResource ToolbarButtonStyle}" 
-                                        Content="Open Folder (Ctrl+Shift+O)" 
-                                        Padding="12,6" 
-                                        Margin="4,0" 
-                                        Click="OnOpenFolderClick" />
+                    <Grid Grid.Column="0">
+                        <controls:EditorControl x:Name="EditorHost" Visibility="Visible" />
+
+                        <!-- Empty State when no tabs are open -->
+                        <Border x:Name="EmptyStateOverlay" Background="{StaticResource BgPrimary}" Visibility="Collapsed">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="RecluseEdit" 
+                                           FontSize="28" 
+                                           FontWeight="Bold" 
+                                           Foreground="{StaticResource FgSecondary}" 
+                                           HorizontalAlignment="Center" 
+                                           Margin="0,0,0,8" />
+                                <TextBlock Text="Web Application Code Editor" 
+                                           FontSize="14" 
+                                           Foreground="{StaticResource FgMuted}" 
+                                           HorizontalAlignment="Center" 
+                                           Margin="0,0,0,24" />
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Style="{StaticResource ToolbarButtonStyle}" 
+                                            Content="Create New File (Ctrl+N)" 
+                                            Padding="12,6" 
+                                            Margin="4,0" 
+                                            Click="OnNewFileClick" />
+                                    <Button Style="{StaticResource ToolbarButtonStyle}" 
+                                            Content="New Project (Ctrl+Shift+N)" 
+                                            Padding="12,6" 
+                                            Margin="4,0" 
+                                            Click="OnNewProjectClick" />
+                                    <Button Style="{StaticResource ToolbarButtonStyle}" 
+                                            Content="Open File (Ctrl+O)" 
+                                            Padding="12,6" 
+                                            Margin="4,0" 
+                                            Click="OnOpenFileClick" />
+                                    <Button Style="{StaticResource ToolbarButtonStyle}" 
+                                            Content="Open Folder (Ctrl+Shift+O)" 
+                                            Padding="12,6" 
+                                            Margin="4,0" 
+                                            Click="OnOpenFolderClick" />
+                                </StackPanel>
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </Border>
+                    </Grid>
+
+                    <!-- Splitter between Editor and Preview -->
+                    <GridSplitter x:Name="PreviewSplitter" Grid.Column="1" Style="{StaticResource VerticalSplitterStyle}" Visibility="Collapsed" />
+
+                    <!-- Live Web & Markdown Preview Pane -->
+                    <controls:LivePreviewControl x:Name="LivePreviewPane" Grid.Column="2" Visibility="Collapsed" />
                 </Grid>
 
-                <!-- Horizontal Splitter between Editor and Terminal -->
+                <!-- Horizontal Splitter between Editor and Bottom Dock -->
                 <GridSplitter x:Name="TerminalSplitter" Grid.Row="1" Style="{StaticResource HorizontalSplitterStyle}" />
 
-                <!-- Bottom: Terminal Pane -->
-                <controls:TerminalPaneControl x:Name="TerminalPane" Grid.Row="2" />
+                <!-- Bottom: Multi-Tab Dock (Terminal, Web Console, Problems) -->
+                <Border Grid.Row="2" Background="{StaticResource BgSecondary}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Bottom Dock Header -->
+                        <Border Grid.Row="0" Background="{StaticResource BgTertiary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
+                            <Grid Margin="6,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <RadioButton x:Name="TabBottomTerminal" Content="💻 Terminal" IsChecked="True" Style="{DynamicResource BottomTabRadioStyle}" Click="OnBottomTabChanged" Tag="Terminal" />
+                                    <RadioButton x:Name="TabBottomConsole" Content="🌐 Web Console" Style="{DynamicResource BottomTabRadioStyle}" Click="OnBottomTabChanged" Tag="Console" />
+                                    <RadioButton x:Name="TabBottomProblems" Content="⚠️ Problems" Style="{DynamicResource BottomTabRadioStyle}" Click="OnBottomTabChanged" Tag="Problems" />
+                                </StackPanel>
+
+                                <Button Grid.Column="1" Style="{StaticResource ToolbarButtonStyle}" Content="✕" Width="20" Height="20" Padding="0" ToolTip="Close Bottom Dock (Ctrl+`)" Click="OnCloseBottomDockClick" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Tab Panes -->
+                        <Grid Grid.Row="1">
+                            <controls:TerminalPaneControl x:Name="TerminalPane" Visibility="Visible" />
+                            <controls:WebConsoleControl x:Name="WebConsolePane" Visibility="Collapsed" />
+                            <controls:ProblemsPanelControl x:Name="ProblemsPane" Visibility="Collapsed" />
+                        </Grid>
+                    </Grid>
+                </Border>
             </Grid>
 
             <!-- 4. Splitter between Editor & Right Pane -->

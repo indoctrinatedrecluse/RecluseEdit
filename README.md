@@ -12,6 +12,10 @@
 
 ## 🎯 Key Objectives & Features
 
+- 🌐 **Chromium-Powered Live Web & Markdown Preview**: Embedded split-pane live preview backed by `Microsoft.Web.WebView2` with real-time debounced updates (<kbd>Ctrl+Shift+V</kbd>), `<base href="...">` relative asset resolution for local CSS/JS/images, multi-device viewport switching (Responsive 100%, Mobile 375px, Tablet 768px, Desktop 1200px), and GitHub Dark-themed Markdown rendering.
+- 🎨 **Document Formatting & Syntax Diagnostics**: Extensible `IDocumentFormatter` pipeline with built-in pure C# formatters for JSON, CSS/SCSS, HTML/XML, SQL, JS/TS, and Markdown (<kbd>Shift+Alt+F</kbd>), configurable "Format on Save", and real-time syntax diagnostics (JSON parser errors, bracket/brace mismatch tracking, HTML tag auditing).
+- 🚀 **Project Scaffolding Wizard**: Interactive project creation wizard (<kbd>Ctrl+Shift+N</kbd>) featuring 7 production starters (Static Web, Vite+React 19, Vite+Vue 3, Vite+Svelte 5, Vite+SolidJS, Fastify Microservice, Markdown Docs) with one-click Git repo initialization and instant workspace opening.
+- 💻 **Integrated Web Developer Console & Problems Dock**: Unified bottom dock with **Terminal** (<kbd>Ctrl+`</kbd>), **Web Console**, and **Problems**. JavaScript console bridge capturing `console.log/info/warn/error` and unhandled exceptions directly from the preview pane into a filterable viewer, plus double-click jump-to-error in code.
 - 🌿 **Git Diff Gutter Indicators & Source Control Panel**: Interactive editor gutter margin displaying live line additions (green), modifications (blue), and deletions (red triangle) computed directly against Git `HEAD`. Dedicated Source Control panel (<kbd>Ctrl+Shift+G</kbd>) with Activity Bar navigation, branch & ahead/behind counters, commit message composer (<kbd>Ctrl+Enter</kbd>), one-click staging/unstaging, and discard changes.
 - ⚡ **Universal Command Palette**: Modal fuzzy command launcher (<kbd>Ctrl+Shift+P</kbd>, <kbd>F1</kbd>) to search and execute any command, quick-open workspace files and tabs (<kbd>Ctrl+P</kbd>), jump to line numbers (<kbd>Ctrl+G</kbd>), and query help commands (`?`).
 - ✂️ **Advanced Line & Multiline Editing**: Move lines up/down (<kbd>Alt+&uarr;/&darr;</kbd>), duplicate lines (<kbd>Shift+Alt+&uarr;/&darr;</kbd>), toggle comments (<kbd>Ctrl+/</kbd>), delete lines (<kbd>Ctrl+Shift+K</kbd>), join lines (<kbd>Ctrl+J</kbd>), transform case (<kbd>Ctrl+Shift+U</kbd>, <kbd>Ctrl+U</kbd>), sort lines, trim trailing whitespace, and rectangular column cursor editing (<kbd>Ctrl+Alt+&uarr;/&darr;</kbd>).
@@ -36,6 +40,9 @@
 
 | Shortcut | Action |
 | :--- | :--- |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> | Toggle Chromium Live Web & Markdown Preview |
+| <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>F</kbd> | Format Document (Prettify Code) |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd> | New Project... (Scaffolding Wizard) |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> / <kbd>F1</kbd> | Universal Command Palette (Commands Mode `>`) |
 | <kbd>Ctrl</kbd> + <kbd>P</kbd> | Quick Open (Search Files & Open Tabs) |
 | <kbd>Ctrl</kbd> + <kbd>G</kbd> | Go to Line & Column (`:line[:col]`) |
@@ -56,7 +63,7 @@
 | <kbd>Ctrl</kbd> + <kbd>S</kbd> | Save File |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | Save As |
 | <kbd>Ctrl</kbd> + <kbd>W</kbd> | Close Active Tab |
-| <kbd>Ctrl</kbd> + <kbd>`</kbd> | Toggle Terminal Panel |
+| <kbd>Ctrl</kbd> + <kbd>`</kbd> | Toggle Terminal / Bottom Dock Panel |
 | <kbd>Ctrl</kbd> + <kbd>B</kbd> | Toggle Sidebar (Explorer / Source Control) |
 | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>A</kbd> | Toggle DeepSeek AI Chat Right Pane |
 | <kbd>Ctrl</kbd> + <kbd>F</kbd> | Find in Document |
@@ -76,6 +83,7 @@
 | **UI Platform** | Windows Presentation Foundation (WPF) |
 | **Language** | C# 13 / 14 |
 | **Editor Core Engine** | [AvalonEdit](https://github.com/icsharpcode/AvalonEdit) (v6.3.1) |
+| **Web Preview Engine** | [Microsoft.Web.WebView2](https://learn.microsoft.com/en-us/microsoft-edge/webview2/) (Chromium) |
 | **IDE / Toolchain** | Visual Studio 2026 Enterprise Edition |
 | **Source Control** | Git & GitHub CLI (`gh`) |
 
@@ -355,17 +363,16 @@ Remove-Item .git\index -Force; git reset
 
 ## 🗺️ Planned Roadmap & SDK Evolution (TODO)
 
-The following architectural evolutions and modular APIs are planned for future releases:
+The following architectural evolutions and modular APIs are planned for upcoming milestones:
 
-### 1. Modular Document Formatters (`IDocumentFormatter`)
-- **Pluggable Code Prettification**: Introduce `IDocumentFormatter` to `RecluseEdit.Sdk` to allow extensions to register external CLI formatters or in-process engine formatters.
-- **Format on Save**: Configurable auto-formatting pipeline invoked transparently before write operations.
-- **Language Prettifiers**: Out-of-the-box integration adapters for `Prettier` (JS/TS/JSON/CSS/HTML/Markdown), `black`/`ruff` (Python), `gofmt`/`goimports` (Go), `sql-formatter` (SQL), `dart format` (Dart/Flutter), and `rustfmt` (Rust).
-
-### 2. Extensible Multi-Model AI Hub (`IAiProvider`) & Diagnostic Providers
+### 1. Extensible Multi-Model AI Hub (`IAiProvider`)
 - **Multi-Model Provider Abstraction**: Evolve `RecluseEdit.Extensions.DeepSeek` into a pluggable multi-model provider architecture with `IAiProvider`, enabling runtime switching between DeepSeek, OpenAI (GPT-4o), Anthropic (Claude 3.5 Sonnet), Google Gemini 2.5, and local offline Ollama models.
+- **AI Code Review & In-line Generation**: Inline prompt generation and streaming code actions directly inside the AvalonEdit editor surface.
+
+### 2. Custom Status Bar & Extension UI Contributions (`IStatusBarProvider`)
 - **Custom Status Bar Contributions (`IStatusBarProvider`)**: Allow extensions to dynamically inject interactive status bar indicators (e.g., active database connection, Git ahead/behind counters, API server latency, language server health).
-- **Diagnostic & Problem Markers (`IDiagnosticProvider`)**: Standardized error/warning/info squiggles and a centralized "Problems" dock, aggregating real-time compiler and linter outputs directly in the editor buffer.
+- **External CLI Formatters & Linter Adapters**: Extend `IDocumentFormatter` with out-of-the-box adapters for CLI tools (`prettier`, `black`, `ruff`, `gofmt`, `rustfmt`, `dart format`).
+- **Live In-Editor Diagnostic Squiggles**: Render wavy squiggles directly beneath tokens identified by `DiagnosticService` and language server providers.
 
 ---
 
