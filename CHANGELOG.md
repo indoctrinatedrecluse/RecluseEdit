@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ Added Features
+
+#### ⚡ Frontend Frameworks & Node Tooling Pack (`RecluseEdit.Extensions.Frontend`)
+- **Vue 3 SFC Highlighting & Idioms**: Custom XSHD syntax grammar for `.vue` files supporting `<template>`, `<script lang="ts">`, `<style scoped>`, Vue directives (`v-if`, `v-for`, `v-model`, `@click`, `:bind`), and interpolations (`{{ ... }}`). Autocomplete provider for `<script setup lang="ts">`, reactivity APIs (`ref`, `reactive`, `computed`, `watchEffect`), and macros (`defineProps`, `defineEmits`, `defineModel`).
+- **Svelte 5 Runes Highlighting & Idioms**: Dedicated XSHD syntax grammar for `.svelte` files highlighting modern Svelte 5 runes (`$state`, `$derived`, `$effect`, `$props`), control flow blocks (`{#if}`, `{#each}`, `{#await}`), and bindings (`bind:`, `on:`). Autocomplete provider with Svelte 5 boilerplate and reactive constructs.
+- **Astro Syntax Highlighting & Idioms**: Dedicated XSHD grammar for `.astro` components supporting frontmatter fences (`---`), component hydration directives (`client:load`, `client:idle`, `client:visible`), `<slot />`, and embedded styles.
+- **Modern Web Frameworks & Bundler Configs**: Completions for SolidJS fine-grained reactivity (`createSignal`, `createEffect`, `<For>`, `<Show>`), Next.js App Router conventions (`layout.tsx`, `page.tsx`, `'use server'`, route handlers), Remix `loader`/`action`, and bundler configuration boilerplate (`vite.config.ts`, `webpack.config.js`, `next.config.js`, `astro.config.mjs`).
+- **Frontend Toolchain Diagnostics**: Active CLI detection for `vite`, `next`, `astro`, `turbo`, `pnpm`, and `bun`.
+
+#### 🌐 Node Backend & Microservices Pack (`RecluseEdit.Extensions.NodeBackend`)
+- **NestJS Enterprise Architecture**: Completions for decorator-driven modules, controllers, providers, guards, and DTO validation with `class-validator` (`@Controller`, `@Get`, `@Post`, `@Injectable`, `@Module`, `ValidationPipe`).
+- **Fastify Web Framework**: Completions for high-performance route declarations, JSON Schema validation (`querystring`, `params`, `body`, `response`), custom plugins (`fastifyPlugin`), and lifecycle hooks (`preHandler`, `onRequest`).
+- **Koa Web Framework**: Snippets for cascading async middleware chains (`async (ctx, next) => { ... }`), context responses (`ctx.body`, `ctx.status`), and `@koa/router` routing.
+- **Socket.io Realtime Services**: Autocomplete for WebSocket server initialization (`new Server(httpServer)`), connection lifecycle (`io.on('connection')`), room broadcasting, and client event emitters/listeners (`socket.emit`, `socket.on`).
+- **Strict Collision Isolation**: Meticulously ensured zero conflict with pre-existing extensions by strictly excluding Flask, FastAPI, Django, and Express from NodeBackend.
+- **Node Backend Toolchain Diagnostics**: Active CLI detection for `nest`, `pm2`, and `fastify`.
+
+### 🧪 Automated Testing
+- Added comprehensive unit test suites in `FrontendExtensionTests.cs` and `NodeBackendExtensionTests.cs`, including strict verification against rule collisions with Express/Python.
+- Expanded the automated test suite to **152 passing tests, 0 warnings, 0 errors** across all 17 projects in `RecluseEdit.slnx`.
+
 ---
 
 ## [2.1.0] - 2026-09-12

@@ -19,7 +19,7 @@
 - 🤖 **DeepSeek AI Chat Assistant**: Collapsible right-pane conversational AI panel (<kbd>Ctrl+Alt+A</kbd>) with real-time streaming, configurable API endpoints & keys, secure file read/write permissions, and interactive confirmation prompts before running terminal commands.
 - 💻 **Integrated Multi-Terminal Dock**: Persistent multi-tab terminal (<kbd>Ctrl+`</kbd>) supporting PowerShell, CMD, Git Bash, WSL, and custom verified executables.
 - 📑 **Multi-File Tabbed Workspace**: Seamlessly open, edit, and switch between multiple tabs. Middle-click tab to close, and right-click for tab context actions (*Close Others*, *Close to Right*, *Copy Path*, *Reveal in Explorer*).
-- 🎨 **Exhaustive High-Fidelity Syntax Highlighting**: Custom, dedicated XSHD syntax definitions across all supported languages (SQL, HTTP/REST, Markdown, modern ECMAScript/TypeScript, CSS3/SCSS/LESS, PHP 8+, React JSX/TSX, GraphQL, Angular HTML templates, Angular TypeScript, Dart 3, Ruby on Rails, Go, Python, Rust, Lua, PowerShell, Bash, JSON, and XML/XAML), beautifully tuned with a rich VS Code Dark+ color palette.
+- 🎨 **Exhaustive High-Fidelity Syntax Highlighting**: Custom, dedicated XSHD syntax definitions across all supported languages (Vue 3 SFC, Svelte 5 runes, Astro, SQL, HTTP/REST, Markdown, modern ECMAScript/TypeScript, CSS3/SCSS/LESS, PHP 8+, React JSX/TSX, GraphQL, Angular HTML templates, Angular TypeScript, Dart 3, Ruby on Rails, Go, Python, Rust, Lua, PowerShell, Bash, JSON, and XML/XAML), beautifully tuned with a rich VS Code Dark+ color palette.
 - ⚡ **Dual Autocomplete System**:
   - **Inline Ghost Text**: Intelligent suggestions inline at the caret in faded italic text (<kbd>Tab</kbd> to accept, <kbd>Esc</kbd> to dismiss).
   - **IntelliSense Popup**: Rich completion list with tags, CSS properties, and JS APIs (<kbd>Ctrl+Space</kbd>).
@@ -188,7 +188,7 @@ RecluseEdit features a modular, decoupled extension architecture. Each extension
 
 ## 📦 Official Extensions (Separate Build Targets)
 
-RecluseEdit comes with twelve modular extensions built as dedicated targets in `RecluseEdit.slnx`:
+RecluseEdit comes with fourteen modular extensions built as dedicated targets in `RecluseEdit.slnx`:
 
 ### 🤖 DeepSeek AI Chat Assistant Pack (`RecluseEdit.Extensions.DeepSeek`)
 - **Right Pane AI Interface**: Integrated collapsible right-side dock (<kbd>Ctrl+Alt+A</kbd>) styled seamlessly in dark theme, with live conversation history, auto-scroll, message bubbles, and status updates.
@@ -288,6 +288,30 @@ RecluseEdit comes with twelve modular extensions built as dedicated targets in `
 - **HTTP Inline Completion**: Snippets for request headers (`Content-Type: application/json`, `Authorization: Bearer`), methods, and request templates.
 - **Toolchain Diagnostics**: Verifies `curl` CLI on system `PATH`.
 
+### ⚡ Frontend Frameworks & Node Tooling Pack (`RecluseEdit.Extensions.Frontend`)
+- Supports **Vue 3 SFC** (`.vue`), **Svelte 5** (`.svelte`), **Astro** (`.astro`), **SolidJS**, **Next.js App Router**, **Remix**, and modern JavaScript/TypeScript bundlers (**Vite**, **Webpack**, **Turbopack**, **Rollup**).
+- **Custom High-Fidelity XSHD Syntax Highlighting**:
+  - **Vue 3**: Highlighting for `<template>`, `<script lang="ts">`, `<style scoped>`, directives (`v-if`, `v-for`, `v-model`, `@click`, `:bind`), and interpolations (`{{ ... }}`).
+  - **Svelte 5**: Highlighting for modern Svelte 5 runes (`$state`, `$derived`, `$effect`, `$props`), control flow blocks (`{#if}`, `{#each}`, `{#await}`), and bindings (`bind:`, `on:`).
+  - **Astro**: Highlighting for Astro frontmatter code fences (`---`), component hydration directives (`client:load`, `client:idle`, `client:visible`), `<slot />`, and embedded styles.
+- **Modern Frontend Autocomplete & Snippets**:
+  - **Vue 3**: `<script setup lang="ts">` boilerplate, reactivity APIs (`ref`, `reactive`, `computed`, `watchEffect`), component macros (`defineProps`, `defineEmits`, `defineModel`), and component template skeletons.
+  - **Svelte 5**: Modern rune state declarations, reactive effects, props destructuring with `$props()`, and async markup blocks.
+  - **Astro**: Frontmatter skeleton with typed `Astro.props`, slotted layout wrappers, and dynamic islands.
+  - **SolidJS**: Fine-grained reactivity (`createSignal`, `createEffect`, `createMemo`), and control components (`<For>`, `<Show>`).
+  - **Next.js & Remix**: App Router server/client boundary patterns (`layout.tsx`, `page.tsx`, `'use server'`, `'use client'`, route handlers `GET`/`POST`), and Remix `loader`/`action` functions.
+  - **Bundler Configs**: Zero-friction templates for `vite.config.ts`, `webpack.config.js`, `next.config.js`, and `astro.config.mjs`.
+- **Toolchain Diagnostics**: Actively detects Node build tools and runtimes: `vite`, `next`, `astro`, `turbo`, `pnpm`, and `bun`.
+
+### 🌐 Node Backend & Microservices Pack (`RecluseEdit.Extensions.NodeBackend`)
+- Supports **NestJS**, **Fastify**, **Koa**, and **Socket.io** microservices and realtime web applications. *(Note: Flask, FastAPI, Django, and Express are purposefully and strictly isolated within the Python and existing web packs to eliminate any provider collision or rule overlaps).*
+- **Contextual Autocomplete & Idiom Providers**:
+  - **NestJS**: Decorator-driven enterprise architecture (`@Controller`, `@Get`, `@Post`, `@Injectable`, `@Module`, DTO validation with `class-validator`, and authorization Guards).
+  - **Fastify**: High-throughput routing (`fastify.get`, `fastify.post`), JSON Schema request validation (`querystring`, `params`, `body`, `response`), custom plugins (`fastifyPlugin`), and lifecycle hooks (`preHandler`, `onRequest`).
+  - **Koa**: Cascading async middleware chains (`async (ctx, next) => { ... }`), context response management (`ctx.body`, `ctx.status`), and `@koa/router` integration.
+  - **Socket.io**: Real-time event-driven communication, server initialization (`new Server(httpServer)`), connection lifecycle (`io.on('connection')`), room broadcasting, and client event handlers (`socket.emit`, `socket.on`).
+- **Toolchain Diagnostics**: Actively checks backend process managers and CLIs on `PATH`: **NestJS CLI** (`nest`), **PM2 Process Manager** (`pm2`), and **Fastify CLI** (`fastify`).
+
 ---
 
 ## 🤖 Automated CI/CD & GitHub Releases
@@ -298,7 +322,7 @@ RecluseEdit includes a fully automated GitHub Actions workflow (`.github/workflo
 - 🧪 **Full Verification**: Executes the complete test suite (`dotnet test RecluseEdit.slnx -c Release`) across all projects before packaging.
 - 📦 **Bundle & Package**:
   - Compiles the host editor and all extensions in `Release` configuration.
-  - Bundles the main application executable, dependencies, and all twelve extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`, `Go`, `Scripting`, `DeepSeek`, `Database`, and `RestClient`) under `Extensions/`.
+  - Bundles the main application executable, dependencies, and all fourteen extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`, `Go`, `Scripting`, `DeepSeek`, `Database`, `RestClient`, `Frontend`, and `NodeBackend`) under `Extensions/`.
   - Packages the entire distribution into a portable archive: `RecluseEdit-windows-<tag>.zip`.
 - 🚀 **GitHub Release**: Automatically creates a new GitHub Release with the bundled `.zip` asset attached and generates release notes.
 - 🕹️ **Manual Trigger**: Can also be executed manually via the **Actions** tab with custom version tags (`workflow_dispatch`).
