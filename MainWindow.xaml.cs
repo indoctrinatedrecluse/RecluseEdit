@@ -827,9 +827,11 @@ public partial class MainWindow : Window
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
         MessageBox.Show(this,
-            "RecluseEdit v2.1.0\n\n" +
+            "RecluseEdit v2.2.0\n\n" +
             "A fast, modern code editor optimized for web applications.\n\n" +
             "Key Features:\n" +
+            "• Frontend Frameworks Pack (Vue 3 SFC, Svelte 5 Runes, Astro, Solid, Next, Remix)\n" +
+            "• Node Backend & Microservices Pack (NestJS, Fastify, Koa, Socket.io)\n" +
             "• Git Diff Gutter Margin & Source Control Panel (Ctrl+Shift+G)\n" +
             "• Database & SQL Explorer Pack with SQLite runner & CSV export\n" +
             "• REST Client & API Workbench with response formatter & metrics\n" +
