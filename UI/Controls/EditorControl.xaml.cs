@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
@@ -693,6 +694,49 @@ public partial class EditorControl : UserControl
         catch
         {
             _ghostRenderer.Clear();
+        }
+    }
+
+    /// <summary>
+    /// Dynamically applies theme-specific caret, selection, and line highlight colors to the AvalonEdit text area.
+    /// </summary>
+    public void ApplyTheme(ThemeColors colors)
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(colors.Caret))
+            {
+                var caretColor = (Color)ColorConverter.ConvertFromString(colors.Caret);
+                var caretBrush = new SolidColorBrush(caretColor);
+                caretBrush.Freeze();
+                Editor.TextArea.Caret.CaretBrush = caretBrush;
+            }
+
+            if (!string.IsNullOrEmpty(colors.Selection))
+            {
+                var selColor = (Color)ColorConverter.ConvertFromString(colors.Selection);
+                var selBrush = new SolidColorBrush(selColor);
+                selBrush.Freeze();
+                Editor.TextArea.SelectionBrush = selBrush;
+            }
+
+            if (!string.IsNullOrEmpty(colors.CurrentLine))
+            {
+                var lineBgColor = (Color)ColorConverter.ConvertFromString(colors.CurrentLine);
+                var lineBgBrush = new SolidColorBrush(lineBgColor);
+                lineBgBrush.Freeze();
+                Editor.TextArea.TextView.CurrentLineBackground = lineBgBrush;
+            }
+
+            if (!string.IsNullOrEmpty(colors.BracketMatch))
+            {
+                var bracketColor = (Color)ColorConverter.ConvertFromString(colors.BracketMatch);
+                _bracketRenderer.SetHighlightColor(bracketColor);
+            }
+        }
+        catch
+        {
+            // Fallback gracefully if hex format is invalid
         }
     }
 }

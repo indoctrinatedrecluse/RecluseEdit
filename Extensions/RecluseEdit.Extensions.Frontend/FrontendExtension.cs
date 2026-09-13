@@ -87,6 +87,9 @@ public class FrontendExtension : IExtension
         host.RegisterToolchainCheck(new PnpmToolchainCheck());
         host.RegisterToolchainCheck(new BunToolchainCheck());
 
+        // 5. Register Extension Themes
+        host.RegisterTheme(new Themes.VueEmeraldTheme());
+
         host.Log("Frontend Frameworks & Node Tooling Pack initialized.");
         return Task.CompletedTask;
     }

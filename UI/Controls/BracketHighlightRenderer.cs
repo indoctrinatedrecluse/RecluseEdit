@@ -33,11 +33,29 @@ public class BracketHighlightRenderer : IBackgroundRenderer
         BorderPen = pen;
     }
 
+    private Brush _fillBrush = FillBrush;
+    private Pen _borderPen = BorderPen;
+
     public KnownLayer Layer => KnownLayer.Selection;
 
     public BracketHighlightRenderer(TextView textView)
     {
         _textView = textView;
+    }
+
+    public void SetHighlightColor(Color color)
+    {
+        var fill = new SolidColorBrush(Color.FromArgb(70, color.R, color.G, color.B));
+        fill.Freeze();
+        _fillBrush = fill;
+
+        var penBrush = new SolidColorBrush(color);
+        penBrush.Freeze();
+        var pen = new Pen(penBrush, 1);
+        pen.Freeze();
+        _borderPen = pen;
+
+        _textView.InvalidateVisual();
     }
 
     public void SetBracketMatch(int firstOffset, int secondOffset)
@@ -60,11 +78,11 @@ public class BracketHighlightRenderer : IBackgroundRenderer
         if (_firstOffset < 0 || _secondOffset < 0) return;
         if (textView.Document == null) return;
 
-        DrawBracketBox(textView, drawingContext, _firstOffset);
-        DrawBracketBox(textView, drawingContext, _secondOffset);
+        DrawBracketBox(textView, drawingContext, _firstOffset, _fillBrush, _borderPen);
+        DrawBracketBox(textView, drawingContext, _secondOffset, _fillBrush, _borderPen);
     }
 
-    private static void DrawBracketBox(TextView textView, DrawingContext drawingContext, int offset)
+    private static void DrawBracketBox(TextView textView, DrawingContext drawingContext, int offset, Brush fill, Pen pen)
     {
         if (offset < 0 || offset >= textView.Document.TextLength) return;
 
@@ -88,7 +106,7 @@ public class BracketHighlightRenderer : IBackgroundRenderer
                 screenY + height >= 0 && screenY < textView.ActualHeight)
             {
                 var rect = new Rect(screenX, screenY, width, height);
-                drawingContext.DrawRectangle(FillBrush, BorderPen, rect);
+                drawingContext.DrawRectangle(fill, pen, rect);
             }
         }
         catch

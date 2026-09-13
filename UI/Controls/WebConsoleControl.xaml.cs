@@ -97,3 +97,4 @@ public partial class WebConsoleControl : UserControl
         Clipboard.SetText(sb.ToString());
     }
 }
+

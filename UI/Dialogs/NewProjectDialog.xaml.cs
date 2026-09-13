@@ -135,3 +135,4 @@ public partial class NewProjectDialog : Window
         Close();
     }
 }
+

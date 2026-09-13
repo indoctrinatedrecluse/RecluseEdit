@@ -49,3 +49,4 @@ public partial class ProblemsPanelControl : UserControl
         RefreshRequested?.Invoke();
     }
 }
+

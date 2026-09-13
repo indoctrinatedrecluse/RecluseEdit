@@ -16,9 +16,11 @@ public interface IExtensionHost
     void RegisterSyntaxHighlighting(string languageId, IHighlightingDefinition definition);
     void RegisterSidePanel(ISidePanelProvider panelProvider) {}
     void RegisterDocumentFormatter(IDocumentFormatter formatter) {}
+    void RegisterTheme(IThemeDefinition theme) {}
     IReadOnlyList<LanguageDefinition> GetRegisteredLanguages();
     IReadOnlyList<ISidePanelProvider> RegisteredSidePanels => [];
     IReadOnlyList<IDocumentFormatter> RegisteredFormatters => [];
+    IReadOnlyList<IThemeDefinition> RegisteredThemes => [];
     IWorkspaceContext WorkspaceContext => null!;
     void Log(string message);
 }

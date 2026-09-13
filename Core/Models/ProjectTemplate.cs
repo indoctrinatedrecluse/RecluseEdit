@@ -12,3 +12,4 @@ public class ProjectTemplate
     public IReadOnlyList<string> Tags { get; set; } = new List<string>();
     public string EntrypointRelativePath { get; set; } = "index.html";
 }
+

@@ -7,6 +7,9 @@
     <RootNamespace>RecluseEdit.Sdk</RootNamespace>
     <AssemblyName>RecluseEdit.Sdk</AssemblyName>
     <UseWPF>true</UseWPF>
+    <Version>4.0.0</Version>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

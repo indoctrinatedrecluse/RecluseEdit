@@ -7,11 +7,11 @@
              xmlns:controls="clr-namespace:RecluseEdit.UI.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Background="#1E1E1E">
+    <Grid Background="{DynamicResource BgPrimary}">
         <avalonedit:TextEditor x:Name="Editor"
-                               Background="#1E1E1E"
-                               Foreground="#D4D4D4"
-                               LineNumbersForeground="#858585"
+                               Background="{DynamicResource BgPrimary}"
+                               Foreground="{DynamicResource FgPrimary}"
+                               LineNumbersForeground="{DynamicResource LineNumberFg}"
                                ShowLineNumbers="True"
                                FontFamily="Consolas, Cascadia Code, Courier New"
                                FontSize="14"

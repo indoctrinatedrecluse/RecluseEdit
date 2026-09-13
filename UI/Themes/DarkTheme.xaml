@@ -21,7 +21,7 @@
     <!-- ToolBar / Button Style -->
     <Style x:Key="ToolbarButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource FgPrimary}" />
+        <Setter Property="Foreground" Value="{DynamicResource FgPrimary}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="Padding" Value="8,4" />
@@ -39,11 +39,11 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{StaticResource BgHover}" />
-                            <Setter Property="BorderBrush" Value="{StaticResource BorderLight}" />
+                            <Setter Property="Background" Value="{DynamicResource BgHover}" />
+                            <Setter Property="BorderBrush" Value="{DynamicResource BorderLight}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background" Value="{StaticResource AccentBlue}" />
+                            <Setter Property="Background" Value="{DynamicResource AccentBlue}" />
                             <Setter Property="Foreground" Value="#FFFFFF" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
@@ -58,7 +58,7 @@
     <!-- Tab Close Button Style -->
     <Style x:Key="TabCloseButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource FgSecondary}" />
+        <Setter Property="Foreground" Value="{DynamicResource FgSecondary}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Width" Value="16" />
         <Setter Property="Height" Value="16" />
@@ -90,33 +90,33 @@
 
     <!-- Menu Styles -->
     <Style TargetType="Menu">
-        <Setter Property="Background" Value="{StaticResource BgTertiary}" />
-        <Setter Property="Foreground" Value="{StaticResource FgPrimary}" />
+        <Setter Property="Background" Value="{DynamicResource BgTertiary}" />
+        <Setter Property="Foreground" Value="{DynamicResource FgPrimary}" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="FontFamily" Value="Segoe UI" />
     </Style>
 
     <Style TargetType="MenuItem">
-        <Setter Property="Background" Value="{StaticResource BgTertiary}" />
-        <Setter Property="Foreground" Value="{StaticResource FgPrimary}" />
+        <Setter Property="Background" Value="{DynamicResource BgTertiary}" />
+        <Setter Property="Foreground" Value="{DynamicResource FgPrimary}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Padding" Value="7,4" />
         <Style.Triggers>
             <Trigger Property="IsHighlighted" Value="True">
-                <Setter Property="Background" Value="{StaticResource BgHover}" />
+                <Setter Property="Background" Value="{DynamicResource BgHover}" />
                 <Setter Property="Foreground" Value="#FFFFFF" />
             </Trigger>
             <Trigger Property="IsSubmenuOpen" Value="True">
-                <Setter Property="Background" Value="{StaticResource BgHover}" />
+                <Setter Property="Background" Value="{DynamicResource BgHover}" />
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <!-- ComboBox Style for Language Selector -->
     <Style x:Key="DarkComboBoxStyle" TargetType="ComboBox">
-        <Setter Property="Background" Value="{StaticResource BgTertiary}" />
-        <Setter Property="Foreground" Value="{StaticResource FgPrimary}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderDark}" />
+        <Setter Property="Background" Value="{DynamicResource BgTertiary}" />
+        <Setter Property="Foreground" Value="{DynamicResource FgPrimary}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Padding" Value="6,3" />
@@ -124,52 +124,52 @@
 
     <!-- ContextMenu Styles -->
     <Style TargetType="ContextMenu">
-        <Setter Property="Background" Value="{StaticResource BgTertiary}" />
-        <Setter Property="Foreground" Value="{StaticResource FgPrimary}" />
-        <Setter Property="BorderBrush" Value="{StaticResource BorderDark}" />
+        <Setter Property="Background" Value="{DynamicResource BgTertiary}" />
+        <Setter Property="Foreground" Value="{DynamicResource FgPrimary}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="2" />
     </Style>
 
     <!-- GridSplitter Style -->
     <Style x:Key="VerticalSplitterStyle" TargetType="GridSplitter">
-        <Setter Property="Background" Value="{StaticResource BorderDark}" />
+        <Setter Property="Background" Value="{DynamicResource BorderDark}" />
         <Setter Property="Width" Value="3" />
         <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="VerticalAlignment" Value="Stretch" />
         <Setter Property="Cursor" Value="SizeWE" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{StaticResource AccentBlue}" />
+                <Setter Property="Background" Value="{DynamicResource AccentBlue}" />
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <!-- Horizontal GridSplitter Style -->
     <Style x:Key="HorizontalSplitterStyle" TargetType="GridSplitter">
-        <Setter Property="Background" Value="{StaticResource BorderDark}" />
+        <Setter Property="Background" Value="{DynamicResource BorderDark}" />
         <Setter Property="Height" Value="3" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Cursor" Value="SizeNS" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{StaticResource AccentBlue}" />
+                <Setter Property="Background" Value="{DynamicResource AccentBlue}" />
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <!-- TreeView Styles -->
     <Style TargetType="TreeView">
-        <Setter Property="Background" Value="{StaticResource BgSecondary}" />
-        <Setter Property="Foreground" Value="{StaticResource FgPrimary}" />
+        <Setter Property="Background" Value="{DynamicResource BgSecondary}" />
+        <Setter Property="Foreground" Value="{DynamicResource FgPrimary}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Padding" Value="4" />
         <Setter Property="FontSize" Value="12" />
     </Style>
 
     <Style TargetType="TreeViewItem">
-        <Setter Property="Foreground" Value="{StaticResource FgPrimary}" />
+        <Setter Property="Foreground" Value="{DynamicResource FgPrimary}" />
         <Setter Property="Padding" Value="3,2" />
         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
         <Style.Triggers>

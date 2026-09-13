@@ -35,3 +35,4 @@ public class ConsoleLogItem
         _ => "#4EC9B0"
     };
 }
+

@@ -13,3 +13,4 @@ public class FormattingOptions
         return InsertSpaces ? new string(' ', level * IndentSize) : new string('\t', level);
     }
 }
+

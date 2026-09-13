@@ -92,11 +92,31 @@ public static class LivePreviewBridge
         return html;
     }
 
-    public static string MarkdownToHtml(string markdown, string? documentFilePath)
+    public static string MarkdownToHtml(string markdown, string? documentFilePath, RecluseEdit.Sdk.Models.ThemeColors? themeColors = null)
     {
         var dir = !string.IsNullOrEmpty(documentFilePath) ? Path.GetDirectoryName(documentFilePath) : null;
-        var baseUri = dir != null ? new Uri(dir.EndsWith(Path.DirectorySeparatorChar) ? dir : dir + Path.DirectorySeparatorChar).AbsoluteUri : "";
-        var baseTag = !string.IsNullOrEmpty(baseUri) ? $"<base href=\"{baseUri}\">" : "";
+        string baseTag = "";
+        if (!string.IsNullOrEmpty(dir))
+        {
+            try
+            {
+                var fullDir = Path.GetFullPath(dir);
+                var baseUri = new Uri(fullDir.EndsWith(Path.DirectorySeparatorChar) ? fullDir : fullDir + Path.DirectorySeparatorChar).AbsoluteUri;
+                baseTag = $"<base href=\"{baseUri}\">";
+            }
+            catch
+            {
+                // Ignore uri resolution errors for relative paths
+            }
+        }
+
+        var bg = themeColors?.MarkdownBg ?? "#0d1117";
+        var text = themeColors?.MarkdownFg ?? "#c9d1d9";
+        var heading = themeColors?.FgAccent ?? "#f0f6fc";
+        var link = themeColors?.Accent ?? "#58a6ff";
+        var border = themeColors?.BorderDark ?? "#30363d";
+        var codeBg = themeColors?.MarkdownCodeBg ?? "#161b22";
+        var quote = themeColors?.FgSecondary ?? "#8b949e";
 
         var body = RenderMarkdownBody(markdown);
 
@@ -110,14 +130,14 @@ public static class LivePreviewBridge
           {{ConsoleBridgeScript}}
           <style>
             :root {
-              --bg: #0d1117;
-              --text: #c9d1d9;
-              --heading: #f0f6fc;
-              --link: #58a6ff;
-              --border: #30363d;
-              --code-bg: #161b22;
-              --card-bg: #161b22;
-              --quote: #8b949e;
+              --bg: {{bg}};
+              --text: {{text}};
+              --heading: {{heading}};
+              --link: {{link}};
+              --border: {{border}};
+              --code-bg: {{codeBg}};
+              --card-bg: {{codeBg}};
+              --quote: {{quote}};
             }
             * { box-sizing: border-box; }
             body {
@@ -377,3 +397,4 @@ public static class LivePreviewBridge
         return escaped;
     }
 }
+

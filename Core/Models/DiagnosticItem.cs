@@ -35,3 +35,4 @@ public class DiagnosticItem
         _ => "#4EC9B0"
     };
 }
+

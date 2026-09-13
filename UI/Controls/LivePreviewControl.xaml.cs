@@ -8,6 +8,7 @@ using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
 using RecluseEdit.Core.Models;
 using RecluseEdit.Core.Services;
+using RecluseEdit.Sdk.Models;
 
 namespace RecluseEdit.UI.Controls;
 
@@ -21,6 +22,7 @@ public partial class LivePreviewControl : UserControl
 
     public event Action<ConsoleLogItem>? ConsoleMessageReceived;
     public event Action? CloseRequested;
+    public ThemeColors? ThemeColors { get; set; }
 
     public LivePreviewControl()
     {
@@ -140,7 +142,7 @@ public partial class LivePreviewControl : UserControl
 
             if (isMarkdown)
             {
-                var html = LivePreviewBridge.MarkdownToHtml(content, filePath);
+                var html = LivePreviewBridge.MarkdownToHtml(content, filePath, ThemeColors);
                 WebViewControl.NavigateToString(html);
             }
             else
@@ -152,6 +154,15 @@ public partial class LivePreviewControl : UserControl
         catch
         {
             // Ignore render errors during mid-typing
+        }
+    }
+
+    public void UpdateTheme(ThemeColors colors)
+    {
+        ThemeColors = colors;
+        if (_isInitialized && _pendingIsMarkdown && !string.IsNullOrEmpty(_pendingContent))
+        {
+            RenderContent(_pendingContent, _currentFilePath, _pendingIsMarkdown);
         }
     }
 
@@ -239,3 +250,4 @@ public partial class LivePreviewControl : UserControl
         StatusOverlay.Visibility = Visibility.Collapsed;
     }
 }
+

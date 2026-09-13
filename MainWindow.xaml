@@ -12,12 +12,12 @@
         Height="760" Width="1180"
         MinHeight="450" MinWidth="650"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource BgPrimary}"
-        Foreground="{StaticResource FgPrimary}">
+        Background="{DynamicResource BgPrimary}"
+        Foreground="{DynamicResource FgPrimary}">
 
     <Window.Resources>
         <Style x:Key="BottomTabRadioStyle" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{StaticResource FgSecondary}" />
+            <Setter Property="Foreground" Value="{DynamicResource FgSecondary}" />
             <Setter Property="FontSize" Value="11" />
             <Setter Property="Margin" Value="2,1" />
             <Setter Property="Padding" Value="8,3" />
@@ -30,12 +30,12 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="b" Property="Background" Value="{StaticResource BgPrimary}" />
-                                <Setter Property="Foreground" Value="{StaticResource FgPrimary}" />
+                                <Setter TargetName="b" Property="Background" Value="{DynamicResource BgPrimary}" />
+                                <Setter Property="Foreground" Value="{DynamicResource FgPrimary}" />
                                 <Setter Property="FontWeight" Value="SemiBold" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="b" Property="Background" Value="{StaticResource BgHover}" />
+                                <Setter TargetName="b" Property="Background" Value="{DynamicResource BgHover}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -65,6 +65,7 @@
         <KeyBinding Modifiers="Control+Shift" Key="G" Command="{x:Static local:MainWindow.SourceControlCommand}" />
         <KeyBinding Modifiers="Shift+Alt" Key="F" Command="{x:Static local:MainWindow.FormatDocumentCommand}" />
         <KeyBinding Modifiers="Control+Shift" Key="V" Command="{x:Static local:MainWindow.ToggleLivePreviewCommand}" />
+        <KeyBinding Modifiers="Control+Alt" Key="T" Command="{x:Static local:MainWindow.SelectThemeCommand}" />
     </Window.InputBindings>
 
     <Grid>
@@ -77,38 +78,38 @@
         </Grid.RowDefinitions>
 
         <!-- 0. Menu Bar -->
-        <Menu Grid.Row="0" Background="{StaticResource BgTertiary}">
+        <Menu Grid.Row="0" Background="{DynamicResource BgTertiary}">
             <MenuItem Header="_File">
                 <MenuItem Header="New _Project..." InputGestureText="Ctrl+Shift+N" Click="OnNewProjectClick" />
                 <MenuItem Header="_New File" InputGestureText="Ctrl+N" Click="OnNewFileClick" />
                 <MenuItem Header="_Open File..." InputGestureText="Ctrl+O" Click="OnOpenFileClick" />
                 <MenuItem Header="Open _Folder..." InputGestureText="Ctrl+Shift+O" Click="OnOpenFolderClick" />
-                <Separator Background="{StaticResource BorderDark}" />
+                <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="_Save" InputGestureText="Ctrl+S" Click="OnSaveFileClick" />
                 <MenuItem Header="Save _As..." InputGestureText="Ctrl+Shift+S" Click="OnSaveAsFileClick" />
                 <MenuItem Header="Save A_ll" Click="OnSaveAllClick" />
-                <Separator Background="{StaticResource BorderDark}" />
+                <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="_Close Tab" InputGestureText="Ctrl+W" Click="OnCloseTabClick" />
                 <MenuItem Header="Close _All Tabs" Click="OnCloseAllTabsClick" />
-                <Separator Background="{StaticResource BorderDark}" />
+                <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="E_xit" Click="OnExitClick" />
             </MenuItem>
             <MenuItem Header="_Edit">
                 <MenuItem Header="_Undo" InputGestureText="Ctrl+Z" Click="OnUndoClick" />
                 <MenuItem Header="_Redo" InputGestureText="Ctrl+Y" Click="OnRedoClick" />
-                <Separator Background="{StaticResource BorderDark}" />
+                <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="Cu_t" InputGestureText="Ctrl+X" Click="OnCutClick" />
                 <MenuItem Header="_Copy" InputGestureText="Ctrl+C" Click="OnCopyClick" />
                 <MenuItem Header="_Paste" InputGestureText="Ctrl+V" Click="OnPasteClick" />
                 <MenuItem Header="Select _All" InputGestureText="Ctrl+A" Click="OnSelectAllClick" />
-                <Separator Background="{StaticResource BorderDark}" />
+                <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="_Find..." InputGestureText="Ctrl+F" Click="OnFindClick" />
                 <MenuItem Header="_Replace..." InputGestureText="Ctrl+H" Click="OnReplaceClick" />
                 <MenuItem Header="_Go to Line..." InputGestureText="Ctrl+G" Click="OnGoToLineClick" />
-                <Separator Background="{StaticResource BorderDark}" />
+                <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="_Format Document" InputGestureText="Shift+Alt+F" Click="OnFormatDocumentClick" />
                 <MenuItem x:Name="MenuFormatOnSave" Header="Format on _Save" IsCheckable="True" IsChecked="False" Click="OnToggleFormatOnSaveClick" />
-                <Separator Background="{StaticResource BorderDark}" />
+                <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="_Line Operations">
                     <MenuItem Header="Toggle Line _Comment" InputGestureText="Ctrl+/" Click="OnToggleCommentClick" />
                     <MenuItem Header="_Move Line Up" InputGestureText="Alt+Up" Click="OnMoveLineUpClick" />
@@ -117,7 +118,7 @@
                     <MenuItem Header="Duplicate Line _Up" InputGestureText="Shift+Alt+Up" Click="OnDuplicateLineUpClick" />
                     <MenuItem Header="_Delete Line" InputGestureText="Ctrl+Shift+K" Click="OnDeleteLineClick" />
                     <MenuItem Header="_Join Lines" InputGestureText="Ctrl+J" Click="OnJoinLinesClick" />
-                    <Separator Background="{StaticResource BorderDark}" />
+                    <Separator Background="{DynamicResource BorderDark}" />
                     <MenuItem Header="Transform to _UPPERCASE" InputGestureText="Ctrl+Shift+U" Click="OnTransformUppercaseClick" />
                     <MenuItem Header="Transform to _lowercase" InputGestureText="Ctrl+U" Click="OnTransformLowercaseClick" />
                     <MenuItem Header="_Sort Lines" Click="OnSortLinesClick" />
@@ -126,19 +127,24 @@
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="_Command Palette..." InputGestureText="Ctrl+Shift+P" Click="OnCommandPaletteClick" />
-                <Separator Background="{StaticResource BorderDark}" />
+                <MenuItem Header="Color _Theme..." InputGestureText="Ctrl+K, Ctrl+T" Click="OnSelectThemeClick" />
+                <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem x:Name="MenuLivePreview" Header="Live _Preview" InputGestureText="Ctrl+Shift+V" IsCheckable="True" IsChecked="False" Click="OnToggleLivePreviewClick" />
                 <MenuItem Header="_Web Console" Click="OnMenuWebConsoleClick" />
                 <MenuItem Header="_Problems" Click="OnMenuProblemsClick" />
-                <Separator Background="{StaticResource BorderDark}" />
+                <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="_Explorer" InputGestureText="Ctrl+Shift+E" Click="OnMenuExplorerClick" />
                 <MenuItem Header="_Source Control" InputGestureText="Ctrl+Shift+G" Click="OnMenuSourceControlClick" />
-                <Separator Background="{StaticResource BorderDark}" />
+                <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem x:Name="MenuSidebar" Header="Toggle _Sidebar" InputGestureText="Ctrl+B" IsCheckable="True" IsChecked="True" Click="OnToggleSidebarClick" />
                 <MenuItem x:Name="MenuRightPane" Header="Toggle _AI Chat / Side Panels" InputGestureText="Ctrl+Alt+A" IsCheckable="True" IsChecked="True" Click="OnToggleAiChatClick" />
                 <MenuItem x:Name="MenuTerminal" Header="Toggle _Terminal" InputGestureText="Ctrl+`" IsCheckable="True" IsChecked="True" Click="OnToggleTerminalClick" />
                 <MenuItem x:Name="MenuWordWrap" Header="Word _Wrap" IsCheckable="True" Click="OnToggleWordWrapClick" />
                 <MenuItem x:Name="MenuLineNumbers" Header="_Line Numbers" IsCheckable="True" IsChecked="True" Click="OnToggleLineNumbersClick" />
+            </MenuItem>
+            <MenuItem x:Name="MenuThemes" Header="_Themes" SubmenuOpened="OnMenuThemesSubmenuOpened">
+                <MenuItem Header="Color _Theme..." InputGestureText="Ctrl+K, Ctrl+T" Click="OnSelectThemeClick" />
+                <Separator Background="{DynamicResource BorderDark}" />
             </MenuItem>
             <MenuItem Header="E_xtensions">
                 <MenuItem Header="_Manage Extensions..." Click="OnManageExtensionsClick" />
@@ -146,19 +152,19 @@
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="_Keyboard Shortcuts" InputGestureText="Ctrl+K, Ctrl+S" Click="OnKeyboardShortcutsClick" />
-                <Separator Background="{StaticResource BorderDark}" />
+                <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="_About RecluseEdit" Click="OnAboutClick" />
             </MenuItem>
         </Menu>
 
         <!-- 1. Quick Action Toolbar -->
-        <Border Grid.Row="1" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1" Padding="6,4">
+        <Border Grid.Row="1" Background="{DynamicResource BgSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1" Padding="6,4">
             <StackPanel Orientation="Horizontal">
                 <Button x:Name="BtnToggleSidebar" Style="{StaticResource ToolbarButtonStyle}" Click="OnToggleSidebarClick" ToolTip="Toggle Sidebar (Ctrl+B)">
                     <TextBlock Text="☰ Explorer" />
                 </Button>
 
-                <Rectangle Width="1" Fill="{StaticResource BorderDark}" Margin="6,2" />
+                <Rectangle Width="1" Fill="{DynamicResource BorderDark}" Margin="6,2" />
 
                 <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnNewFileClick" ToolTip="New File (Ctrl+N)">
                     <TextBlock Text="📄 New" />
@@ -176,7 +182,7 @@
                     <TextBlock Text="💾 Save All" />
                 </Button>
 
-                <Rectangle Width="1" Fill="{StaticResource BorderDark}" Margin="6,2" />
+                <Rectangle Width="1" Fill="{DynamicResource BorderDark}" Margin="6,2" />
 
                 <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnFindClick" ToolTip="Find (Ctrl+F)">
                     <TextBlock Text="🔍 Find" />
@@ -185,7 +191,7 @@
                     <TextBlock Text="🔄 Replace" />
                 </Button>
 
-                <Rectangle Width="1" Fill="{StaticResource BorderDark}" Margin="6,2" />
+                <Rectangle Width="1" Fill="{DynamicResource BorderDark}" Margin="6,2" />
 
                 <Primitives:ToggleButton xmlns:Primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
                                          x:Name="BtnWordWrap" 
@@ -235,19 +241,19 @@
                     <TextBlock Text="✨ Format" />
                 </Button>
 
-                <Rectangle Width="1" Fill="{StaticResource BorderDark}" Margin="6,2" />
+                <Rectangle Width="1" Fill="{DynamicResource BorderDark}" Margin="6,2" />
 
-                <TextBlock Text="Language:" VerticalAlignment="Center" Foreground="{StaticResource FgSecondary}" Margin="4,0,6,0" FontSize="12" />
+                <TextBlock Text="Language:" VerticalAlignment="Center" Foreground="{DynamicResource FgSecondary}" Margin="4,0,6,0" FontSize="12" />
                 <ComboBox x:Name="CmbLanguage" 
-                          Style="{StaticResource DarkComboBoxStyle}" 
-                          Width="130"
-                          DisplayMemberPath="DisplayName"
+                          Style="{DynamicResource DarkComboBoxStyle}" 
+                          Width="130" 
+                          DisplayMemberPath="DisplayName" 
                           SelectionChanged="OnLanguageChanged" />
             </StackPanel>
         </Border>
 
         <!-- 2. Tab Strip -->
-        <Border Grid.Row="2" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
+        <Border Grid.Row="2" Background="{DynamicResource BgSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1">
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                 <StackPanel Orientation="Horizontal">
                     <ItemsControl x:Name="TabItemsControl">
@@ -259,8 +265,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Border x:Name="TabBorder"
-                                        Background="{StaticResource BgTertiary}" 
-                                        BorderBrush="{StaticResource BorderDark}" 
+                                        Background="{DynamicResource BgTertiary}" 
+                                        BorderBrush="{DynamicResource BorderDark}" 
                                         BorderThickness="0,0,1,0"
                                         Padding="12,7"
                                         Cursor="Hand"
@@ -271,7 +277,7 @@
                                             <MenuItem Header="Close" Click="OnMenuCloseTabClick" />
                                             <MenuItem Header="Close Other Tabs" Click="OnMenuCloseOtherTabsClick" />
                                             <MenuItem Header="Close Tabs to the Right" Click="OnMenuCloseRightTabsClick" />
-                                            <Separator Background="{StaticResource BorderDark}" />
+                                            <Separator Background="{DynamicResource BorderDark}" />
                                             <MenuItem Header="Copy Full Path" Click="OnMenuCopyFullPathClick" />
                                             <MenuItem Header="Reveal in File Explorer" Click="OnMenuRevealInExplorerClick" />
                                         </ContextMenu>
@@ -279,19 +285,19 @@
 
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Title}" 
-                                                   Foreground="{StaticResource FgPrimary}" 
+                                                   Foreground="{DynamicResource FgPrimary}" 
                                                    FontSize="12"
                                                    VerticalAlignment="Center" />
-                                        <Button Style="{StaticResource TabCloseButtonStyle}" 
+                                        <Button Style="{DynamicResource TabCloseButtonStyle}" 
                                                 ToolTip="Close Tab (Ctrl+W)"
                                                 Click="OnCloseTabButtonClicked" />
                                     </StackPanel>
                                 </Border>
                                 <DataTemplate.Triggers>
                                     <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                        <Setter TargetName="TabBorder" Property="Background" Value="{StaticResource BgPrimary}" />
+                                        <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource BgPrimary}" />
                                         <Setter TargetName="TabBorder" Property="BorderThickness" Value="0,2,1,0" />
-                                        <Setter TargetName="TabBorder" Property="BorderBrush" Value="{StaticResource AccentBlue}" />
+                                        <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource AccentBlue}" />
                                     </DataTrigger>
                                 </DataTemplate.Triggers>
                             </DataTemplate>
@@ -299,7 +305,7 @@
                     </ItemsControl>
 
                     <!-- New Tab Button -->
-                    <Button Style="{StaticResource ToolbarButtonStyle}" 
+                    <Button Style="{DynamicResource ToolbarButtonStyle}" 
                             Content="+" 
                             FontSize="15" 
                             FontWeight="SemiBold"
@@ -323,7 +329,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- 0. Activity Bar -->
-            <Border Grid.Column="0" Background="{StaticResource BgTertiary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,1,0">
+            <Border Grid.Column="0" Background="{DynamicResource ActivityBarBg}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,1,0">
                 <StackPanel Orientation="Vertical">
                     <Button x:Name="BtnActivityExplorer" 
                             Style="{StaticResource ToolbarButtonStyle}" 
@@ -343,7 +349,7 @@
             </Border>
 
             <!-- 1. Left Sidebar: Explorer or Source Control -->
-            <Border Grid.Column="1" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,1,0">
+            <Border Grid.Column="1" Background="{DynamicResource BgSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,1,0">
                 <Grid>
                     <!-- Explorer View -->
                     <Grid x:Name="ViewExplorer" Visibility="Visible">
@@ -353,7 +359,7 @@
                         </Grid.RowDefinitions>
 
                         <!-- Sidebar Header -->
-                        <Border Grid.Row="0" Background="{StaticResource BgTertiary}" Padding="8,6" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
+                        <Border Grid.Row="0" Background="{DynamicResource BgTertiary}" Padding="8,6" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -361,7 +367,7 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
-                                <TextBlock x:Name="TxtWorkspaceName" Text="EXPLORER" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource FgSecondary}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                <TextBlock x:Name="TxtWorkspaceName" Text="EXPLORER" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource FgSecondary}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
 
                                 <Button Grid.Column="1" Style="{StaticResource ToolbarButtonStyle}" Content="🔄" Width="22" Height="22" Padding="0" ToolTip="Refresh Workspace" Click="OnRefreshWorkspaceClick" />
                                 <Button Grid.Column="2" Style="{StaticResource ToolbarButtonStyle}" Content="📁" Width="22" Height="22" Padding="0" ToolTip="Open Folder" Click="OnOpenFolderClick" />
@@ -411,17 +417,17 @@
                         <controls:EditorControl x:Name="EditorHost" Visibility="Visible" />
 
                         <!-- Empty State when no tabs are open -->
-                        <Border x:Name="EmptyStateOverlay" Background="{StaticResource BgPrimary}" Visibility="Collapsed">
+                        <Border x:Name="EmptyStateOverlay" Background="{DynamicResource BgPrimary}" Visibility="Collapsed">
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock Text="RecluseEdit" 
                                            FontSize="28" 
                                            FontWeight="Bold" 
-                                           Foreground="{StaticResource FgSecondary}" 
+                                           Foreground="{DynamicResource FgSecondary}" 
                                            HorizontalAlignment="Center" 
                                            Margin="0,0,0,8" />
                                 <TextBlock Text="Web Application Code Editor" 
                                            FontSize="14" 
-                                           Foreground="{StaticResource FgMuted}" 
+                                           Foreground="{DynamicResource FgMuted}" 
                                            HorizontalAlignment="Center" 
                                            Margin="0,0,0,24" />
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -461,7 +467,7 @@
                 <GridSplitter x:Name="TerminalSplitter" Grid.Row="1" Style="{StaticResource HorizontalSplitterStyle}" />
 
                 <!-- Bottom: Multi-Tab Dock (Terminal, Web Console, Problems) -->
-                <Border Grid.Row="2" Background="{StaticResource BgSecondary}">
+                <Border Grid.Row="2" Background="{DynamicResource BgSecondary}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="28" />
@@ -469,7 +475,7 @@
                         </Grid.RowDefinitions>
 
                         <!-- Bottom Dock Header -->
-                        <Border Grid.Row="0" Background="{StaticResource BgTertiary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
+                        <Border Grid.Row="0" Background="{DynamicResource BgTertiary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1">
                             <Grid Margin="6,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -500,7 +506,7 @@
             <GridSplitter x:Name="RightSplitter" Grid.Column="4" Style="{StaticResource VerticalSplitterStyle}" />
 
             <!-- 5. Right: Side Panels Host (AI Chat, Database, REST Client) -->
-            <Border x:Name="RightPaneBorder" Grid.Column="5" Background="{StaticResource BgSecondary}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1,0,0,0">
+            <Border x:Name="RightPaneBorder" Grid.Column="5" Background="{DynamicResource BgSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="1,0,0,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -508,7 +514,7 @@
                     </Grid.RowDefinitions>
 
                     <!-- Right Pane Header with Tab Buttons -->
-                    <Border Grid.Row="0" Background="{StaticResource BgTertiary}" Padding="8,4" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
+                    <Border Grid.Row="0" Background="{DynamicResource BgTertiary}" Padding="8,4" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -528,8 +534,8 @@
                         <Border Padding="20" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <StackPanel HorizontalAlignment="Center">
                                 <TextBlock Text="⚡" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,12" />
-                                <TextBlock Text="RecluseEdit Side Panels" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource FgPrimary}" HorizontalAlignment="Center" Margin="0,0,0,6" />
-                                <TextBlock Text="Initializing Extensions..." FontSize="12" Foreground="{StaticResource FgMuted}" HorizontalAlignment="Center" />
+                                <TextBlock Text="RecluseEdit Side Panels" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource FgPrimary}" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                                <TextBlock Text="Initializing Extensions..." FontSize="12" Foreground="{DynamicResource FgMuted}" HorizontalAlignment="Center" />
                             </StackPanel>
                         </Border>
                     </ContentControl>
@@ -538,7 +544,7 @@
         </Grid>
 
         <!-- 4. Bottom Status Bar -->
-        <StatusBar Grid.Row="4" Background="{StaticResource AccentBlue}" Foreground="{StaticResource FgAccent}" Padding="8,3">
+        <StatusBar Grid.Row="4" Background="{DynamicResource StatusBarBg}" Foreground="{DynamicResource StatusBarFg}" Padding="8,3">
             <StatusBar.ItemsPanel>
                 <ItemsPanelTemplate>
                     <Grid>
@@ -563,6 +569,8 @@
                     <TextBlock x:Name="StatusLanguage" Text="HTML" FontSize="11" Margin="8,0" />
                     <TextBlock Text="|" Opacity="0.5" />
                     <TextBlock x:Name="StatusEncoding" Text="UTF-8" FontSize="11" Margin="8,0" />
+                    <TextBlock Text="|" Opacity="0.5" />
+                    <TextBlock x:Name="StatusTheme" Text="Theme: Recluse Dark+" FontSize="11" Margin="8,0" Cursor="Hand" MouseLeftButtonDown="OnSelectThemeClick" ToolTip="Click to change color theme (Ctrl+K, Ctrl+T)" />
                     <TextBlock Text="|" Opacity="0.5" />
                     <TextBlock x:Name="StatusExtensions" Text="Extensions: 1" FontSize="11" Margin="8,0" Cursor="Hand" MouseLeftButtonDown="OnManageExtensionsClick" ToolTip="Click to manage extensions" />
                 </StackPanel>

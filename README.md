@@ -12,6 +12,7 @@
 
 ## 🎯 Key Objectives & Features
 
+- 🎨 **Extensible Theme System & Public Theme API**: First-class open Theme API in `RecluseEdit.Sdk` (`IThemeDefinition`, `ThemeDefinitionBase`, `ThemeColors`, `ThemeType`) allowing anyone to author and register custom themes. Includes 9 creative built-in themes (Recluse Dark+, Recluse Light+, Cyberpunk 2077, Monokai Pro, Solarized Dark, Dracula, Nord, Retro Matrix, High Contrast Black), a dedicated **Themes** menu bar item, an interactive Theme Picker dialog (<kbd>Ctrl+K, Ctrl+T</kbd> / <kbd>Ctrl+Alt+T</kbd>) with real-time live preview and safe rollback, and dynamic AvalonEdit and Live Preview Markdown styling synchronization.
 - 🌐 **Chromium-Powered Live Web & Markdown Preview**: Embedded split-pane live preview backed by `Microsoft.Web.WebView2` with real-time debounced updates (<kbd>Ctrl+Shift+V</kbd>), `<base href="...">` relative asset resolution for local CSS/JS/images, multi-device viewport switching (Responsive 100%, Mobile 375px, Tablet 768px, Desktop 1200px), and GitHub Dark-themed Markdown rendering.
 - 🎨 **Document Formatting & Syntax Diagnostics**: Extensible `IDocumentFormatter` pipeline with built-in pure C# formatters for JSON, CSS/SCSS, HTML/XML, SQL, JS/TS, and Markdown (<kbd>Shift+Alt+F</kbd>), configurable "Format on Save", and real-time syntax diagnostics (JSON parser errors, bracket/brace mismatch tracking, HTML tag auditing).
 - 🚀 **Project Scaffolding Wizard**: Interactive project creation wizard (<kbd>Ctrl+Shift+N</kbd>) featuring 7 production starters (Static Web, Vite+React 19, Vite+Vue 3, Vite+Svelte 5, Vite+SolidJS, Fastify Microservice, Markdown Docs) with one-click Git repo initialization and instant workspace opening.
@@ -40,6 +41,8 @@
 
 | Shortcut | Action |
 | :--- | :--- |
+| <kbd>Ctrl</kbd> + <kbd>K</kbd>, <kbd>Ctrl</kbd> + <kbd>T</kbd> | Color Theme Picker (Live Preview & Rollback) |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd> | Quick Color Theme Selector |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> | Toggle Chromium Live Web & Markdown Preview |
 | <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>F</kbd> | Format Document (Prettify Code) |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd> | New Project... (Scaffolding Wizard) |

@@ -10,6 +10,7 @@ using RecluseEdit.Core.Models;
 using RecluseEdit.Core.Services;
 using RecluseEdit.Sdk;
 using RecluseEdit.Sdk.Models;
+using RecluseEdit.Sdk.Providers;
 using RecluseEdit.UI.Dialogs;
 using RecluseEdit.UI.Views;
 
@@ -39,6 +40,7 @@ public partial class MainWindow : Window
     public static readonly RoutedUICommand NewProjectCommand = new("New Project", "NewProject", typeof(MainWindow));
     public static readonly RoutedUICommand FormatDocumentCommand = new("Format Document", "FormatDocument", typeof(MainWindow));
     public static readonly RoutedUICommand ToggleLivePreviewCommand = new("Toggle Live Preview", "ToggleLivePreview", typeof(MainWindow));
+    public static readonly RoutedUICommand SelectThemeCommand = new("Select Color Theme", "SelectTheme", typeof(MainWindow));
 
     private readonly SyntaxManager _syntaxManager;
     private readonly AutocompleteManager _autocompleteManager;
@@ -47,11 +49,13 @@ public partial class MainWindow : Window
     private readonly DocumentManager _documentManager;
     private readonly WorkspaceManager _workspaceManager;
     private readonly CommandRegistry _commandRegistry;
+    private readonly ThemeManager _themeManager = new();
     private readonly DocumentFormattingService _formattingService = new();
     private readonly DiagnosticService _diagnosticService = new();
     private readonly ProjectScaffoldingService _scaffoldingService = new();
     private bool _formatOnSave = false;
     private bool _isLivePreviewOpen = false;
+    private bool _isChordCtrlK = false;
     private GridLength _lastPreviewWidth = new(1, GridUnitType.Star);
 
     private readonly List<ISidePanelProvider> _registeredSidePanels = [];
@@ -72,7 +76,7 @@ public partial class MainWindow : Window
         _workspaceManager = new WorkspaceManager();
         _documentManager = new DocumentManager(_syntaxManager);
         var workspaceContext = new WorkspaceContext(_workspaceManager, _documentManager);
-        _extensionManager = new ExtensionManager(_syntaxManager, _autocompleteManager, _toolchainManager, workspaceContext);
+        _extensionManager = new ExtensionManager(_syntaxManager, _autocompleteManager, _toolchainManager, workspaceContext, _themeManager);
         _commandRegistry = new CommandRegistry();
 
         EditorHost.SyntaxManager = _syntaxManager;
@@ -100,6 +104,10 @@ public partial class MainWindow : Window
         CommandBindings.Add(new CommandBinding(SourceControlCommand, (_, _) => SwitchSidebarView(false)));
         CommandBindings.Add(new CommandBinding(FormatDocumentCommand, (_, _) => FormatActiveDocument()));
         CommandBindings.Add(new CommandBinding(ToggleLivePreviewCommand, (_, _) => ToggleLivePreview()));
+        CommandBindings.Add(new CommandBinding(SelectThemeCommand, (_, _) => OpenThemePickerDialog()));
+
+        PreviewKeyDown += OnWindowPreviewKeyDown;
+        _themeManager.ThemeChanged += OnThemeChanged;
 
         SourceControlPane.FileSelected += OnSourceControlFileSelected;
 
@@ -142,6 +150,9 @@ public partial class MainWindow : Window
 
         // Create default initial document
         CreateNewFile();
+
+        // Load persisted theme preference
+        _themeManager.LoadPersistedTheme();
     }
 
     private void UpdateExtensionsStatus()
@@ -866,9 +877,10 @@ public partial class MainWindow : Window
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
         MessageBox.Show(this,
-            "RecluseEdit v3.0.0\n\n" +
+            "RecluseEdit v4.0.0\n\n" +
             "A fast, modern code editor optimized for web applications.\n\n" +
             "Key Features:\n" +
+            "• Extensible Theme System & SDK API with 9 Creative Themes (Ctrl+K, Ctrl+T)\n" +
             "• Chromium-Powered Live Web & Markdown Preview (Ctrl+Shift+V)\n" +
             "• Document Formatting & Linting Pipeline (Shift+Alt+F)\n" +
             "• Project Scaffolding Wizard (Ctrl+Shift+N)\n" +
@@ -936,6 +948,109 @@ public partial class MainWindow : Window
     private void OnTransformLowercaseClick(object sender, RoutedEventArgs e) => EditorHost.TransformToLowercase();
     private void OnSortLinesClick(object sender, RoutedEventArgs e) => EditorHost.SortLines();
     private void OnTrimTrailingWhitespaceClick(object sender, RoutedEventArgs e) => EditorHost.TrimTrailingWhitespace();
+
+    #region Theme Management
+
+    public void OpenThemePickerDialog()
+    {
+        var dlg = new ThemePickerDialog(_themeManager)
+        {
+            Owner = this
+        };
+
+        if (dlg.ShowDialog() == true && dlg.SelectedTheme != null)
+        {
+            _themeManager.ApplyTheme(dlg.SelectedTheme);
+        }
+        else
+        {
+            _themeManager.RollbackPreview();
+        }
+    }
+
+    private void OnSelectThemeClick(object sender, RoutedEventArgs e)
+    {
+        OpenThemePickerDialog();
+    }
+
+    private void OnSelectThemeClick(object sender, MouseButtonEventArgs e)
+    {
+        OpenThemePickerDialog();
+    }
+
+    private void OnThemeChanged(IThemeDefinition theme)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            StatusTheme.Text = $"Theme: {theme.DisplayName}";
+            EditorHost.ApplyTheme(theme.Colors);
+            LivePreviewPane.UpdateTheme(theme.Colors);
+        });
+    }
+
+    private void OnMenuThemesSubmenuOpened(object sender, RoutedEventArgs e)
+    {
+        PopulateThemesMenu();
+    }
+
+    private void PopulateThemesMenu()
+    {
+        MenuThemes.Items.Clear();
+
+        var pickerItem = new MenuItem
+        {
+            Header = "Color _Theme Picker...",
+            InputGestureText = "Ctrl+K, Ctrl+T"
+        };
+        pickerItem.Click += OnSelectThemeClick;
+        MenuThemes.Items.Add(pickerItem);
+
+        var sep = new Separator();
+        sep.SetResourceReference(Separator.BackgroundProperty, "BorderDark");
+        MenuThemes.Items.Add(sep);
+
+        foreach (var theme in _themeManager.RegisteredThemes)
+        {
+            var item = new MenuItem
+            {
+                Header = theme.DisplayName,
+                IsCheckable = true,
+                IsChecked = _themeManager.ActiveTheme.Id == theme.Id,
+                Tag = theme.Id
+            };
+            item.Click += (_, _) => _themeManager.ApplyTheme(theme);
+            MenuThemes.Items.Add(item);
+        }
+    }
+
+    private void OnWindowPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        // Support VS Code style chord: Ctrl+K, then T for Theme Picker, or S for Shortcuts
+        if (e.Key == Key.K && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            _isChordCtrlK = true;
+            return;
+        }
+
+        if (_isChordCtrlK)
+        {
+            _isChordCtrlK = false;
+            if (e.Key == Key.T)
+            {
+                e.Handled = true;
+                OpenThemePickerDialog();
+                return;
+            }
+            if (e.Key == Key.S)
+            {
+                e.Handled = true;
+                ShowKeyboardShortcuts();
+                return;
+            }
+        }
+    }
+
+    #endregion
 
     #region Live Preview, Formatting, Diagnostics & Project Scaffolding
 
@@ -1189,6 +1304,10 @@ public partial class MainWindow : Window
             new() { Id = "view.toggleTerminal", Title = "Toggle Integrated Terminal", Category = "View", InputGestureText = "Ctrl+`", Icon = "💻", Action = () => ToggleTerminal() },
             new() { Id = "view.toggleWrap", Title = "Toggle Word Wrap", Category = "View", Icon = "↩️", Action = () => { EditorHost.ToggleWordWrap(!EditorHost.UnderlyingEditor.WordWrap); BtnWordWrap.IsChecked = EditorHost.UnderlyingEditor.WordWrap; MenuWordWrap.IsChecked = EditorHost.UnderlyingEditor.WordWrap; } },
             new() { Id = "view.toggleLineNumbers", Title = "Toggle Line Numbers", Category = "View", Icon = "🔢", Action = () => { EditorHost.ToggleLineNumbers(!EditorHost.UnderlyingEditor.ShowLineNumbers); BtnLineNumbers.IsChecked = EditorHost.UnderlyingEditor.ShowLineNumbers; MenuLineNumbers.IsChecked = EditorHost.UnderlyingEditor.ShowLineNumbers; } },
+
+            // Themes & Preferences
+            new() { Id = "preferences.colorTheme", Title = "Preferences: Color Theme", Category = "Preferences", InputGestureText = "Ctrl+K, Ctrl+T", Icon = "🎨", Action = () => OpenThemePickerDialog() },
+            new() { Id = "view.selectTheme", Title = "Select Color Theme...", Category = "View", InputGestureText = "Ctrl+K, Ctrl+T", Icon = "🎨", Action = () => OpenThemePickerDialog() },
 
             // Extensions & Help
             new() { Id = "ext.manage", Title = "Manage Extensions & Toolchains...", Category = "Extensions", Icon = "🧩", Action = () => OnManageExtensionsClick(this, new RoutedEventArgs()) },

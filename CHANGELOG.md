@@ -11,6 +11,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.0.0] - 2026-09-13
+
+### 🚀 Major Release: Extensible Theme System, Public Theme API, 9 Built-In Themes & Dedicated Themes Menu
+
+#### 🧩 1. Public Theme SDK (`RecluseEdit.Sdk`)
+- **`IThemeDefinition` & `ThemeDefinitionBase`**: Clean provider interfaces and abstract base classes for extension developers to register custom themes.
+- **`ThemeColors` Specification**: Fine-grained color token schema covering primary surfaces, foregrounds, borders, accents, margins, status bars, activity bars, caret, selection, bracket match, terminals, and Markdown preview, plus extensible `CustomTokens` dictionary.
+- **`ThemeType` Classification**: Support for `Dark`, `Light`, `HighContrast`, and `Creative` categories.
+- **`IExtensionHost.RegisterTheme(IThemeDefinition)`**: First-class theme registration hook in the extension host.
+
+#### 🖌️ 2. Core Theme Engine & 9 Built-In Creative Themes
+- **`ThemeManager`**: Core management engine featuring dynamic WPF resource mutation, live preview, rollback, and preference persistence (`%APPDATA%/RecluseEdit/theme_settings.json`).
+- **9 Handcrafted Built-In Themes**:
+  1. **Recluse Dark+ (Default)**: Deep slate grays with classic VS blue accents.
+  2. **Recluse Light+ (Daylight)**: Clean alabaster daylight palette for high-ambient lighting.
+  3. **Cyberpunk 2077 (Neon Dusk)**: High-contrast midnight purple (`#120E24`) with hot pink (`#FF2A6D`) and laser cyan (`#05D9E8`) accents.
+  4. **Monokai Pro**: Warm charcoal olive with pastel magenta, lime green, and canary yellow highlights.
+  5. **Solarized Dark**: Ethan Schoonover's precision low-glare cyan-teal palette for extended sessions.
+  6. **Dracula**: Classic gothic purple and vampire pink theme with vibrant accents.
+  7. **Nord**: Cool polar slate, snow storm whites, and frost blues inspired by arctic nights.
+  8. **Retro Matrix**: Phosphor green on CRT obsidian black for hacker aesthetics.
+  9. **High Contrast Black**: W3C AAA-accessible pure black with vivid borders and high visibility.
+
+#### 🎛️ 3. Interactive Theme Picker & UX Integration (`Ctrl+K, Ctrl+T`)
+- **Interactive Theme Picker Dialog (`ThemePickerDialog`)**: Filterable theme list with 4-swatch color dots, keyboard navigation, and instant live preview on item selection.
+- **Live Preview & Safe Rollback**: Preview any theme instantaneously; pressing <kbd>Esc</kbd> or closing the dialog cleanly rolls back to the previous theme, while <kbd>Enter</kbd> commits and persists it.
+- **Status Bar Integration**: Clickable `StatusTheme` indicator showing the current active theme with one-click modal opening.
+- **Keyboard Chord & Command Palette**: Standard two-key chord <kbd>Ctrl+K, Ctrl+T</kbd>, direct shortcut <kbd>Ctrl+Alt+T</kbd>, and Command Palette entries (`Preferences: Color Theme`, `Select Color Theme...`).
+
+#### 🌐 4. Editor & Live Preview Synchronization
+- **AvalonEdit Reactivity**: Text editor background, foreground, line numbers, caret brush, selection brush, current line highlight, and bracket matching borders adapt dynamically to the active theme.
+- **Markdown Live Preview Harmonization**: Live Preview Markdown pane inherits background, text, heading, link, and code block styles dynamically from the active theme.
+
+#### 🧩 5. Extension Demonstration & Automated Verification
+- **`VueEmeraldTheme`**: Extension theme implemented in `RecluseEdit.Extensions.Frontend` demonstrating third-party theme creation via `ThemeDefinitionBase`.
+- **Automated Test Suite**: Added comprehensive unit test coverage in `ThemeManagerTests.cs`, bringing total automated tests to 183 with 100% pass rate.
+
+---
+
 ## [3.0.0] - 2026-09-13
 
 ### 🚀 Major Release: Live Preview, Formatting Pipeline, Project Scaffolding & Web Console
@@ -399,7 +438,8 @@ The debut release of **RecluseEdit**, a modern, lightweight, high-performance de
 - **GitHub Actions Workflow**: Automated build and release pipeline (`.github/workflows/release.yml`) triggered on tag pushes (`v*`) to run the 27-test automated test suite and package a portable distribution archive (`RecluseEdit-windows-<tag>.zip`) attached to GitHub Releases.
 - **Git Environment Configuration**: Configured `.gitattributes` to enforce consistent LF/CRLF normalization across development environments and CI runners.
 
-[Unreleased]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v4.0.0...HEAD
+[4.0.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v3.0.0...v4.0.0
 [3.0.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v2.2.0...v3.0.0
 [2.2.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v2.0.0...v2.1.0

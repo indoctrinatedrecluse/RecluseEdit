@@ -17,14 +17,17 @@ public class ExtensionManager : IExtensionHost
     private readonly AutocompleteManager _autocompleteManager;
     private readonly ToolchainManager _toolchainManager;
     private readonly IWorkspaceContext _workspaceContext;
+    private readonly ThemeManager? _themeManager;
     private readonly List<IExtension> _loadedExtensions = [];
     private readonly List<ISidePanelProvider> _sidePanels = [];
     private readonly List<IDocumentFormatter> _formatters = [];
+    private readonly List<IThemeDefinition> _extensionThemes = [];
     private readonly List<string> _logs = [];
 
     public IReadOnlyList<IExtension> LoadedExtensions => _loadedExtensions.AsReadOnly();
     public IReadOnlyList<ISidePanelProvider> RegisteredSidePanels => _sidePanels.AsReadOnly();
     public IReadOnlyList<IDocumentFormatter> RegisteredFormatters => _formatters.AsReadOnly();
+    public IReadOnlyList<IThemeDefinition> RegisteredThemes => _themeManager?.RegisteredThemes ?? _extensionThemes.AsReadOnly();
     public IWorkspaceContext WorkspaceContext => _workspaceContext;
     public IReadOnlyList<string> Logs => _logs.AsReadOnly();
     public ToolchainManager ToolchainManager => _toolchainManager;
@@ -36,12 +39,14 @@ public class ExtensionManager : IExtensionHost
         SyntaxManager syntaxManager,
         AutocompleteManager autocompleteManager,
         ToolchainManager toolchainManager,
-        IWorkspaceContext? workspaceContext = null)
+        IWorkspaceContext? workspaceContext = null,
+        ThemeManager? themeManager = null)
     {
         _syntaxManager = syntaxManager;
         _autocompleteManager = autocompleteManager;
         _toolchainManager = toolchainManager;
         _workspaceContext = workspaceContext ?? new WorkspaceContext(new WorkspaceManager(), new DocumentManager(syntaxManager));
+        _themeManager = themeManager;
     }
 
     public async Task InitializeAsync()
@@ -176,6 +181,16 @@ public class ExtensionManager : IExtensionHost
         {
             _formatters.Add(formatter);
             Log($"Registered document formatter '{formatter.DisplayName}' ({formatter.FormatterId})");
+        }
+    }
+
+    public void RegisterTheme(IThemeDefinition theme)
+    {
+        if (!_extensionThemes.Any(t => t.Id == theme.Id))
+        {
+            _extensionThemes.Add(theme);
+            _themeManager?.RegisterTheme(theme);
+            Log($"Registered theme '{theme.DisplayName}' ({theme.Id})");
         }
     }
 

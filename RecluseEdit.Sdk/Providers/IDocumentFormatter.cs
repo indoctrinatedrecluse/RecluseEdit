@@ -15,3 +15,4 @@ public interface IDocumentFormatter
     bool CanFormat(string language, string filePath);
     string Format(string sourceCode, string language, FormattingOptions options);
 }
+
