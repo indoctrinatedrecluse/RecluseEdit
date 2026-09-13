@@ -877,7 +877,7 @@ public partial class MainWindow : Window
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
         MessageBox.Show(this,
-            "RecluseEdit v4.0.0\n\n" +
+            "RecluseEdit v4.0.1\n\n" +
             "A fast, modern code editor optimized for web applications.\n\n" +
             "Key Features:\n" +
             "• Extensible Theme System & SDK API with 9 Creative Themes (Ctrl+K, Ctrl+T)\n" +

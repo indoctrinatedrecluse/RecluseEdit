@@ -11,6 +11,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.0.1] - 2026-09-13
+
+### 🐛 Fixed: Problems Section Linter Bracket Misreading in Markdown & Code
+- **Markdown Bracket Analyzer (`AnalyzeMarkdownBrackets`)**:
+  - Fixed URL scheme separator (`://`) in markdown links (e.g. `[Title](https://...)`) falsely triggering single-line comments and leaving unclosed `(` on the bracket stack.
+  - Added full support for Markdown comments (`<!-- ... -->`), ignoring them during bracket balance tracking.
+  - Fixed false bracket diagnostics inside inline code spans (`` `...` ``) and fenced code blocks (```` ``` ```` / `~~~`).
+  - Added smart recognition of ordered list enumerations (`1)`, `2)`, `a)`, `b)`) and emoticons (`:)`, `:(`, `:-)`) to prevent false unexpected closing bracket errors.
+  - Handled prose apostrophes (`don't`, `it's`, `user's`) without entering indefinite single-quote string literal mode.
+  - Accurately detects and reports genuine Markdown bracket problems: unclosed link brackets, unclosed URL parentheses, mismatched brackets, and unclosed code fences.
+- **Language-Aware Code Bracket Analyzer (`AnalyzeCodeBrackets`)**:
+  - Prevented URLs in code strings/literals from triggering `//` line comments.
+  - Added language-specific comment detection: `#` for Python/Ruby/Shell/PowerShell/YAML, `--` for SQL/Lua, and `//` + `/* */` for C-family.
+  - Fixed single-line string literals across newlines, preventing cascading syntax errors across downstream lines.
+  - Automatically exempts plain text files (`.txt`, `.log`, `.csv`, `.tsv`) from code bracket diagnostics.
+- **Test Suite Expansion**:
+  - Added 7 new unit tests for Markdown links, code blocks, Python floor division, SQL comments, and plain text handling, raising total test count to 191.
+
+---
+
 ## [4.0.0] - 2026-09-13
 
 ### 🚀 Major Release: Extensible Theme System, Public Theme API, 9 Built-In Themes & Dedicated Themes Menu
@@ -438,7 +458,8 @@ The debut release of **RecluseEdit**, a modern, lightweight, high-performance de
 - **GitHub Actions Workflow**: Automated build and release pipeline (`.github/workflows/release.yml`) triggered on tag pushes (`v*`) to run the 27-test automated test suite and package a portable distribution archive (`RecluseEdit-windows-<tag>.zip`) attached to GitHub Releases.
 - **Git Environment Configuration**: Configured `.gitattributes` to enforce consistent LF/CRLF normalization across development environments and CI runners.
 
-[Unreleased]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v4.0.1...HEAD
+[4.0.1]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v4.0.0...v4.0.1
 [4.0.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v3.0.0...v4.0.0
 [3.0.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v2.2.0...v3.0.0
 [2.2.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v2.1.0...v2.2.0
