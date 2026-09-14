@@ -150,3 +150,4 @@ public sealed class DotNetExtensionTests
         Assert.AreEqual("#512BD4", theme.Colors.BgActive);
     }
 }
+

@@ -34,6 +34,9 @@ public partial class ExtensionManagerWindow : Window
 
         ListToolchains.ItemsSource = null;
         ListToolchains.ItemsSource = _toolchainManager.Reports;
+
+        ListSdks.ItemsSource = null;
+        ListSdks.ItemsSource = _toolchainManager.DetectedSdks;
     }
 
     private void OnToolchainStatusChanged()
@@ -44,6 +47,12 @@ public partial class ExtensionManagerWindow : Window
     private async void OnRefreshToolchainsClick(object sender, RoutedEventArgs e)
     {
         await _toolchainManager.RunAllChecksAsync();
+        RefreshLists();
+    }
+
+    private async void OnRefreshSdksClick(object sender, RoutedEventArgs e)
+    {
+        await _toolchainManager.ScanSdksAsync();
         RefreshLists();
     }
 

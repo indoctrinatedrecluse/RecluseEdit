@@ -50,30 +50,8 @@ public class NodeJsToolchainCheck : IToolchainCheck
 
     private static async Task<(bool success, string output, string? path)> ExecuteCommandAsync(string cmd, string args, CancellationToken ct)
     {
-        try
-        {
-            var psi = new ProcessStartInfo
-            {
-                FileName = cmd,
-                Arguments = args,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using var p = Process.Start(psi);
-            if (p == null) return (false, "", null);
-
-            var stdout = await p.StandardOutput.ReadToEndAsync(ct);
-            await p.WaitForExitAsync(ct);
-
-            return (p.ExitCode == 0, stdout.Trim(), psi.FileName);
-        }
-        catch
-        {
-            return (false, "", null);
-        }
+        var res = await RecluseEdit.Sdk.Toolchains.ToolchainExecutor.ExecuteAsync(cmd, args, null, null, 3000, ct);
+        return (res.Success, res.Output, res.ResolvedPath);
     }
 }
 
@@ -119,35 +97,8 @@ public class NpmToolchainCheck : IToolchainCheck
 
     private static async Task<(bool success, string output, string? path)> ExecuteCommandAsync(string cmd, string args, CancellationToken ct)
     {
-        try
-        {
-            // On Windows, npm is typically a cmd or ps1 script
-            var isWindows = OperatingSystem.IsWindows();
-            var fileName = isWindows ? "cmd.exe" : cmd;
-            var arguments = isWindows ? $"/c {cmd} {args}" : args;
-
-            var psi = new ProcessStartInfo
-            {
-                FileName = fileName,
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using var p = Process.Start(psi);
-            if (p == null) return (false, "", null);
-
-            var stdout = await p.StandardOutput.ReadToEndAsync(ct);
-            await p.WaitForExitAsync(ct);
-
-            return (p.ExitCode == 0, stdout.Trim(), cmd);
-        }
-        catch
-        {
-            return (false, "", null);
-        }
+        var res = await RecluseEdit.Sdk.Toolchains.ToolchainExecutor.ExecuteAsync(cmd, args, null, null, 3000, ct);
+        return (res.Success, res.Output, res.ResolvedPath);
     }
 }
 
@@ -173,12 +124,12 @@ public class TypeScriptToolchainCheck : IToolchainCheck
                 Command = Command,
                 Status = ToolchainStatus.Warning,
                 RequiredVersion = RequiredVersion,
-                Description = "TypeScript compiler (tsc) was not detected globally on PATH. Global compilation disabled; workspace npx tsc will be utilized if project dependencies are installed.",
+                Description = "TypeScript compiler (tsc) was not detected. Type checking will be limited to editor diagnostics.",
                 InstallHelp = InstallHelp
             };
         }
 
-        var versionMatch = Regex.Match(output, @"(\d+\.\d+\.\d+)");
+        var versionMatch = Regex.Match(output, @"Version\s+([0-9\.]+)");
         var version = versionMatch.Success ? versionMatch.Value : output;
 
         return new ToolchainReport
@@ -196,34 +147,7 @@ public class TypeScriptToolchainCheck : IToolchainCheck
 
     private static async Task<(bool success, string output, string? path)> ExecuteCommandAsync(string cmd, string args, CancellationToken ct)
     {
-        try
-        {
-            var isWindows = OperatingSystem.IsWindows();
-            var fileName = isWindows ? "cmd.exe" : cmd;
-            var arguments = isWindows ? $"/c {cmd} {args}" : args;
-
-            var psi = new ProcessStartInfo
-            {
-                FileName = fileName,
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using var p = Process.Start(psi);
-            if (p == null) return (false, "", null);
-
-            var stdout = await p.StandardOutput.ReadToEndAsync(ct);
-            await p.WaitForExitAsync(ct);
-
-            return (p.ExitCode == 0, stdout.Trim(), cmd);
-        }
-        catch
-        {
-            return (false, "", null);
-        }
+        var res = await RecluseEdit.Sdk.Toolchains.ToolchainExecutor.ExecuteAsync(cmd, args, null, null, 3000, ct);
+        return (res.Success, res.Output, res.ResolvedPath);
     }
 }
-

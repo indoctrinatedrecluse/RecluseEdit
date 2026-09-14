@@ -48,3 +48,4 @@ public class DotNetPurpleTheme : ThemeDefinitionBase
         MarkdownCodeBg = "#0B0914"
     };
 }
+

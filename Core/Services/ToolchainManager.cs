@@ -1,20 +1,22 @@
-using System.Diagnostics;
-using System.Text.RegularExpressions;
 using RecluseEdit.Sdk.Models;
 using RecluseEdit.Sdk.Providers;
+using RecluseEdit.Sdk.Toolchains;
 
 namespace RecluseEdit.Core.Services;
 
 /// <summary>
-/// Orchestrates and monitors developer toolchains (compilers, runtimes, CLI tools) registered by extensions.
+/// Orchestrates and monitors developer toolchains (compilers, runtimes, CLI tools) registered by extensions,
+/// and automatically detects system development kits and compiler suites.
 /// </summary>
 public class ToolchainManager
 {
     private readonly List<IToolchainCheck> _checks = [];
     private readonly List<ToolchainReport> _reports = [];
+    private readonly List<DetectedSdk> _detectedSdks = [];
 
     public IReadOnlyList<ToolchainReport> Reports => _reports.AsReadOnly();
     public IReadOnlyList<IToolchainCheck> RegisteredChecks => _checks.AsReadOnly();
+    public IReadOnlyList<DetectedSdk> DetectedSdks => _detectedSdks.AsReadOnly();
     public bool HasIssues => _reports.Any(r => r.Status is ToolchainStatus.Missing or ToolchainStatus.Warning);
 
     public event Action? ToolchainStatusChanged;
@@ -30,9 +32,30 @@ public class ToolchainManager
 
     public async Task RunAllChecksAsync(CancellationToken cancellationToken = default)
     {
-        var tasks = _checks.Select(c => RunCheckAsync(c, cancellationToken)).ToList();
-        await Task.WhenAll(tasks);
+        var checkTasks = _checks.Select(c => (Task)RunCheckAsync(c, cancellationToken));
+        var sdkTask = (Task)ScanSdksAsync(null, cancellationToken);
+
+        await Task.WhenAll(checkTasks.Append(sdkTask));
         ToolchainStatusChanged?.Invoke();
+    }
+
+    public async Task<IReadOnlyList<DetectedSdk>> ScanSdksAsync(string? workspaceRoot = null, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var sdks = await SdkAutoDetector.DetectAllSdksAsync(workspaceRoot, cancellationToken);
+            lock (_detectedSdks)
+            {
+                _detectedSdks.Clear();
+                _detectedSdks.AddRange(sdks);
+            }
+            ToolchainStatusChanged?.Invoke();
+            return _detectedSdks.AsReadOnly();
+        }
+        catch
+        {
+            return _detectedSdks.AsReadOnly();
+        }
     }
 
     public async Task<ToolchainReport> RunCheckAsync(IToolchainCheck check, CancellationToken cancellationToken = default)
@@ -65,6 +88,7 @@ public class ToolchainManager
 
     /// <summary>
     /// Helper method to execute a command-line tool with arguments and retrieve its stdout/exit code safely.
+    /// Delegates to the centralized Sdk.Toolchains.ToolchainExecutor.
     /// </summary>
     public static async Task<(bool success, string output, string? path)> ExecuteToolAsync(
         string command,
@@ -72,51 +96,8 @@ public class ToolchainManager
         int timeoutMs = 3000,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var psi = new ProcessStartInfo
-            {
-                FileName = command,
-                Arguments = args,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using var process = new Process { StartInfo = psi };
-            process.Start();
-
-            var stdoutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-            var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
-
-            var completed = await Task.WhenAny(process.WaitForExitAsync(cancellationToken), Task.Delay(timeoutMs, cancellationToken));
-            if (completed != process.WaitForExitAsync(cancellationToken))
-            {
-                try { process.Kill(); } catch { }
-                return (false, "Execution timed out", null);
-            }
-
-            var output = (await stdoutTask).Trim();
-            if (string.IsNullOrEmpty(output))
-            {
-                output = (await stderrTask).Trim();
-            }
-
-            string? resolvedPath = null;
-            try
-            {
-                resolvedPath = process.MainModule?.FileName;
-            }
-            catch { }
-
-            return (process.ExitCode == 0, output, resolvedPath);
-        }
-        catch
-        {
-            // Executable not found on PATH or access denied
-            return (false, "Not found on PATH", null);
-        }
+        var result = await ToolchainExecutor.ExecuteAsync(command, args, null, null, timeoutMs, cancellationToken);
+        return (result.Success, result.Output, result.ResolvedPath);
     }
 }
 

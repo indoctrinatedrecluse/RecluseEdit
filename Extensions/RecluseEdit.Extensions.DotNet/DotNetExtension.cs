@@ -66,3 +66,4 @@ public class DotNetExtension : IExtension
 
     public Task DeinitializeAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
 }
+

@@ -95,6 +95,25 @@
 
                                             <TextBlock Text="{Binding Description}" FontSize="12" Foreground="{StaticResource FgPrimary}" Margin="0,4,0,0" TextWrapping="Wrap" />
 
+                                            <!-- Detected Binary Path -->
+                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Path}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Path}" Value="">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <TextBlock Text="📍 " FontSize="11" />
+                                                <TextBlock Text="{Binding Path}" FontSize="11" FontFamily="Consolas, Segoe UI Mono, Courier New" Foreground="#80CBC4" TextWrapping="Wrap" />
+                                            </StackPanel>
+
                                             <TextBlock Text="{Binding InstallHelp}" FontSize="11" Foreground="#4FC3F7" Margin="0,4,0,0" TextWrapping="Wrap" />
                                         </StackPanel>
 
@@ -144,6 +163,58 @@
 
                     <Border Grid.Row="1" Background="{StaticResource BgTertiary}" Padding="8,6" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,1,0,0">
                         <Button Style="{StaticResource ToolbarButtonStyle}" Content="🔄 Re-run Toolchain Checks" HorizontalAlignment="Left" Padding="8,4" Click="OnRefreshToolchainsClick" />
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- Tab 3: Auto-Detected SDKs -->
+            <TabItem Header="Auto-Detected SDKs" Foreground="{StaticResource FgPrimary}" FontSize="12" Padding="12,6">
+                <Grid Background="{StaticResource BgSecondary}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <ListView x:Name="ListSdks" Grid.Row="0" Background="Transparent" BorderThickness="0" Foreground="{StaticResource FgPrimary}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate DataType="{x:Type models:DetectedSdk}">
+                                <Border Padding="12,10" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource FgAccent}" />
+                                                <Border Background="{StaticResource BgHover}" CornerRadius="3" Margin="8,0,0,0" Padding="6,1">
+                                                    <TextBlock Text="{Binding Version, StringFormat='v{0}'}" FontSize="11" Foreground="{StaticResource FgSecondary}" />
+                                                </Border>
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                <TextBlock Text="📁 Root: " FontSize="11" Foreground="{StaticResource FgMuted}" />
+                                                <TextBlock Text="{Binding RootDirectory}" FontSize="11" FontFamily="Consolas, Segoe UI Mono, Courier New" Foreground="{StaticResource FgSecondary}" />
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                <TextBlock Text="⚙️ Binary: " FontSize="11" Foreground="{StaticResource FgMuted}" />
+                                                <TextBlock Text="{Binding MainExecutablePath}" FontSize="11" FontFamily="Consolas, Segoe UI Mono, Courier New" Foreground="#80CBC4" />
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <Border Grid.Column="1" VerticalAlignment="Center" Background="{StaticResource BgTertiary}" CornerRadius="3" Padding="8,3">
+                                            <TextBlock Text="{Binding Category}" FontSize="11" Foreground="{StaticResource FgMuted}" FontWeight="SemiBold" />
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <Border Grid.Row="1" Background="{StaticResource BgTertiary}" Padding="8,6" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,1,0,0">
+                        <Button Style="{StaticResource ToolbarButtonStyle}" Content="🔄 Re-scan System SDKs" HorizontalAlignment="Left" Padding="8,4" Click="OnRefreshSdksClick" />
                     </Border>
                 </Grid>
             </TabItem>

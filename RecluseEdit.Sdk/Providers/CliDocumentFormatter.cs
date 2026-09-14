@@ -151,29 +151,7 @@ public abstract class CliDocumentFormatter : IDocumentFormatter
 
     public static string? FindExecutableInPath(string executable)
     {
-        if (File.Exists(executable))
-            return Path.GetFullPath(executable);
-
-        var pathEnv = Environment.GetEnvironmentVariable("PATH");
-        if (string.IsNullOrEmpty(pathEnv))
-            return null;
-
-        var paths = pathEnv.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries);
-        var extensions = OperatingSystem.IsWindows()
-            ? [".exe", ".cmd", ".bat", ""]
-            : new[] { "" };
-
-        foreach (var path in paths)
-        {
-            foreach (var ext in extensions)
-            {
-                var candidate = Path.Combine(path, executable + ext);
-                if (File.Exists(candidate))
-                    return candidate;
-            }
-        }
-
-        return null;
+        return Toolchains.SdkPathResolver.ResolveExecutable(executable);
     }
 }
 

@@ -142,3 +142,4 @@ public static class JavaSyntaxDefinition
         return HighlightingLoader.Load(xmlReader, HighlightingManager.Instance);
     }
 }
+

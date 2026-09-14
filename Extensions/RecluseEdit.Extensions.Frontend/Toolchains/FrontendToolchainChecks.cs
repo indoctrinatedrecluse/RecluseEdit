@@ -1,7 +1,7 @@
-using System.Diagnostics;
 using System.Text.RegularExpressions;
 using RecluseEdit.Sdk.Models;
 using RecluseEdit.Sdk.Providers;
+using RecluseEdit.Sdk.Toolchains;
 
 namespace RecluseEdit.Extensions.Frontend.Toolchains;
 
@@ -9,36 +9,8 @@ internal static class ToolchainRunner
 {
     public static async Task<(bool success, string output, string? path)> ExecuteAsync(string cmd, string args, CancellationToken ct)
     {
-        try
-        {
-            var isWindows = OperatingSystem.IsWindows();
-            var fileName = isWindows ? "cmd.exe" : cmd;
-            var arguments = isWindows ? $"/c {cmd} {args}" : args;
-
-            var psi = new ProcessStartInfo
-            {
-                FileName = fileName,
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using var p = Process.Start(psi);
-            if (p == null) return (false, "", null);
-
-            var stdout = await p.StandardOutput.ReadToEndAsync(ct);
-            var stderr = await p.StandardError.ReadToEndAsync(ct);
-            await p.WaitForExitAsync(ct);
-
-            var outText = !string.IsNullOrWhiteSpace(stdout) ? stdout.Trim() : stderr.Trim();
-            return (p.ExitCode == 0, outText, cmd);
-        }
-        catch
-        {
-            return (false, "", null);
-        }
+        var res = await ToolchainExecutor.ExecuteAsync(cmd, args, null, null, 3000, ct);
+        return (res.Success, res.Output, res.ResolvedPath);
     }
 }
 

@@ -408,6 +408,7 @@ All initial planned architectural milestones and SDK evolutions have been comple
 - ✅ **AI Code Review (<kbd>Ctrl+Shift+R</kbd>) & Inline Generation (<kbd>Ctrl+I</kbd>)**: Real-time auditing and in-editor streaming generation.
 - ✅ **Interactive Status Bar Contribution SDK (`IStatusBarProvider`, `IStatusBarItem`)**: Modular status bar items with dynamic live updates.
 - ✅ **External CLI & Formatters SDK (`IDocumentFormatter`, `ToolchainManager`)**: External command formatters and interactive toolchain validation.
+- ✅ **Consolidated Compiler & SDK Discovery (`SdkPathResolver`, `SdkAutoDetector`, `ToolchainExecutor`)**: Unified cross-platform compiler and runtime detection with environment variables fallback, standard directory tree probes, workspace-local binary resolution, and MSVC detection via `vswhere.exe`.
 - ✅ **Live Diagnostic Squiggle Renderer**: Real-time squiggles for syntax and linter diagnostics in AvalonEdit.
 
 New features, language grammars, and toolchain requests may be proposed via GitHub Issues.

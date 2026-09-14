@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.4.0] - 2026-09-14
+
+### 🚀 Added: Consolidated Compiler & SDK Path Detection and Auto-Discovery Engine
+
+- **Unified SDK & Compiler Path Resolver (`SdkPathResolver`)**:
+  - Centralized multi-tier path resolution engine in `RecluseEdit.Sdk.Toolchains` available across all extensions, document formatters, language servers, terminal integrations, and host editor.
+  - Multi-tier resolution pipeline:
+    1. **Direct Path Check**: Resolves explicit relative or absolute file paths.
+    2. **Workspace-Local Binaries**: Automatic probing in `./node_modules/.bin/`, `./vendor/bin/`, `./.venv/Scripts/` (and `.venv/bin/`), and `./target/release/`.
+    3. **System `%PATH%` Resolution**: Cross-platform path scanning with Windows executable extension probe (`.exe`, `.cmd`, `.bat`, `.ps1`) and thread-safe caching.
+    4. **Tool-Specific Environment Variables**: Automatic fallback inspection of standard SDK home variables (`DOTNET_ROOT`, `JAVA_HOME`, `JDK_HOME`, `GOROOT`, `GOPATH`, `CARGO_HOME`, `RUSTUP_HOME`, `FLUTTER_ROOT`, `DART_SDK`, `PYTHONHOME`, `DENO_INSTALL`, `BUN_INSTALL`, `PNPM_HOME`, `ELIXIR_HOME`, `LLVM_HOME`).
+    5. **Standard System Installation Directories**: Deep inspection of standard install trees on Windows (including .NET, Node/npm/pnpm/bun, Rustup `.cargo/bin`, Go `Program Files/Go/bin`, Python `Programs/Python` and Windows Store apps, JDK containers across Oracle/Adoptium/Microsoft/Corretto, Flutter `C:\flutter\bin` & `C:\src\flutter\bin`, LLVM Clang, MinGW/MSYS2, Scoop shims, and Chocolatey bins).
+    6. **MSVC & Visual Studio Discovery**: Automated detection of MSVC C/C++ compiler (`cl.exe`) via `vswhere.exe`.
+
+- **Safe Toolchain Execution Helper (`ToolchainExecutor`)**:
+  - Centralized process runner with automatic path resolution, Windows `.cmd`/`.bat` shell wrapping, timeout protection (default 3000ms), stdout/stderr streaming, and regex/semantic version extraction (`ToolExecutionResult`).
+
+- **Base Toolchain Check Abstraction (`BaseToolchainCheck`)**:
+  - Declarative abstract base class in `RecluseEdit.Sdk` implementing `IToolchainCheck` that eliminates copy-pasted process invocation boilerplate and populates `ToolchainReport.Path` with real filesystem binary paths.
+
+- **System SDK Auto-Discovery (`SdkAutoDetector`)**:
+  - Automated scanner that catalogs all installed development kits on the machine, yielding structured `DetectedSdk` records with root directories, main binary paths, version strings, categories, and associated secondary tools.
+
+- **Diagnostics UI Enhancements (`ExtensionManagerWindow`)**:
+  - Added full resolved filesystem path display (`📍 C:\Program Files\...`) with monospace styling in the **Compilers & Toolchains** diagnostics list.
+  - Added dedicated **Auto-Detected SDKs** tab displaying discovered SDKs, root folders, binary locations, and category badges with a one-click "🔄 Re-scan System SDKs" button.
+
+- **Extension Toolchain Checks Consolidation**:
+  - Refactored toolchain checks across 15+ extensions (`DotNet`, `Frontend`, `RestClient`, `Scripting`, `React`, `Go`, `Python`, `Flutter`, `Php`, `Ruby`, `Laravel`, `Angular`, `NodeBackend`, `Database`) to eliminate duplicate `Process.Start` methods and utilize the consolidated `ToolchainExecutor` and `SdkPathResolver`.
+
+- **Test Suite Expansion**:
+  - Added `SdkPathResolverTests` covering path resolution from PATH, workspace-local probing, venv detection, non-existent tool handling, `ToolchainExecutor` execution and version extraction, `SdkAutoDetector` discovery, and `ToolchainManager` integration.
+  - Test suite grew to 292 passing unit tests with 100% pass rate, 0 warnings, and 0 errors.
+
 ## [5.3.0] - 2026-09-14
 
 ### 🚀 Added: Major Web Frameworks & Languages Ecosystem Integration
