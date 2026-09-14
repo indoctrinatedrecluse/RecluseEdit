@@ -296,3 +296,4 @@ public partial class InlineAiPromptBar : UserControl
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 }
+

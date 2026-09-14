@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.0] - 2026-09-14
+
 ### 🚀 Added
 - **Extensible Multi-Model AI Hub (`IAiProvider`)**:
   - Added `IAiProvider`, `AiProviderType`, `AiAuthMode`, `AiModelInfo`, and `IAiChatView` in `RecluseEdit.Sdk`.
@@ -487,7 +489,8 @@ The debut release of **RecluseEdit**, a modern, lightweight, high-performance de
 - **GitHub Actions Workflow**: Automated build and release pipeline (`.github/workflows/release.yml`) triggered on tag pushes (`v*`) to run the 27-test automated test suite and package a portable distribution archive (`RecluseEdit-windows-<tag>.zip`) attached to GitHub Releases.
 - **Git Environment Configuration**: Configured `.gitattributes` to enforce consistent LF/CRLF normalization across development environments and CI runners.
 
-[Unreleased]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v4.0.1...HEAD
+[Unreleased]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v5.0.0...HEAD
+[5.0.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v4.0.1...v5.0.0
 [4.0.1]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v4.0.0...v4.0.1
 [4.0.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v3.0.0...v4.0.0
 [3.0.0]: https://github.com/indoctrinatedrecluse/RecluseEdit/compare/v2.2.0...v3.0.0

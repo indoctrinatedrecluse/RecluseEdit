@@ -1015,9 +1015,10 @@ public partial class MainWindow : Window
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
         MessageBox.Show(this,
-            "RecluseEdit v4.0.1\n\n" +
+            "RecluseEdit v5.0.0\n\n" +
             "A fast, modern code editor optimized for web applications.\n\n" +
             "Key Features:\n" +
+            "• Multi-Model AI Hub & Code Review (Ctrl+Alt+A, Ctrl+Shift+R, Ctrl+I)\n" +
             "• Extensible Theme System & SDK API with 9 Creative Themes (Ctrl+K, Ctrl+T)\n" +
             "• Chromium-Powered Live Web & Markdown Preview (Ctrl+Shift+V)\n" +
             "• Document Formatting & Linting Pipeline (Shift+Alt+F)\n" +
@@ -1032,7 +1033,6 @@ public partial class MainWindow : Window
             "• Multi-Cursor & Multiline Column Editing (Ctrl+Alt+Up/Down, Alt+Drag)\n" +
             "• Developer Line Manipulation (Ctrl+/, Alt+Up/Down, Shift+Alt+Down, Ctrl+Shift+K)\n" +
             "• Integrated Multi-Shell Terminal (Ctrl+`)\n" +
-            "• DeepSeek AI Chat Assistant (Ctrl+Alt+A)\n" +
             "• Web Workspace Explorer (Ctrl+B)\n" +
             "• Dual Autocomplete: Ghost-text (Tab) + IntelliSense popup (Ctrl+Space)\n" +
             "• Built-in Find & Replace (Ctrl+F, Ctrl+H)\n" +

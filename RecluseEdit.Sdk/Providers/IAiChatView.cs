@@ -15,3 +15,4 @@ public interface IAiChatView
     /// </summary>
     void StartCodeReview(string code, string? fileName = null);
 }
+

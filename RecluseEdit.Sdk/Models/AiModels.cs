@@ -84,3 +84,4 @@ public class AiModelInfo
         SupportsTools = supportsTools;
     }
 }
+
