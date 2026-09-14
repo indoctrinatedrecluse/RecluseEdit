@@ -248,3 +248,4 @@ You can use the official Microsoft Store GitHub Action or a direct REST script:
 | **Packaging Choice** | **MSIX** with `<rescap:Capability Name="runFullTrust" />` for seamless in-store differential auto-updates and sandbox compliance. |
 | **Code Signing** | Microsoft Store automatically signs packages with Microsoft's trusted root during Store ingestion, eliminating all SmartScreen warnings for Store users. |
 | **CI/CD Automation** | **100% Automatable** via `microsoft/store-action` and Microsoft Store Submission API once the initial v1 submission is manually certified. |
+
