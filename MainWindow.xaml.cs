@@ -1218,7 +1218,7 @@ public partial class MainWindow : Window
 
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
-        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "5.4.0";
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "5.5.0";
         MessageBox.Show(this,
             $"RecluseEdit v{version}\n\n" +
             "A fast, modern code editor optimized for web applications.\n\n" +

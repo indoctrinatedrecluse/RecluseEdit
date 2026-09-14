@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.5.0] - 2026-09-14
+
+### 🔏 Added: Automated Self-Signed CA & Release Code-Signing Pipeline
+
+- **Self-Signed Root Certificate Authority & Code-Signing Provisioning (`scripts/ensure-ca-cert.ps1`)**:
+  - Automated certificate provisioning tool establishing a self-signed Root CA (`CN=indoctrinatedrecluse Root CA, O=indoctrinatedrecluse`) with basic constraints (`ca=1`) and key usage `CertSign, CRLSign` (valid for 10 years).
+  - Issues an Authenticode Code Signing certificate (`CN=indoctrinatedrecluse Code Signing, O=indoctrinatedrecluse`) signed by the Root CA with enhanced key usage `CodeSigning` (`1.3.6.1.5.5.7.3.3`) (valid for 5 years).
+  - Automatically exports the public Root CA certificate to `certs/indoctrinatedrecluse-RootCA.cer` and the code-signing bundle to `certs/indoctrinatedrecluse-CodeSigning.pfx`.
+  - Idempotent execution: detects existing valid certificates in the Windows Certificate Store (`Cert:\CurrentUser\My`) or `.pfx` files to prevent unnecessary key regeneration.
+
+- **Automated Binary Signing Utility (`scripts/sign-release.ps1`)**:
+  - Discovers and signs all `.exe` and `.dll` binaries recursively in any target directory (including the main `RecluseEdit.exe` editor, `RecluseEdit.Sdk.dll`, WebView2 runtimes, and all fifteen official extensions under `Extensions/`).
+  - Uses native PowerShell `Set-AuthenticodeSignature` with SHA256 digest hashing.
+  - Automatically bundles the public Root CA certificate (`indoctrinatedrecluse-RootCA.cer`) into the signed target folder.
+  - Formats a comprehensive verification table displaying Authenticode status, signer subject, issuer, and thumbprint.
+
+- **Unified Build, Test & Sign Automation (`scripts/build-and-sign.ps1`)**:
+  - Local end-to-end automation script that restores dependencies, runs test suites, compiles Release binaries, executes binary code-signing, stages distribution directories, and packages signed zip archives (`RecluseEdit-windows-<version>.zip`).
+
+- **Root CA Installer Helper (`scripts/install-root-ca.ps1`)**:
+  - Convenience helper script to install the public Root CA (`certs/indoctrinatedrecluse-RootCA.cer`) into the Windows Trusted Root Certification Authorities store (`CurrentUser` or `LocalMachine`), enabling Windows to verify all signed binaries as completely trusted without unknown-publisher prompts.
+
+- **Automated GitHub Actions CI/CD Signing Integration (`.github/workflows/release.yml`)**:
+  - Integrated `scripts/sign-release.ps1` into the automated release pipeline before packaging.
+  - Automatically signs all executables and extension libraries and includes `indoctrinatedrecluse-RootCA.cer` in the release zip asset attached to GitHub releases.
+
+- **Test Suite Expansion**:
+  - Added `CodeSigningTests` validating script presence, organization attributes (`O=indoctrinatedrecluse`), SHA256 algorithm enforcement, public Root CA structure and validity, workflow integration, and `.gitignore` certificate security.
+  - Test suite now features 305 passing unit tests with 100% pass rate, 0 warnings, and 0 errors.
+
 ## [5.4.0] - 2026-09-14
 
 ### 🚀 Added: Consolidated Compiler & SDK Path Detection and Auto-Discovery Engine

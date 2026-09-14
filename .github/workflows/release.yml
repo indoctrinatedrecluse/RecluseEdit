@@ -65,9 +65,17 @@ jobs:
             Remove-Item -Path "$stagingDir/RecluseEdit.Tests.*" -Force
           }
 
+          # Sign all release binaries with self-signed CA code-signing certificate
+          pwsh scripts/sign-release.ps1 -TargetDir $stagingDir
+
+          # Include public Root CA certificate for user verification
+          if (Test-Path "certs/indoctrinatedrecluse-RootCA.cer") {
+            Copy-Item -Path "certs/indoctrinatedrecluse-RootCA.cer" -Destination $stagingDir -Force
+          }
+
           # Create zip archive
           $zipFileName = "RecluseEdit-windows-$tag.zip"
-          Compress-Archive -Path "package/RecluseEdit" -DestinationPath $zipFileName -Force
+          Compress-Archive -Path "$stagingDir/*" -DestinationPath $zipFileName -Force
 
           Write-Host "Successfully generated distribution package: $zipFileName"
           echo "ZIP_FILE=$zipFileName" >> $env:GITHUB_ENV

@@ -368,12 +368,39 @@ RecluseEdit includes a fully automated GitHub Actions workflow (`.github/workflo
 
 - 🏷️ **Triggered on Tag Push**: Pushing a new version tag (e.g. `git tag v5.3.0 && git push origin v5.3.0`) triggers an automated build pipeline on `windows-latest`.
 - 🧪 **Full Verification**: Executes the complete test suite (`dotnet test RecluseEdit.slnx -c Release`) across all projects before packaging.
+- 🔏 **Automated Code-Signing**: All executable binaries (`.exe`) and extension libraries (`.dll`) are signed with SHA256 Authenticode signatures issued by the `indoctrinatedrecluse` Root CA. The public Root CA certificate (`indoctrinatedrecluse-RootCA.cer`) is automatically bundled inside every release archive.
 - 📦 **Bundle & Package**:
   - Compiles the host editor and all extensions in `Release` configuration.
   - Bundles the main application executable, dependencies, and all fifteen extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`, `Go`, `Scripting`, `AiChat`, `Database`, `RestClient`, `Frontend`, `NodeBackend`, and `DotNet`) under `Extensions/`.
   - Packages the entire distribution into a portable archive: `RecluseEdit-windows-<tag>.zip`.
 - 🚀 **GitHub Release**: Automatically creates a new GitHub Release with the bundled `.zip` asset attached and generates release notes.
 - 🕹️ **Manual Trigger**: Can also be executed manually via the **Actions** tab with custom version tags (`workflow_dispatch`).
+
+---
+
+## 🔏 Release Code-Signing & Certificate Provisioning
+
+RecluseEdit features an automated code-signing pipeline for both local development and GitHub Actions CI/CD workflows:
+
+- **Certificate Hierarchy**:
+  - **Root CA Certificate**: `CN=indoctrinatedrecluse Root CA, O=indoctrinatedrecluse` (valid for 10 years, Basic Constraints: `ca=1`, Key Usage: `CertSign, CRLSign`).
+  - **Code Signing Certificate**: `CN=indoctrinatedrecluse Code Signing, O=indoctrinatedrecluse` (valid for 5 years, Enhanced Key Usage: `CodeSigning`).
+- **Automated Provisioning (`scripts/ensure-ca-cert.ps1`)**:
+  - Checks if a valid code-signing certificate exists in the Windows Certificate Store (`Cert:\CurrentUser\My`) or as an exported `.pfx`.
+  - If missing, automatically generates the Root CA and Code Signing certificate pair, exports the public Root CA certificate to `certs/indoctrinatedrecluse-RootCA.cer`, and exports the password-protected private key to `certs/indoctrinatedrecluse-CodeSigning.pfx` (which is strictly gitignored).
+- **Binary Signing Utility (`scripts/sign-release.ps1`)**:
+  - Recursively finds all `.exe` and `.dll` binaries in the target directory (including all 15+ extension libraries under `Extensions/`).
+  - Applies SHA256 Authenticode signatures via `Set-AuthenticodeSignature`.
+  - Copies `certs/indoctrinatedrecluse-RootCA.cer` into the distribution folder alongside the binaries.
+- **Unified Build & Packaging Script (`scripts/build-and-sign.ps1`)**:
+  - Executes `dotnet restore`, `dotnet test`, and `dotnet build -c Release`, signs the output directory, stages distribution files, and creates `RecluseEdit-windows-<version>.zip`.
+- **Installing Root CA on Windows (`scripts/install-root-ca.ps1`)**:
+  - To make Windows recognize and trust all signatures from `indoctrinatedrecluse` without unknown-publisher warnings, run:
+    ```powershell
+    pwsh scripts/install-root-ca.ps1
+    # Or in Windows PowerShell:
+    powershell -ExecutionPolicy Bypass -File scripts/install-root-ca.ps1
+    ```
 
 ---
 
@@ -403,20 +430,14 @@ Remove-Item .git\index -Force; git reset
 
 ## 🗺️ Planned Roadmap & SDK Evolution (TODO)
 
-### 📌 Upcoming for Next Minor Release
-- 🔏 **Release Code-Signing with Self-Signed CA Certificate**:
-  - Implement automated code-signing for all RecluseEdit binaries, assemblies, and release packages (for both local development builds and the GitHub Actions release workflow).
-  - Organization name: `"indoctrinatedrecluse"`.
-  - Automated local certificate workflow: Check if the certificate already exists; if not, run a provisioning script to generate the self-signed Root CA and signing certificate pair, then use it to sign.
-  - Consistent dual-signing pipeline: Integrate the signing mechanism into local build scripts as well as GitHub Actions CI/CD workflows so all release artifacts are verified and signed.
-
-### Completed Milestones
+All initial planned architectural milestones and SDK evolutions have been completed:
 - ✅ **Pluggable Multi-Model AI Hub (`IAiProvider`)**: Runtime switching across DeepSeek, OpenAI (GPT-4o), Google Antigravity & Gemini 2.5, Anthropic Claude, and local offline Ollama models.
 - ✅ **AI Code Review (<kbd>Ctrl+Shift+R</kbd>) & Inline Generation (<kbd>Ctrl+I</kbd>)**: Real-time auditing and in-editor streaming generation.
 - ✅ **Interactive Status Bar Contribution SDK (`IStatusBarProvider`, `IStatusBarItem`)**: Modular status bar items with dynamic live updates.
 - ✅ **External CLI & Formatters SDK (`IDocumentFormatter`, `ToolchainManager`)**: External command formatters and interactive toolchain validation.
 - ✅ **Consolidated Compiler & SDK Discovery (`SdkPathResolver`, `SdkAutoDetector`, `ToolchainExecutor`)**: Unified cross-platform compiler and runtime detection with environment variables fallback, standard directory tree probes, workspace-local binary resolution, and MSVC detection via `vswhere.exe`.
 - ✅ **Instant Sub-Second Startup & Diagnostics Caching (`ToolchainCacheService`)**: Optimized process execution, cached `%PATH%` scans, and 24-hour persistent cache for instantaneous editor launches.
+- ✅ **Release Code-Signing Pipeline (`indoctrinatedrecluse` Root CA)**: Automated code-signing for all binaries, assemblies, and release packages in local builds and GitHub Actions CI/CD with self-signed Root CA and Authenticode certificates.
 - ✅ **Live Diagnostic Squiggle Renderer**: Real-time squiggles for syntax and linter diagnostics in AvalonEdit.
 
 New features, language grammars, and toolchain requests may be proposed via GitHub Issues.

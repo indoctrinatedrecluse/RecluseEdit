@@ -24,5 +24,14 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
-.DS_Store
+# Code signing & certificates (exclude private keys, allow public Root CA)
+*.pfx
+*.p12
+*.key
+*.pem
+!certs/*.cer
+
+# Packaging artifacts
+package/
+RecluseEdit-windows-*.zip
 

@@ -1,0 +1,3 @@
+# This directory contains the public Root Certificate Authority certificate
+# for indoctrinatedrecluse (e.g. indoctrinatedrecluse-RootCA.cer).
+# Private keys (*.pfx) are strictly gitignored and must never be committed.
