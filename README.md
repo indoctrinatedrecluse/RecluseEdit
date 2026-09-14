@@ -430,7 +430,15 @@ Remove-Item .git\index -Force; git reset
 
 ## 🗺️ Planned Roadmap & SDK Evolution (TODO)
 
-All initial planned architectural milestones and SDK evolutions have been completed:
+### 📌 Upcoming for Next Releases
+- 🏪 **Microsoft Store Distribution & Automated Publishing**:
+  - Publish RecluseEdit to the **Microsoft Store** as an independent developer under the publisher identity `"indoctrinatedrecluse"`.
+  - Target zero-cost registration paths (via GitHub Student Developer Pack, Microsoft for Startups Founders Hub, or standard one-time fee).
+  - Package as an MSIX application with `<rescap:Capability Name="runFullTrust" />` for differential background auto-updates and sandbox compliance.
+  - Automate subsequent Store release submissions directly within the GitHub Actions release workflow via the Microsoft Store Submission API (`microsoft/store-action`).
+  - See detailed step-by-step instructions and CI/CD integration guide in [docs/MICROSOFT_STORE_PUBLISHING.md](docs/MICROSOFT_STORE_PUBLISHING.md).
+
+### Completed Milestones
 - ✅ **Pluggable Multi-Model AI Hub (`IAiProvider`)**: Runtime switching across DeepSeek, OpenAI (GPT-4o), Google Antigravity & Gemini 2.5, Anthropic Claude, and local offline Ollama models.
 - ✅ **AI Code Review (<kbd>Ctrl+Shift+R</kbd>) & Inline Generation (<kbd>Ctrl+I</kbd>)**: Real-time auditing and in-editor streaming generation.
 - ✅ **Interactive Status Bar Contribution SDK (`IStatusBarProvider`, `IStatusBarItem`)**: Modular status bar items with dynamic live updates.
