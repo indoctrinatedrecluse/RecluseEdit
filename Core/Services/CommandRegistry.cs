@@ -15,6 +15,11 @@ public class CommandRegistry
     public Func<IEnumerable<CommandItem>>? FileProvider { get; set; }
 
     /// <summary>
+    /// Optional dynamic symbol provider for Go to Symbol mode (@ prefix).
+    /// </summary>
+    public Func<string, IEnumerable<CommandItem>>? SymbolProvider { get; set; }
+
+    /// <summary>
     /// Optional handler for Go to Line navigation.
     /// </summary>
     public Action<int, int>? LineJumpHandler { get; set; }
@@ -75,6 +80,14 @@ public class CommandRegistry
                     Category = "Help",
                     Icon = "📍",
                     Action = () => { }
+                },
+                new CommandItem
+                {
+                    Id = "help.symbol",
+                    Title = "Type '@' to Go to Symbol in active file (e.g. @MyMethod)",
+                    Category = "Help",
+                    Icon = "🔣",
+                    Action = () => { }
                 }
             ];
         }
@@ -118,7 +131,30 @@ public class CommandRegistry
             return FilterCommands(_commands, filter);
         }
 
-        // 4. Quick Open File Mode (default when no prefix)
+        // 4. Go to Symbol Mode (prefixed with '@')
+        if (query.StartsWith('@'))
+        {
+            var filter = query.TrimStart('@').Trim();
+            if (SymbolProvider != null)
+            {
+                var symbols = SymbolProvider(filter);
+                return FilterCommands(symbols, filter);
+            }
+
+            return
+            [
+                new CommandItem
+                {
+                    Id = "nav.symbol.prompt",
+                    Title = "Type symbol name to jump to in current file",
+                    Category = "Go to Symbol",
+                    Icon = "🔣",
+                    Action = () => { }
+                }
+            ];
+        }
+
+        // 5. Quick Open File Mode (default when no prefix)
         var results = new List<CommandItem>();
 
         if (FileProvider != null)

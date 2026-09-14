@@ -82,13 +82,21 @@ public class DocumentManager
             return existing;
         }
 
+        var fileInfo = new FileInfo(fullPath);
+        bool isLarge = fileInfo.Length > 10 * 1024 * 1024; // > 10 MB
         var text = File.ReadAllText(fullPath, Encoding.UTF8);
+        if (!isLarge && text.Length > 2_000_000)
+        {
+            isLarge = true;
+        }
+
         var lang = _syntaxManager.GetLanguageForFile(fullPath);
         var fileName = Path.GetFileName(fullPath);
 
         var doc = new DocumentModel(fileName, text, lang, fullPath)
         {
-            IsDirty = false
+            IsDirty = false,
+            IsLargeFile = isLarge
         };
 
         Documents.Add(doc);

@@ -398,3 +398,4 @@ public class AiChatExtensionTests
         Assert.AreSame(provider, extensionManager.RegisteredSidePanels[0]);
     }
 }
+

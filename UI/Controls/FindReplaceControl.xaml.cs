@@ -20,6 +20,7 @@ public partial class FindReplaceControl : UserControl
     }
 
     public event Action? CloseRequested;
+    public event Action<IReadOnlyList<int>>? MatchesUpdated;
 
     public FindReplaceControl()
     {
@@ -76,6 +77,7 @@ public partial class FindReplaceControl : UserControl
     private void OnCloseClick(object sender, RoutedEventArgs e)
     {
         Visibility = Visibility.Collapsed;
+        MatchesUpdated?.Invoke([]);
         CloseRequested?.Invoke();
         _editor?.Focus();
     }
@@ -135,11 +137,21 @@ public partial class FindReplaceControl : UserControl
         if (_editor == null || string.IsNullOrEmpty(TxtFind.Text))
         {
             TxtMatchCount.Text = "No results";
+            MatchesUpdated?.Invoke([]);
             return;
         }
 
-        var count = GetMatches().Count;
-        TxtMatchCount.Text = count > 0 ? $"{count} found" : "No results";
+        var matches = GetMatches();
+        TxtMatchCount.Text = matches.Count > 0 ? $"{matches.Count} found" : "No results";
+        if (_editor.Document != null)
+        {
+            var lines = matches.Select(m => _editor.Document.GetLocation(m.Index).Line).Distinct().ToList();
+            MatchesUpdated?.Invoke(lines);
+        }
+        else
+        {
+            MatchesUpdated?.Invoke([]);
+        }
     }
 
     private List<Match> GetMatches()

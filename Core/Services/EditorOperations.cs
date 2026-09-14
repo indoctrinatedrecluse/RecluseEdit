@@ -612,4 +612,171 @@ public static class EditorOperations
             }
         }
     }
+
+    /// <summary>
+    /// Returns leading whitespace (spaces/tabs) from the line text.
+    /// </summary>
+    public static string GetLeadingWhitespace(string line)
+    {
+        int count = 0;
+        while (count < line.Length && (line[count] == ' ' || line[count] == '\t'))
+        {
+            count++;
+        }
+        return line[..count];
+    }
+
+    /// <summary>
+    /// Executes smart indentation and delimiter splitting on Enter key press.
+    /// </summary>
+    public static void HandleSmartEnter(TextEditor editor, string? languageId)
+    {
+        if (editor.Document == null) return;
+
+        var caretOffset = editor.CaretOffset;
+        var doc = editor.Document;
+        var line = doc.GetLineByOffset(caretOffset);
+        var colInLine = caretOffset - line.Offset;
+        var lineText = doc.GetText(line.Offset, line.Length);
+
+        var textBefore = lineText[..Math.Min(colInLine, lineText.Length)];
+        var textAfter = lineText[Math.Min(colInLine, lineText.Length)..];
+
+        var baseIndent = GetLeadingWhitespace(lineText);
+        var indentStep = editor.Options.ConvertTabsToSpaces
+            ? new string(' ', Math.Max(1, editor.Options.IndentationSize))
+            : "\t";
+
+        var trimmedBefore = textBefore.TrimEnd();
+        var trimmedAfter = textAfter.TrimStart();
+
+        char? prevChar = trimmedBefore.Length > 0 ? trimmedBefore[^1] : null;
+        char? nextChar = trimmedAfter.Length > 0 ? trimmedAfter[0] : null;
+
+        var newLine = line.DelimiterLength == 2 ? "\r\n" : "\n";
+
+        using (doc.RunUpdate())
+        {
+            // Case 1: Brace / Bracket / Parenthesis splitting (e.g. {|} or [|] or (|))
+            if ((prevChar == '{' && nextChar == '}') ||
+                (prevChar == '[' && nextChar == ']') ||
+                (prevChar == '(' && nextChar == ')'))
+            {
+                var insertText = newLine + baseIndent + indentStep + newLine + baseIndent;
+                doc.Insert(caretOffset, insertText);
+                editor.CaretOffset = caretOffset + newLine.Length + baseIndent.Length + indentStep.Length;
+                return;
+            }
+
+            // Case 2: Opening block delimiter or Python/YAML colon ':'
+            var lang = (languageId ?? "").ToLowerInvariant().Trim().TrimStart('.');
+            bool isBlockOpener = prevChar is '{' or '[' or '(';
+            if (!isBlockOpener && prevChar == ':')
+            {
+                isBlockOpener = lang is "python" or "py" or "yaml" or "yml" ||
+                                trimmedBefore.StartsWith("case ", StringComparison.Ordinal) ||
+                                trimmedBefore.StartsWith("default", StringComparison.Ordinal);
+            }
+            if (!isBlockOpener && (trimmedBefore.EndsWith("=>") || trimmedBefore.EndsWith("->")))
+            {
+                isBlockOpener = true;
+            }
+
+            if (isBlockOpener)
+            {
+                var insertText = newLine + baseIndent + indentStep;
+                doc.Insert(caretOffset, insertText);
+                editor.CaretOffset = caretOffset + insertText.Length;
+                return;
+            }
+
+            // Case 3: Preserve line indentation
+            var defaultInsert = newLine + baseIndent;
+            doc.Insert(caretOffset, defaultInsert);
+            editor.CaretOffset = caretOffset + defaultInsert.Length;
+        }
+    }
+
+    /// <summary>
+    /// Deletes both characters when backspacing between matching pairs: (), {}, [], "", '', ``.
+    /// </summary>
+    public static bool HandleSmartBackspace(TextEditor editor)
+    {
+        if (editor.Document == null || !editor.TextArea.Selection.IsEmpty) return false;
+
+        var caretOffset = editor.CaretOffset;
+        if (caretOffset <= 0 || caretOffset >= editor.Document.TextLength) return false;
+
+        char before = editor.Document.GetCharAt(caretOffset - 1);
+        char after = editor.Document.GetCharAt(caretOffset);
+
+        bool isPair = (before == '(' && after == ')') ||
+                      (before == '{' && after == '}') ||
+                      (before == '[' && after == ']') ||
+                      (before == '"' && after == '"') ||
+                      (before == '\'' && after == '\'') ||
+                      (before == '`' && after == '`');
+
+        if (isPair)
+        {
+            using (editor.Document.RunUpdate())
+            {
+                editor.Document.Remove(caretOffset - 1, 2);
+                editor.CaretOffset = caretOffset - 1;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Folds all foldings in the folding manager.
+    /// </summary>
+    public static void FoldAll(ICSharpCode.AvalonEdit.Folding.FoldingManager? manager)
+    {
+        if (manager == null) return;
+        foreach (var folding in manager.AllFoldings)
+        {
+            folding.IsFolded = true;
+        }
+    }
+
+    /// <summary>
+    /// Unfolds all foldings in the folding manager.
+    /// </summary>
+    public static void UnfoldAll(ICSharpCode.AvalonEdit.Folding.FoldingManager? manager)
+    {
+        if (manager == null) return;
+        foreach (var folding in manager.AllFoldings)
+        {
+            folding.IsFolded = false;
+        }
+    }
+
+    /// <summary>
+    /// Toggles the fold state of the innermost folding containing the specified offset.
+    /// </summary>
+    public static void ToggleFoldAtOffset(ICSharpCode.AvalonEdit.Folding.FoldingManager? manager, int offset)
+    {
+        if (manager == null) return;
+        var folding = manager.GetFoldingsContaining(offset).LastOrDefault();
+        if (folding != null)
+        {
+            folding.IsFolded = !folding.IsFolded;
+        }
+    }
+
+    /// <summary>
+    /// Folds or unfolds the block at the specified offset.
+    /// </summary>
+    public static void SetFoldAtOffset(ICSharpCode.AvalonEdit.Folding.FoldingManager? manager, int offset, bool fold)
+    {
+        if (manager == null) return;
+        var folding = manager.GetFoldingsContaining(offset).LastOrDefault();
+        if (folding != null)
+        {
+            folding.IsFolded = fold;
+        }
+    }
 }

@@ -8,7 +8,13 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid Background="{DynamicResource BgPrimary}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
         <avalonedit:TextEditor x:Name="Editor"
+                               Grid.Column="0"
                                Background="{DynamicResource BgPrimary}"
                                Foreground="{DynamicResource FgPrimary}"
                                LineNumbersForeground="{DynamicResource LineNumberFg}"
@@ -19,8 +25,15 @@
                                HorizontalScrollBarVisibility="Auto"
                                VerticalScrollBarVisibility="Auto" />
 
+        <!-- Vertical Overview Ruler for Search, Git, and Diagnostics -->
+        <controls:OverviewRulerControl x:Name="OverviewRuler"
+                                       Grid.Column="1"
+                                       Width="14"
+                                       Background="{DynamicResource BgSecondary}" />
+
         <!-- Floating Find & Replace Bar -->
         <controls:FindReplaceControl x:Name="FindReplace"
+                                     Grid.Column="0" Grid.ColumnSpan="2"
                                      VerticalAlignment="Top"
                                      HorizontalAlignment="Right"
                                      Margin="0,8,20,0"
@@ -28,6 +41,7 @@
 
         <!-- Floating Inline AI Prompt & Generation Bar (Ctrl+I) -->
         <controls:InlineAiPromptBar x:Name="InlineAiPrompt"
+                                    Grid.Column="0" Grid.ColumnSpan="2"
                                     VerticalAlignment="Top"
                                     HorizontalAlignment="Center"
                                     Margin="0,16,0,0"

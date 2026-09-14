@@ -29,6 +29,10 @@ public partial class EditorControl : UserControl
     private CompletionWindow? _completionWindow;
     private FoldingManager? _foldingManager;
     private XmlFoldingStrategy? _xmlFoldingStrategy;
+    private readonly UniversalFoldingStrategy _foldingStrategy = new();
+    private readonly MultiSelectionManager _multiSelectionManager = new();
+    private readonly MultiCaretRenderer _multiCaretRenderer;
+    private readonly SemanticSelectionService _semanticSelectionService = new();
     private ToolTip? _diagnosticToolTip;
 
     public string? WorkspacePath { get; set; }
@@ -62,19 +66,29 @@ public partial class EditorControl : UserControl
 
                 Editor.Document = _documentModel.Document;
 
-                try
+                if (!_documentModel.IsLargeFile)
                 {
-                    _foldingManager = FoldingManager.Install(Editor.TextArea);
+                    try
+                    {
+                        _foldingManager = FoldingManager.Install(Editor.TextArea);
+                    }
+                    catch
+                    {
+                        _foldingManager = null;
+                    }
+
+                    UpdateSyntaxHighlighting();
+                    UpdateFolding();
                 }
-                catch
+                else
                 {
                     _foldingManager = null;
+                    Editor.SyntaxHighlighting = null;
                 }
 
+                IndentationDetector.Apply(Editor, _documentModel.Indentation);
                 _documentModel.PropertyChanged += OnDocumentModelPropertyChanged;
                 _documentModel.Document.TextChanged += OnDocumentTextChanged;
-                UpdateSyntaxHighlighting();
-                UpdateFolding();
                 _ = RefreshGitDiffAsync();
             }
             else
@@ -105,13 +119,21 @@ public partial class EditorControl : UserControl
 
         FindReplace.Editor = Editor;
         InlineAiPrompt.Editor = Editor;
+        OverviewRuler.Editor = Editor;
+
+        FindReplace.MatchesUpdated += lines => OverviewRuler.SetFindMatches(lines);
+        FindReplace.CloseRequested += () => OverviewRuler.SetFindMatches([]);
 
         _ghostRenderer = new GhostTextRenderer(Editor.TextArea.TextView);
         _bracketRenderer = new BracketHighlightRenderer(Editor.TextArea.TextView);
         _diagnosticRenderer = new DiagnosticSquiggleRenderer(Editor.TextArea.TextView);
+        _multiCaretRenderer = new MultiCaretRenderer(Editor.TextArea.TextView, _multiSelectionManager);
         Editor.TextArea.TextView.BackgroundRenderers.Add(_ghostRenderer);
         Editor.TextArea.TextView.BackgroundRenderers.Add(_bracketRenderer);
         Editor.TextArea.TextView.BackgroundRenderers.Add(_diagnosticRenderer);
+        Editor.TextArea.TextView.BackgroundRenderers.Add(_multiCaretRenderer);
+
+        Editor.TextArea.PreviewMouseDown += (_, _) => _multiSelectionManager.Clear();
 
         Editor.TextArea.TextView.MouseHover += OnTextViewMouseHover;
         Editor.TextArea.TextView.MouseHoverStopped += OnTextViewMouseHoverStopped;
@@ -153,11 +175,13 @@ public partial class EditorControl : UserControl
     public void SetDiagnostics(IReadOnlyList<DiagnosticItem> diagnostics)
     {
         _diagnosticRenderer.SetDiagnostics(Editor.Document, diagnostics);
+        OverviewRuler.SetDiagnostics(diagnostics);
     }
 
     public void ClearDiagnostics()
     {
         _diagnosticRenderer.Clear();
+        OverviewRuler.SetDiagnostics([]);
     }
 
     private void OnTextViewMouseHover(object sender, MouseEventArgs e)
@@ -218,9 +242,11 @@ public partial class EditorControl : UserControl
     private void UpdateFolding()
     {
         if (_foldingManager == null || _documentModel == null || _xmlFoldingStrategy == null) return;
+        if (_foldingManager == null || _documentModel == null || Editor.Document == null || _documentModel.IsLargeFile) return;
 
         var langId = _documentModel.Language.Id.ToLowerInvariant();
         if (langId is "html" or "xml")
+        try
         {
             try
             {
@@ -230,6 +256,11 @@ public partial class EditorControl : UserControl
             {
                 // Unclosed XML tags during typing
             }
+            _foldingStrategy.UpdateFoldings(_foldingManager, Editor.Document, _documentModel.Language?.Id);
+        }
+        catch
+        {
+            // Ignore folding errors during typing
         }
     }
 
@@ -261,17 +292,25 @@ public partial class EditorControl : UserControl
         {
             string relativePath = System.IO.Path.GetRelativePath(WorkspacePath, _documentModel.FilePath);
             var hunks = await _gitService.GetFileDiffHunksAsync(WorkspacePath, relativePath);
-            Dispatcher.Invoke(() => _gitDiffMargin.Hunks = hunks);
+            Dispatcher.Invoke(() =>
+            {
+                _gitDiffMargin.Hunks = hunks;
+                OverviewRuler.SetGitHunks(hunks);
+            });
         }
         catch
         {
-            Dispatcher.Invoke(() => _gitDiffMargin.Hunks = []);
+            Dispatcher.Invoke(() =>
+            {
+                _gitDiffMargin.Hunks = [];
+                OverviewRuler.SetGitHunks([]);
+            });
         }
     }
 
     public void UpdateSyntaxHighlighting()
     {
-        if (_documentModel == null || SyntaxManager == null)
+        if (_documentModel == null || SyntaxManager == null || _documentModel.IsLargeFile)
         {
             Editor.SyntaxHighlighting = null;
             return;
@@ -329,6 +368,13 @@ public partial class EditorControl : UserControl
             {
                 _bracketRenderer.Clear();
             }
+        }
+
+        // Live scope calculation for breadcrumb / status bar
+        if (!_documentModel.IsLargeFile && Editor.Document != null)
+        {
+            var symbols = DocumentSymbolService.ExtractSymbols(Editor.Document, _documentModel.FilePath ?? string.Empty);
+            _documentModel.CurrentScope = DocumentSymbolService.GetEnclosingScope(symbols, caret.Line);
         }
     }
 
@@ -420,9 +466,35 @@ public partial class EditorControl : UserControl
             e.Handled = true;
             return;
         }
+        // 6. Ctrl+D triggers Multi-Caret: Add Next Occurrence
         if (e.Key == Key.D && Keyboard.Modifiers == ModifierKeys.Control)
         {
             EditorOperations.DuplicateLinesDown(Editor);
+            _multiSelectionManager.AddNextOccurrence(Editor);
+            e.Handled = true;
+            return;
+        }
+
+        // 6b. Ctrl+Shift+L triggers Multi-Caret: Select All Occurrences
+        if (e.Key == Key.L && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+        {
+            _multiSelectionManager.SelectAllOccurrences(Editor);
+            e.Handled = true;
+            return;
+        }
+
+        // 6c. Shift+Alt+Right triggers Semantic Selection: Expand
+        if (e.Key == Key.Right && Keyboard.Modifiers == (ModifierKeys.Shift | ModifierKeys.Alt))
+        {
+            _semanticSelectionService.ExpandSelection(Editor);
+            e.Handled = true;
+            return;
+        }
+
+        // 6d. Shift+Alt+Left triggers Semantic Selection: Shrink
+        if (e.Key == Key.Left && Keyboard.Modifiers == (ModifierKeys.Shift | ModifierKeys.Alt))
+        {
+            _semanticSelectionService.ShrinkSelection(Editor);
             e.Handled = true;
             return;
         }
@@ -501,18 +573,86 @@ public partial class EditorControl : UserControl
             return;
         }
 
-        // 13. Escape dismisses ghost text
-        if (e.Key == Key.Escape && _ghostRenderer.HasSuggestion)
+        // 13. Escape dismisses ghost text or clears multi-carets
+        if (e.Key == Key.Escape)
         {
-            e.Handled = true;
-            _ghostRenderer.Clear();
-            return;
+            if (_multiSelectionManager.HasSecondarySelections)
+            {
+                _multiSelectionManager.Clear();
+                e.Handled = true;
+                return;
+            }
+            if (_ghostRenderer.HasSuggestion)
+            {
+                e.Handled = true;
+                _ghostRenderer.Clear();
+                return;
+            }
+        }
+
+        // 13b. Multi-Caret Backspace and Delete
+        if (e.Key == Key.Back && _multiSelectionManager.HasSecondarySelections)
+        {
+            if (_multiSelectionManager.HandleBackspace(Editor))
+            {
+                e.Handled = true;
+                return;
+            }
+        }
+        if (e.Key == Key.Delete && _multiSelectionManager.HasSecondarySelections)
+        {
+            if (_multiSelectionManager.HandleDelete(Editor))
+            {
+                e.Handled = true;
+                return;
+            }
         }
 
         // 14. Clear ghost text on navigation
         if (e.Key is Key.Back or Key.Delete or Key.Enter or Key.Return or Key.Left or Key.Right or Key.Up or Key.Down)
         {
             _ghostRenderer.Clear();
+        }
+
+        // 15. Code folding shortcuts: Ctrl+Shift+[ (fold current), Ctrl+Shift+] (unfold current), Ctrl+M (toggle fold)
+        if ((e.Key == Key.OemOpenBrackets || e.Key == Key.Oem4) && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+        {
+            FoldCurrent();
+            e.Handled = true;
+            return;
+        }
+        if ((e.Key == Key.OemCloseBrackets || e.Key == Key.Oem6) && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+        {
+            UnfoldCurrent();
+            e.Handled = true;
+            return;
+        }
+        if (e.Key == Key.M && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            ToggleFoldAtCaret();
+            e.Handled = true;
+            return;
+        }
+
+        // 16. Smart Backspace for delimiter pairs
+        if (e.Key == Key.Back && Keyboard.Modifiers == ModifierKeys.None)
+        {
+            if (EditorOperations.HandleSmartBackspace(Editor))
+            {
+                e.Handled = true;
+                return;
+            }
+        }
+
+        // 17. Smart Enter (auto-indent, brace-splitting)
+        if (_completionWindow == null && (e.Key is Key.Enter or Key.Return) && Keyboard.Modifiers == ModifierKeys.None)
+        {
+            if (Editor.Document != null)
+            {
+                EditorOperations.HandleSmartEnter(Editor, _documentModel?.Language?.Id);
+                e.Handled = true;
+                return;
+            }
         }
     }
 
@@ -596,6 +736,16 @@ public partial class EditorControl : UserControl
     public void SortLines() => EditorOperations.SortLines(Editor);
     public void TrimTrailingWhitespace() => EditorOperations.TrimTrailingWhitespace(Editor);
     public void GoToLine(int line, int col = 1) => EditorOperations.GoToLine(Editor, line, col);
+    public void FoldAll() => EditorOperations.FoldAll(_foldingManager);
+    public void UnfoldAll() => EditorOperations.UnfoldAll(_foldingManager);
+    public void ToggleFoldAtCaret() => EditorOperations.ToggleFoldAtOffset(_foldingManager, Editor.CaretOffset);
+    public void FoldCurrent() => EditorOperations.SetFoldAtOffset(_foldingManager, Editor.CaretOffset, true);
+    public void UnfoldCurrent() => EditorOperations.SetFoldAtOffset(_foldingManager, Editor.CaretOffset, false);
+    public void AddNextOccurrence() => _multiSelectionManager.AddNextOccurrence(Editor);
+    public void SelectAllOccurrences() => _multiSelectionManager.SelectAllOccurrences(Editor);
+    public void ExpandSelection() => _semanticSelectionService.ExpandSelection(Editor);
+    public void ShrinkSelection() => _semanticSelectionService.ShrinkSelection(Editor);
+    public void ClearMultiCarets() => _multiSelectionManager.Clear();
 
     private void OnTextEntering(object sender, TextCompositionEventArgs e)
     {
@@ -605,6 +755,32 @@ public partial class EditorControl : UserControl
             {
                 // Non-identifier key closes completion window
                 _completionWindow.CompletionList.RequestInsertion(e);
+            }
+        }
+
+        // Multi-Caret Text Insertion
+        if (_multiSelectionManager.HasSecondarySelections && !string.IsNullOrEmpty(e.Text))
+        {
+            if (_multiSelectionManager.HandleTextInput(Editor, e.Text))
+            {
+                e.Handled = true;
+                return;
+            }
+        }
+
+        // Smart Overtype: If typing closing delimiter and the next character is that delimiter, skip over it instead of inserting duplicate
+        if (e.Text.Length == 1 && Editor.Document != null && Editor.TextArea.Selection.IsEmpty)
+        {
+            char inputChar = e.Text[0];
+            if (inputChar is ')' or '}' or ']' or '"' or '\'' or '`')
+            {
+                int caret = Editor.CaretOffset;
+                if (caret < Editor.Document.TextLength && Editor.Document.GetCharAt(caret) == inputChar)
+                {
+                    Editor.CaretOffset++;
+                    e.Handled = true;
+                    return;
+                }
             }
         }
     }
@@ -728,6 +904,7 @@ public partial class EditorControl : UserControl
     private async Task QueryGhostTextAsync()
     {
         if (AutocompleteManager == null || _documentModel == null) return;
+        if (AutocompleteManager == null || _documentModel == null || _documentModel.IsLargeFile) return;
 
         _suggestionCts?.Cancel();
         _suggestionCts?.Dispose();
@@ -818,6 +995,8 @@ public partial class EditorControl : UserControl
                 var bracketColor = (Color)ColorConverter.ConvertFromString(colors.BracketMatch);
                 _bracketRenderer.SetHighlightColor(bracketColor);
             }
+
+            _multiCaretRenderer?.UpdateColors(Editor.TextArea.SelectionBrush, Editor.TextArea.Caret.CaretBrush);
         }
         catch
         {

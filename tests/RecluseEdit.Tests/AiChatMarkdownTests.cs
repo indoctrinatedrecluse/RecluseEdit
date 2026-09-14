@@ -117,3 +117,4 @@ public class AiChatMarkdownTests
         Assert.HasCount(1, rawSpanInlines);
     }
 }
+

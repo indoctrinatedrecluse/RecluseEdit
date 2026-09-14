@@ -86,7 +86,7 @@ public class CommandRegistryTests
         var registry = new CommandRegistry();
         var results = registry.Search("?");
 
-        Assert.IsGreaterThanOrEqualTo(results.Count, 3);
+        Assert.IsGreaterThanOrEqualTo(3, results.Count);
         Assert.IsTrue(results.Any(r => r.Title.Contains("'>'")));
         Assert.IsTrue(results.Any(r => r.Title.Contains("':'")));
     }

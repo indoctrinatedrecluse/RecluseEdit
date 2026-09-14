@@ -43,6 +43,7 @@ public partial class MainWindow : Window
     public static readonly RoutedUICommand SelectThemeCommand = new("Select Color Theme", "SelectTheme", typeof(MainWindow));
     public static readonly RoutedUICommand AiCodeReviewCommand = new("AI Code Review", "AiCodeReview", typeof(MainWindow));
     public static readonly RoutedUICommand AiInlinePromptCommand = new("AI Inline Generation", "AiInlinePrompt", typeof(MainWindow));
+    public static readonly RoutedUICommand GoToSymbolCommand = new("Go to Symbol", "GoToSymbol", typeof(MainWindow));
 
     private readonly SyntaxManager _syntaxManager;
     private readonly AutocompleteManager _autocompleteManager;
@@ -55,6 +56,8 @@ public partial class MainWindow : Window
     private readonly DocumentFormattingService _formattingService = new();
     private readonly DiagnosticService _diagnosticService = new();
     private readonly ProjectScaffoldingService _scaffoldingService = new();
+    private readonly FileWatcherService _fileWatcherService;
+    private (DocumentModel Doc, string DiskContent)? _pendingConflict;
     private bool _formatOnSave = false;
     private bool _isLivePreviewOpen = false;
     private bool _isChordCtrlK = false;
@@ -77,6 +80,10 @@ public partial class MainWindow : Window
         _toolchainManager = new ToolchainManager();
         _workspaceManager = new WorkspaceManager();
         _documentManager = new DocumentManager(_syntaxManager);
+        _fileWatcherService = new FileWatcherService(() => _documentManager.Documents);
+        _fileWatcherService.FileReloaded += OnFileReloadedFromDisk;
+        _fileWatcherService.FileConflictDetected += OnFileConflictDetected;
+        _fileWatcherService.FileDeletedOnDisk += OnFileDeletedOnDisk;
         var workspaceContext = new WorkspaceContext(_workspaceManager, _documentManager);
         _extensionManager = new ExtensionManager(_syntaxManager, _autocompleteManager, _toolchainManager, workspaceContext, _themeManager);
         _commandRegistry = new CommandRegistry();
@@ -109,6 +116,7 @@ public partial class MainWindow : Window
         CommandBindings.Add(new CommandBinding(SelectThemeCommand, (_, _) => OpenThemePickerDialog()));
         CommandBindings.Add(new CommandBinding(AiCodeReviewCommand, (_, _) => PerformAiCodeReview()));
         CommandBindings.Add(new CommandBinding(AiInlinePromptCommand, (_, _) => OpenAiInlinePrompt()));
+        CommandBindings.Add(new CommandBinding(GoToSymbolCommand, (_, _) => OpenCommandPalette("@")));
 
         PreviewKeyDown += OnWindowPreviewKeyDown;
         _themeManager.ThemeChanged += OnThemeChanged;
@@ -823,6 +831,9 @@ public partial class MainWindow : Window
             EditorHost.Visibility = Visibility.Visible;
             EditorHost.DocumentModel = document;
 
+            LargeFileBanner.Visibility = document.IsLargeFile ? Visibility.Visible : Visibility.Collapsed;
+            FileConflictBanner.Visibility = (_pendingConflict?.Doc == document) ? Visibility.Visible : Visibility.Collapsed;
+
             document.PropertyChanged += OnActiveDocumentPropertyChanged;
             UpdateDocumentStatusUI(document);
 
@@ -831,19 +842,27 @@ public partial class MainWindow : Window
 
             if (_isLivePreviewOpen) UpdateLivePreview();
             UpdateDiagnostics();
+            _fileWatcherService.SyncWatchedFiles();
         }
         else
         {
             EditorHost.DocumentModel = null;
             EditorHost.Visibility = Visibility.Collapsed;
             EmptyStateOverlay.Visibility = Visibility.Visible;
+            LargeFileBanner.Visibility = Visibility.Collapsed;
+            FileConflictBanner.Visibility = Visibility.Collapsed;
 
             StatusCaret.Text = "--";
             StatusLength.Text = "No open files";
+            StatusSpaces.Text = "--";
+            StatusEol.Text = "--";
             StatusLanguage.Text = "--";
+            StatusScope.Text = string.Empty;
+            StatusScope.Visibility = Visibility.Collapsed;
             Title = "RecluseEdit";
 
             ProblemsPane.ClearProblems();
+            _fileWatcherService.SyncWatchedFiles();
         }
     }
 
@@ -858,14 +877,24 @@ public partial class MainWindow : Window
     private void OnDocumentClosed(DocumentModel document)
     {
         document.PropertyChanged -= OnActiveDocumentPropertyChanged;
+        if (_pendingConflict?.Doc == document)
+        {
+            _pendingConflict = null;
+            FileConflictBanner.Visibility = Visibility.Collapsed;
+        }
+        _fileWatcherService.SyncWatchedFiles();
     }
 
     private void UpdateDocumentStatusUI(DocumentModel doc)
     {
         StatusCaret.Text = $"Ln {doc.CaretLine}, Col {doc.CaretColumn}";
         StatusLength.Text = $"Length: {doc.Document.TextLength}";
+        StatusSpaces.Text = doc.Indentation.ToString();
+        StatusEol.Text = doc.LineEnding == DocumentLineEnding.Crlf ? "CRLF" : "LF";
         StatusLanguage.Text = doc.Language.DisplayName;
         StatusEncoding.Text = doc.EncodingName;
+        StatusScope.Text = !string.IsNullOrEmpty(doc.CurrentScope) ? $"📍 {doc.CurrentScope}" : string.Empty;
+        StatusScope.Visibility = !string.IsNullOrEmpty(doc.CurrentScope) ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void OnTabClicked(object sender, MouseButtonEventArgs e)
@@ -892,6 +921,158 @@ public partial class MainWindow : Window
             EditorHost.UpdateSyntaxHighlighting();
             StatusLanguage.Text = lang.DisplayName;
         }
+    }
+
+    #endregion
+
+    #region File Watcher & Conflict Handling
+
+    private void OnFileReloadedFromDisk(DocumentModel doc)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            if (_pendingConflict?.Doc == doc)
+            {
+                FileConflictBanner.Visibility = Visibility.Collapsed;
+                _pendingConflict = null;
+            }
+
+            StatusMessage.Text = $"Reloaded '{doc.FileName}' from disk";
+            if (doc == _documentManager.ActiveDocument)
+            {
+                UpdateDocumentStatusUI(doc);
+                if (_isLivePreviewOpen) UpdateLivePreview();
+                UpdateDiagnostics();
+            }
+        });
+    }
+
+    private void OnFileConflictDetected(DocumentModel doc, string diskContent)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            _pendingConflict = (doc, diskContent);
+            if (doc == _documentManager.ActiveDocument)
+            {
+                TxtConflictMessage.Text = $"'{doc.FileName}' has unsaved changes and was modified externally on disk.";
+                FileConflictBanner.Visibility = Visibility.Visible;
+            }
+            StatusMessage.Text = $"⚠️ External modification conflict: {doc.FileName}";
+        });
+    }
+
+    private void OnFileDeletedOnDisk(DocumentModel doc)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            doc.IsDirty = true;
+            StatusMessage.Text = $"⚠️ '{doc.FileName}' was deleted on disk";
+        });
+    }
+
+    private void OnReloadDiskContentClick(object sender, RoutedEventArgs e)
+    {
+        if (_pendingConflict != null)
+        {
+            var (doc, diskContent) = _pendingConflict.Value;
+            doc.Document.Text = diskContent;
+            doc.IsDirty = false;
+            FileConflictBanner.Visibility = Visibility.Collapsed;
+            _pendingConflict = null;
+            StatusMessage.Text = $"Reloaded '{doc.FileName}' from disk";
+            if (_isLivePreviewOpen) UpdateLivePreview();
+            UpdateDiagnostics();
+        }
+    }
+
+    private void OnKeepLocalChangesClick(object sender, RoutedEventArgs e)
+    {
+        FileConflictBanner.Visibility = Visibility.Collapsed;
+        _pendingConflict = null;
+        StatusMessage.Text = "Kept local unsaved changes";
+    }
+
+    private void OnDismissConflictClick(object sender, RoutedEventArgs e)
+    {
+        FileConflictBanner.Visibility = Visibility.Collapsed;
+        _pendingConflict = null;
+    }
+
+    private void OnDismissLargeFileBannerClick(object sender, RoutedEventArgs e)
+    {
+        LargeFileBanner.Visibility = Visibility.Collapsed;
+    }
+
+    #endregion
+
+    #region Indentation and EOL Pickers
+
+    private void OnStatusSpacesClick(object sender, MouseButtonEventArgs e)
+    {
+        var doc = _documentManager.ActiveDocument;
+        if (doc == null) return;
+
+        var menu = new ContextMenu();
+
+        var m2 = new MenuItem { Header = "Indent Using Spaces (2 Spaces)" };
+        m2.Click += (_, _) =>
+        {
+            doc.Indentation = new IndentationInfo(UseTabs: false, IndentSize: 2);
+            IndentationDetector.Apply(EditorHost.UnderlyingEditor, doc.Indentation);
+            UpdateDocumentStatusUI(doc);
+        };
+        menu.Items.Add(m2);
+
+        var m4 = new MenuItem { Header = "Indent Using Spaces (4 Spaces)" };
+        m4.Click += (_, _) =>
+        {
+            doc.Indentation = new IndentationInfo(UseTabs: false, IndentSize: 4);
+            IndentationDetector.Apply(EditorHost.UnderlyingEditor, doc.Indentation);
+            UpdateDocumentStatusUI(doc);
+        };
+        menu.Items.Add(m4);
+
+        var mTab = new MenuItem { Header = "Indent Using Tabs (Tab Size: 4)" };
+        mTab.Click += (_, _) =>
+        {
+            doc.Indentation = new IndentationInfo(UseTabs: true, IndentSize: 4);
+            IndentationDetector.Apply(EditorHost.UnderlyingEditor, doc.Indentation);
+            UpdateDocumentStatusUI(doc);
+        };
+        menu.Items.Add(mTab);
+
+        menu.Items.Add(new Separator());
+
+        var mConvSpaces = new MenuItem { Header = "Convert Indentation to Spaces" };
+        mConvSpaces.Click += (_, _) =>
+        {
+            IndentationDetector.ConvertTabsToSpaces(EditorHost.UnderlyingEditor, doc.Indentation.IndentSize);
+            StatusMessage.Text = "Converted tabs to spaces";
+        };
+        menu.Items.Add(mConvSpaces);
+
+        var mConvTabs = new MenuItem { Header = "Convert Indentation to Tabs" };
+        mConvTabs.Click += (_, _) =>
+        {
+            IndentationDetector.ConvertSpacesToTabs(EditorHost.UnderlyingEditor, doc.Indentation.IndentSize);
+            StatusMessage.Text = "Converted spaces to tabs";
+        };
+        menu.Items.Add(mConvTabs);
+
+        menu.PlacementTarget = StatusSpaces;
+        menu.IsOpen = true;
+    }
+
+    private void OnStatusEolClick(object sender, MouseButtonEventArgs e)
+    {
+        var doc = _documentManager.ActiveDocument;
+        if (doc == null) return;
+
+        var target = doc.LineEnding == DocumentLineEnding.Crlf ? DocumentLineEnding.Lf : DocumentLineEnding.Crlf;
+        LineEndingDetector.ConvertLineEndings(EditorHost.UnderlyingEditor, target);
+        doc.LineEnding = target;
+        StatusEol.Text = target == DocumentLineEnding.Crlf ? "CRLF" : "LF";
+        StatusMessage.Text = $"Converted line endings to {StatusEol.Text}";
     }
 
     #endregion
@@ -1077,6 +1258,8 @@ public partial class MainWindow : Window
 
     private void OnCommandPaletteClick(object sender, RoutedEventArgs e) => OpenCommandPalette(">");
     private void OnGoToLineClick(object sender, RoutedEventArgs e) => OpenGoToLine();
+    private void OnGoToSymbolClick(object sender, RoutedEventArgs e) => OpenCommandPalette("@");
+    private void OnStatusScopeClick(object sender, MouseButtonEventArgs e) => OpenCommandPalette("@");
     private void OnKeyboardShortcutsClick(object sender, RoutedEventArgs e) => ShowKeyboardShortcuts();
 
     private void OnToggleCommentClick(object sender, RoutedEventArgs e) => EditorHost.ToggleLineComment();
@@ -1187,6 +1370,20 @@ public partial class MainWindow : Window
             {
                 e.Handled = true;
                 ShowKeyboardShortcuts();
+                return;
+            }
+            if (e.Key is Key.D0 or Key.NumPad0)
+            {
+                e.Handled = true;
+                EditorHost.FoldAll();
+                StatusMessage.Text = "Folded all code blocks";
+                return;
+            }
+            if (e.Key == Key.J)
+            {
+                e.Handled = true;
+                EditorHost.UnfoldAll();
+                StatusMessage.Text = "Unfolded all code blocks";
                 return;
             }
         }
@@ -1398,8 +1595,32 @@ public partial class MainWindow : Window
             return items;
         };
 
+        _commandRegistry.SymbolProvider = (filter) =>
+        {
+            var doc = _documentManager.ActiveDocument;
+            if (doc == null || doc.Document == null) return [];
+
+            var symbols = DocumentSymbolService.ExtractSymbols(doc.Document, doc.FilePath ?? string.Empty);
+            var items = new List<CommandItem>();
+            foreach (var sym in symbols)
+            {
+                items.Add(new CommandItem
+                {
+                    Id = $"sym.{sym.LineNumber}.{sym.ColumnNumber}",
+                    Title = sym.Name,
+                    Category = sym.Kind.ToString(),
+                    Description = !string.IsNullOrEmpty(sym.ContainerName) ? $"{sym.ContainerName} (Line {sym.LineNumber})" : $"Line {sym.LineNumber}",
+                    Icon = sym.DisplayIcon,
+                    Action = () => EditorHost.GoToLine(sym.LineNumber, sym.ColumnNumber)
+                });
+            }
+            return items;
+        };
+
         _commandRegistry.RegisterRange(
         [
+            // Go to Symbol
+            new() { Id = "nav.goToSymbol", Title = "Go to Symbol in File...", Category = "Go", InputGestureText = "Ctrl+Shift+O", Icon = "🔣", Action = () => OpenCommandPalette("@") },
             // File
             new() { Id = "file.new", Title = "New File", Category = "File", InputGestureText = "Ctrl+N", Icon = "📄", Action = () => CreateNewFile() },
             new() { Id = "file.newProject", Title = "New Project from Template...", Category = "File", InputGestureText = "Ctrl+Shift+N", Icon = "🛠️", Action = () => OpenNewProjectDialog() },
@@ -1438,6 +1659,19 @@ public partial class MainWindow : Window
             new() { Id = "line.lowercase", Title = "Transform to lowercase", Category = "Line Operations", InputGestureText = "Ctrl+U", Icon = "🔡", Action = () => EditorHost.TransformToLowercase() },
             new() { Id = "line.sort", Title = "Sort Lines Alphabetically", Category = "Line Operations", Icon = "📶", Action = () => EditorHost.SortLines() },
             new() { Id = "line.trim", Title = "Trim Trailing Whitespace", Category = "Line Operations", Icon = "✂️", Action = () => EditorHost.TrimTrailingWhitespace() },
+
+            // Code Folding
+            new() { Id = "fold.foldAll", Title = "Fold All", Category = "Code Folding", InputGestureText = "Ctrl+K, Ctrl+0", Icon = "📁", Action = () => EditorHost.FoldAll() },
+            new() { Id = "fold.unfoldAll", Title = "Unfold All", Category = "Code Folding", InputGestureText = "Ctrl+K, Ctrl+J", Icon = "📂", Action = () => EditorHost.UnfoldAll() },
+            new() { Id = "fold.toggle", Title = "Toggle Fold", Category = "Code Folding", InputGestureText = "Ctrl+M", Icon = "↕️", Action = () => EditorHost.ToggleFoldAtCaret() },
+            new() { Id = "fold.foldCurrent", Title = "Fold Current Block", Category = "Code Folding", InputGestureText = "Ctrl+Shift+[", Icon = "⤴️", Action = () => EditorHost.FoldCurrent() },
+            new() { Id = "fold.unfoldCurrent", Title = "Unfold Current Block", Category = "Code Folding", InputGestureText = "Ctrl+Shift+]", Icon = "⤵️", Action = () => EditorHost.UnfoldCurrent() },
+
+            // Multi-Cursor & Selection
+            new() { Id = "selection.addNextOccurrence", Title = "Add Next Occurrence", Category = "Selection", InputGestureText = "Ctrl+D", Icon = "🎯", Action = () => EditorHost.AddNextOccurrence() },
+            new() { Id = "selection.selectAllOccurrences", Title = "Select All Occurrences", Category = "Selection", InputGestureText = "Ctrl+Shift+L", Icon = "✨", Action = () => EditorHost.SelectAllOccurrences() },
+            new() { Id = "selection.expand", Title = "Expand Selection", Category = "Selection", InputGestureText = "Shift+Alt+Right", Icon = "🔲", Action = () => EditorHost.ExpandSelection() },
+            new() { Id = "selection.shrink", Title = "Shrink Selection", Category = "Selection", InputGestureText = "Shift+Alt+Left", Icon = "▫️", Action = () => EditorHost.ShrinkSelection() },
 
             // View & UI
             new() { Id = "view.commandPalette", Title = "Command Palette", Category = "View", InputGestureText = "Ctrl+Shift+P", Icon = "🚀", Action = () => OpenCommandPalette(">") },
@@ -1487,6 +1721,7 @@ public partial class MainWindow : Window
         }
 
         TerminalPane.CloseAllTerminals();
+        _fileWatcherService?.Dispose();
         base.OnClosing(e);
     }
 

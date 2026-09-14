@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using ICSharpCode.AvalonEdit.Document;
+using RecluseEdit.Core.Services;
 using RecluseEdit.Sdk.Models;
 
 namespace RecluseEdit.Core.Models;
@@ -21,6 +22,10 @@ public class DocumentModel : INotifyPropertyChanged
     private int _caretLine = 1;
     private int _caretColumn = 1;
     private int _caretOffset;
+    private IndentationInfo _indentation;
+    private DocumentLineEnding _lineEnding;
+    private bool _isLargeFile;
+    private string? _currentScope;
 
     public Guid Id { get; } = Guid.NewGuid();
 
@@ -143,11 +148,65 @@ public class DocumentModel : INotifyPropertyChanged
         }
     }
 
+    public IndentationInfo Indentation
+    {
+        get => _indentation;
+        set
+        {
+            if (_indentation != value)
+            {
+                _indentation = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public DocumentLineEnding LineEnding
+    {
+        get => _lineEnding;
+        set
+        {
+            if (_lineEnding != value)
+            {
+                _lineEnding = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool IsLargeFile
+    {
+        get => _isLargeFile;
+        set
+        {
+            if (_isLargeFile != value)
+            {
+                _isLargeFile = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string? CurrentScope
+    {
+        get => _currentScope;
+        set
+        {
+            if (_currentScope != value)
+            {
+                _currentScope = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     public DocumentModel(string title, string initialText, LanguageDefinition language, string? filePath = null)
     {
         _title = title;
         _filePath = filePath;
         _language = language;
+        _indentation = IndentationDetector.Detect(initialText);
+        _lineEnding = LineEndingDetector.Detect(initialText);
         Document = new TextDocument(initialText);
 
         Document.TextChanged += (s, e) =>

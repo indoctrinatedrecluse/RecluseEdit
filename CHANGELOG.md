@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.2.0] - 2026-09-14
+
+### 🚀 Added & Enhanced: Core Editor Engine Overhaul (Phases 1 - 4)
+
+- **Phase 1: Smart Typing & Universal Code Folding**:
+  - **Universal Code Folding (`UniversalFoldingStrategy`)**: Implemented universal language-agnostic code folding for brace blocks (`{...}`), indentation blocks (Python, YAML), `#region...#endregion` directives, block comments, and XML/HTML tags. Added keyboard shortcuts: <kbd>Ctrl+Shift+[</kbd> (Fold), <kbd>Ctrl+Shift+]</kbd> (Unfold), <kbd>Ctrl+M</kbd> (Toggle), chord <kbd>Ctrl+K, Ctrl+0</kbd> (Fold All), chord <kbd>Ctrl+K, Ctrl+J</kbd> (Unfold All).
+  - **Smart Indentation & Auto-Brace Splitting**: Preserves leading indentation on newline. Splitting braces on <kbd>Enter</kbd> between `{` and `}` places the caret on an indented middle line and closing brace on the next line.
+  - **Smart Overtype & Pair Backspace**: Typing closing delimiters (`)`, `]`, `}`, `"`, `'`) skips over existing closing characters. Pressing <kbd>Backspace</kbd> between delimiter pairs removes both atomically.
+- **Phase 2: Multi-Caret "Add Next Occurrence" & Semantic Selection**:
+  - **Multi-Caret Engine (`MultiSelectionManager`)**: Added <kbd>Ctrl+D</kbd> to add the next matching word occurrence to multi-selection and <kbd>Ctrl+Shift+L</kbd> to select all occurrences across the document.
+  - **Simultaneous Multi-Caret Editing**: Atomic descending-offset text replacement for simultaneous typing, backspacing, deleting, and pasting across all carets. <kbd>Escape</kbd> clears secondary carets.
+  - **Multi-Caret Visuals (`MultiCaretRenderer`)**: Custom AvalonEdit background renderer displaying blinking/accent caret lines and semi-transparent selection boxes matching the active color theme.
+  - **Semantic Selection Expansion & Shrinking (`SemanticSelectionService`)**: Added <kbd>Shift+Alt+Right</kbd> and <kbd>Shift+Alt+Left</kbd> to intelligently expand/shrink selections outward (Word $\to$ String contents $\to$ String with quotes $\to$ Inner brackets $\to$ Outer brackets $\to$ Line $\to$ Document).
+- **Phase 3: File System Watcher, Indentation/EOL Detection & Large File Safe Mode**:
+  - **Real-Time Disk Change Monitoring (`FileWatcherService`)**: Multi-directory `FileSystemWatcher` with 350ms debounce and retry file reads; automatically reloads clean open tabs when modified externally on disk.
+  - **Conflict Prompt Banner**: When an externally modified file has unsaved local edits, a non-intrusive warning banner appears with "Reload from Disk" and "Keep Local Changes" action buttons.
+  - **Indentation & EOL Detection (`IndentationDetector`, `LineEndingDetector`)**: Auto-detects Tabs vs Spaces (2 vs 4 spaces) and CRLF vs LF on document load. Added interactive status bar pickers with context menu conversion between Tabs and Spaces and instant CRLF/LF toggling.
+  - **Large File Safe Mode**: Files >10 MB or >2,000,000 characters automatically open in Safe Mode with heavy syntax highlighting, folding managers, and deep AST scans disabled to maintain smooth 60fps responsiveness.
+- **Phase 4: Overview Ruler, Symbol Outline & Quick Navigation**:
+  - **Scrollbar Overview Ruler (`OverviewRulerControl`)**: Vertical overview strip alongside the vertical scrollbar track showing color-coded tick marks for search matches (amber `#E5A00D`), git changes (green/blue/red), and diagnostics (red/yellow/blue). Clicking any tick mark instantly scrolls the editor to that line.
+  - **Document Symbol Extraction (`DocumentSymbolService`)**: High-performance regex symbol extractor for C#, Python, Go, Rust, JavaScript, TypeScript, and PHP, extracting classes, structs, interfaces, enums, methods, functions, and constructors with brace-depth and container hierarchy tracking.
+  - **Symbol Jump Palette (<kbd>Ctrl+Shift+O</kbd> / <kbd>Ctrl+T</kbd>)**: Opens the Command Palette with `@` symbol prefix, filtering symbols by name with icons and container paths and navigating directly to the symbol on click or Enter.
+  - **Sticky Scope Breadcrumb Indicator**: Status bar displays active enclosing symbol (e.g. `📍 ClassName > MethodName()`) as the caret moves, and clicking it opens the Symbol Jump Palette.
+- **Test Suite Expansion**:
+  - Added 36 new unit tests across `SmartTypingAndFoldingTests`, `MultiCaretAndSemanticSelectionTests`, `WatcherAndDetectionTests`, and `SymbolAndOverviewTests`, bringing total test count to 262 tests passing (100% pass rate, 0 failed, 0 skipped).
+
 ## [5.1.0] - 2026-09-14
 
 ### 🚀 Added & Enhanced: Universal AI Chat & Direct In-Chat Controls

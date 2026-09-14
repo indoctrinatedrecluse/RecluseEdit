@@ -48,7 +48,8 @@
         <KeyBinding Modifiers="Control" Key="N" Command="{x:Static local:MainWindow.NewFileCommand}" />
         <KeyBinding Modifiers="Control+Shift" Key="N" Command="{x:Static local:MainWindow.NewProjectCommand}" />
         <KeyBinding Modifiers="Control" Key="O" Command="{x:Static local:MainWindow.OpenFileCommand}" />
-        <KeyBinding Modifiers="Control+Shift" Key="O" Command="{x:Static local:MainWindow.OpenFolderCommand}" />
+        <KeyBinding Modifiers="Control+Shift" Key="O" Command="{x:Static local:MainWindow.GoToSymbolCommand}" />
+        <KeyBinding Modifiers="Control" Key="T" Command="{x:Static local:MainWindow.GoToSymbolCommand}" />
         <KeyBinding Modifiers="Control" Key="S" Command="{x:Static local:MainWindow.SaveFileCommand}" />
         <KeyBinding Modifiers="Control+Shift" Key="S" Command="{x:Static local:MainWindow.SaveAsFileCommand}" />
         <KeyBinding Modifiers="Control" Key="W" Command="{x:Static local:MainWindow.CloseFileCommand}" />
@@ -108,6 +109,7 @@
                 <MenuItem Header="_Find..." InputGestureText="Ctrl+F" Click="OnFindClick" />
                 <MenuItem Header="_Replace..." InputGestureText="Ctrl+H" Click="OnReplaceClick" />
                 <MenuItem Header="_Go to Line..." InputGestureText="Ctrl+G" Click="OnGoToLineClick" />
+                <MenuItem Header="Go to _Symbol..." InputGestureText="Ctrl+Shift+O" Click="OnGoToSymbolClick" />
                 <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="_Format Document" InputGestureText="Shift+Alt+F" Click="OnFormatDocumentClick" />
                 <MenuItem x:Name="MenuFormatOnSave" Header="Format on _Save" IsCheckable="True" IsChecked="False" Click="OnToggleFormatOnSaveClick" />
@@ -421,6 +423,74 @@
                     <Grid Grid.Column="0">
                         <controls:EditorControl x:Name="EditorHost" Visibility="Visible" />
 
+                        <!-- File External Modification / Conflict Banner -->
+                        <Border x:Name="FileConflictBanner" 
+                                Background="#332B00" 
+                                BorderBrush="#DDAA00" 
+                                BorderThickness="0,0,0,1" 
+                                VerticalAlignment="Top" 
+                                Padding="12,6" 
+                                Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="⚠️" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="TxtConflictMessage" 
+                                               Text="File has been modified on disk by an external program." 
+                                               Foreground="#FFEEAA" 
+                                               FontSize="12" 
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button x:Name="BtnReloadDisk" 
+                                            Content="Reload from Disk" 
+                                            Style="{StaticResource ToolbarButtonStyle}" 
+                                            Padding="8,3" Margin="4,0" 
+                                            Click="OnReloadDiskContentClick" />
+                                    <Button x:Name="BtnKeepLocal" 
+                                            Content="Keep Local Changes" 
+                                            Style="{StaticResource ToolbarButtonStyle}" 
+                                            Padding="8,3" Margin="4,0" 
+                                            Click="OnKeepLocalChangesClick" />
+                                    <Button Content="✕" 
+                                            Style="{StaticResource ToolbarButtonStyle}" 
+                                            Padding="6,3" Margin="4,0" 
+                                            Click="OnDismissConflictClick" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Large File Safe Mode Banner -->
+                        <Border x:Name="LargeFileBanner" 
+                                Background="#1A2634" 
+                                BorderBrush="#4B9CD3" 
+                                BorderThickness="0,0,0,1" 
+                                VerticalAlignment="Top" 
+                                Padding="12,5" 
+                                Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="⚡" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="Large File Mode: Syntax highlighting and folding disabled for optimum performance (>10 MB)." 
+                                               Foreground="#B0D5FF" 
+                                               FontSize="12" 
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <Button Content="✕" 
+                                        Grid.Column="1"
+                                        Style="{StaticResource ToolbarButtonStyle}" 
+                                        Padding="6,2" Margin="4,0" 
+                                        Click="OnDismissLargeFileBannerClick" />
+                            </Grid>
+                        </Border>
+
                         <!-- Empty State when no tabs are open -->
                         <Border x:Name="EmptyStateOverlay" Background="{DynamicResource BgPrimary}" Visibility="Collapsed">
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -564,6 +634,7 @@
             <StatusBarItem Grid.Column="0">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock x:Name="StatusMessage" Text="Ready" FontSize="11" />
+                    <TextBlock x:Name="StatusScope" Text="" FontSize="11" Margin="12,0,0,0" Opacity="0.8" Cursor="Hand" ToolTip="Enclosing symbol / scope. Click or press Ctrl+Shift+O to Jump to Symbol." MouseLeftButtonDown="OnStatusScopeClick" />
                     <StackPanel x:Name="LeftStatusBarContributions" Orientation="Horizontal" Margin="8,0,0,0" />
                 </StackPanel>
             </StatusBarItem>
@@ -574,6 +645,10 @@
                     <TextBlock x:Name="StatusCaret" Text="Ln 1, Col 1" FontSize="11" Margin="8,0" />
                     <TextBlock Text="|" Opacity="0.5" />
                     <TextBlock x:Name="StatusLength" Text="Length: 0" FontSize="11" Margin="8,0" />
+                    <TextBlock Text="|" Opacity="0.5" />
+                    <TextBlock x:Name="StatusSpaces" Text="Spaces: 4" FontSize="11" Margin="8,0" Cursor="Hand" MouseLeftButtonDown="OnStatusSpacesClick" ToolTip="Indentation: Click to toggle Tabs/Spaces or change size" />
+                    <TextBlock Text="|" Opacity="0.5" />
+                    <TextBlock x:Name="StatusEol" Text="CRLF" FontSize="11" Margin="8,0" Cursor="Hand" MouseLeftButtonDown="OnStatusEolClick" ToolTip="End of Line: Click to toggle CRLF / LF" />
                     <TextBlock Text="|" Opacity="0.5" />
                     <TextBlock x:Name="StatusLanguage" Text="HTML" FontSize="11" Margin="8,0" />
                     <TextBlock Text="|" Opacity="0.5" />

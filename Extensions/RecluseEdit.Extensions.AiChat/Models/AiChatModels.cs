@@ -246,3 +246,4 @@ public class UsageInfo
     [JsonPropertyName("total_tokens")]
     public int TotalTokens { get; set; }
 }
+

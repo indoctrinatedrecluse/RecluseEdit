@@ -36,3 +36,4 @@ public class AiChatExtension : IExtension
         return Task.CompletedTask;
     }
 }
+

@@ -18,3 +18,4 @@ public class AiChatSidePanelProvider : ISidePanelProvider
         return new AiChatView(context);
     }
 }
+
