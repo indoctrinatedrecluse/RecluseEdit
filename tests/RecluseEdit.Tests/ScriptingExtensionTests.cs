@@ -55,6 +55,9 @@ public sealed class ScriptingExtensionTests
         Assert.AreEqual("1.0.0", ext.Version);
         Assert.AreEqual("indoctrinatedrecluse", ext.Author);
         Assert.Contains("Rust", ext.Description);
+        Assert.Contains("Java", ext.Description);
+        Assert.Contains("Kotlin", ext.Description);
+        Assert.Contains("Elixir", ext.Description);
         Assert.Contains("Lua", ext.Description);
         Assert.Contains("PowerShell", ext.Description);
         Assert.Contains("Bash", ext.Description);
@@ -68,15 +71,31 @@ public sealed class ScriptingExtensionTests
 
         await ext.InitializeAsync(host);
 
-        // 1. Verify all 4 Languages are registered
+        // 1. Verify all Languages are registered
         Assert.IsTrue(host.Languages.Any(l => l.Id == "rust" && l.Extensions.Contains(".rs")));
+        Assert.IsTrue(host.Languages.Any(l => l.Id == "toml" && l.Extensions.Contains(".toml")));
+        Assert.IsTrue(host.Languages.Any(l => l.Id == "java" && l.Extensions.Contains(".java")));
+        Assert.IsTrue(host.Languages.Any(l => l.Id == "kotlin" && l.Extensions.Contains(".kt")));
+        Assert.IsTrue(host.Languages.Any(l => l.Id == "elixir" && l.Extensions.Contains(".ex")));
         Assert.IsTrue(host.Languages.Any(l => l.Id == "lua" && l.Extensions.Contains(".lua")));
         Assert.IsTrue(host.Languages.Any(l => l.Id == "powershell" && l.Extensions.Contains(".ps1")));
         Assert.IsTrue(host.Languages.Any(l => l.Id == "bash" && l.Extensions.Contains(".sh")));
 
-        // 2. Verify all 4 Syntax Highlighting definitions
+        // 2. Verify all Syntax Highlighting definitions
         Assert.IsTrue(host.Syntaxes.ContainsKey("rust"));
         Assert.AreEqual("Rust", host.Syntaxes["rust"].Name);
+
+        Assert.IsTrue(host.Syntaxes.ContainsKey("toml"));
+        Assert.AreEqual("TOML", host.Syntaxes["toml"].Name);
+
+        Assert.IsTrue(host.Syntaxes.ContainsKey("java"));
+        Assert.AreEqual("Java", host.Syntaxes["java"].Name);
+
+        Assert.IsTrue(host.Syntaxes.ContainsKey("kotlin"));
+        Assert.AreEqual("Kotlin", host.Syntaxes["kotlin"].Name);
+
+        Assert.IsTrue(host.Syntaxes.ContainsKey("elixir"));
+        Assert.AreEqual("Elixir", host.Syntaxes["elixir"].Name);
 
         Assert.IsTrue(host.Syntaxes.ContainsKey("lua"));
         Assert.AreEqual("Lua", host.Syntaxes["lua"].Name);
@@ -87,16 +106,24 @@ public sealed class ScriptingExtensionTests
         Assert.IsTrue(host.Syntaxes.ContainsKey("bash"));
         Assert.AreEqual("Bash", host.Syntaxes["bash"].Name);
 
-        // 3. Verify all 4 Inline Completion Providers
-        Assert.HasCount(4, host.InlineProviders);
-        Assert.IsTrue(host.InlineProviders.Any(p => p.Id == "rust.core.completion"));
-        Assert.IsTrue(host.InlineProviders.Any(p => p.Id == "lua.core.completion"));
-        Assert.IsTrue(host.InlineProviders.Any(p => p.Id == "powershell.core.completion"));
-        Assert.IsTrue(host.InlineProviders.Any(p => p.Id == "bash.core.completion"));
+        // 3. Verify Inline Completion Providers
+        Assert.IsTrue(host.InlineProviders.Any(p => p is RustCompletionProvider));
+        Assert.IsTrue(host.InlineProviders.Any(p => p is RustWebCompletionProvider));
+        Assert.IsTrue(host.InlineProviders.Any(p => p is SpringBootCompletionProvider));
+        Assert.IsTrue(host.InlineProviders.Any(p => p is KtorCompletionProvider));
+        Assert.IsTrue(host.InlineProviders.Any(p => p is PhoenixCompletionProvider));
+        Assert.IsTrue(host.InlineProviders.Any(p => p is LuaCompletionProvider));
+        Assert.IsTrue(host.InlineProviders.Any(p => p is PowerShellCompletionProvider));
+        Assert.IsTrue(host.InlineProviders.Any(p => p is BashCompletionProvider));
 
-        // 4. Verify all 4 Toolchain Checks
-        Assert.HasCount(4, host.ToolchainChecks);
+        // 4. Verify Toolchain Checks
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "rustc"));
+        Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "trunk"));
+        Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "wasm-pack"));
+        Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "javac"));
+        Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "mvn"));
+        Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "gradle"));
+        Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "elixir"));
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "lua"));
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "pwsh"));
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "bash"));
@@ -288,6 +315,128 @@ public sealed class ScriptingExtensionTests
         var bashReport = await bash.CheckAsync();
         Assert.IsNotNull(bashReport);
         Assert.IsTrue(bashReport.Status is ToolchainStatus.Available or ToolchainStatus.Warning or ToolchainStatus.Missing);
+    }
+
+    [TestMethod]
+    public void TestTomlSyntaxDefinition()
+    {
+        var def = TomlSyntaxDefinition.CreateDefinition();
+        Assert.IsNotNull(def);
+        Assert.AreEqual("TOML", def.Name);
+    }
+
+    [TestMethod]
+    public void TestJavaSyntaxDefinition()
+    {
+        var def = JavaSyntaxDefinition.CreateDefinition();
+        Assert.IsNotNull(def);
+        Assert.AreEqual("Java", def.Name);
+    }
+
+    [TestMethod]
+    public void TestKotlinSyntaxDefinition()
+    {
+        var def = KotlinSyntaxDefinition.CreateDefinition();
+        Assert.IsNotNull(def);
+        Assert.AreEqual("Kotlin", def.Name);
+    }
+
+    [TestMethod]
+    public void TestElixirSyntaxDefinition()
+    {
+        var def = ElixirSyntaxDefinition.CreateDefinition();
+        Assert.IsNotNull(def);
+        Assert.AreEqual("Elixir", def.Name);
+    }
+
+    [TestMethod]
+    public async Task TestRustWebCompletionProvider()
+    {
+        var provider = new RustWebCompletionProvider();
+        Assert.AreEqual("scripting.rustweb.inline", provider.Id);
+        CollectionAssert.Contains(provider.SupportedLanguages.ToList(), "rust");
+
+        var axumRes = await provider.GetInlineSuggestionAsync(CreateContext("Router::new()", "rust"));
+        Assert.IsNotNull(axumRes);
+        StringAssert.Contains(axumRes, "route");
+
+        var leptosRes = await provider.GetInlineSuggestionAsync(CreateContext("#[component]", "rust"));
+        Assert.IsNotNull(leptosRes);
+        StringAssert.Contains(leptosRes, "view!");
+    }
+
+    [TestMethod]
+    public async Task TestSpringBootCompletionProvider()
+    {
+        var provider = new SpringBootCompletionProvider();
+        Assert.AreEqual("scripting.springboot.inline", provider.Id);
+        CollectionAssert.Contains(provider.SupportedLanguages.ToList(), "java");
+
+        var restRes = await provider.GetInlineSuggestionAsync(CreateContext("@RestController", "java"));
+        Assert.IsNotNull(restRes);
+        StringAssert.Contains(restRes, "RequestMapping");
+
+        var propRes = await provider.GetInlineSuggestionAsync(CreateContext("server.port=", "properties"));
+        Assert.IsNotNull(propRes);
+        StringAssert.Contains(propRes, "8080");
+    }
+
+    [TestMethod]
+    public async Task TestKtorCompletionProvider()
+    {
+        var provider = new KtorCompletionProvider();
+        Assert.AreEqual("scripting.ktor.inline", provider.Id);
+        CollectionAssert.Contains(provider.SupportedLanguages.ToList(), "kotlin");
+
+        var routingRes = await provider.GetInlineSuggestionAsync(CreateContext("routing {", "kotlin"));
+        Assert.IsNotNull(routingRes);
+        StringAssert.Contains(routingRes, "call.respondText");
+    }
+
+    [TestMethod]
+    public async Task TestPhoenixCompletionProvider()
+    {
+        var provider = new PhoenixCompletionProvider();
+        Assert.AreEqual("scripting.phoenix.inline", provider.Id);
+        CollectionAssert.Contains(provider.SupportedLanguages.ToList(), "elixir");
+
+        var liveRes = await provider.GetInlineSuggestionAsync(CreateContext("use Phoenix.LiveView", "elixir"));
+        Assert.IsNotNull(liveRes);
+        StringAssert.Contains(liveRes, "mount");
+    }
+
+    [TestMethod]
+    public async Task TestSystemsWebToolchains()
+    {
+        var trunk = new TrunkToolchainCheck();
+        Assert.AreEqual("trunk", trunk.Command);
+        var trunkReport = await trunk.CheckAsync();
+        Assert.IsNotNull(trunkReport);
+
+        var wasm = new WasmPackToolchainCheck();
+        Assert.AreEqual("wasm-pack", wasm.Command);
+        var wasmReport = await wasm.CheckAsync();
+        Assert.IsNotNull(wasmReport);
+
+        var javac = new JavaToolchainCheck();
+        Assert.AreEqual("javac", javac.Command);
+        var javacReport = await javac.CheckAsync();
+        Assert.IsNotNull(javacReport);
+
+        var mvn = new MavenToolchainCheck();
+        Assert.AreEqual("mvn", mvn.Command);
+        var mvnReport = await mvn.CheckAsync();
+        Assert.IsNotNull(mvnReport);
+
+        var gradle = new GradleToolchainCheck();
+        Assert.AreEqual("gradle", gradle.Command);
+        var gradleReport = await gradle.CheckAsync();
+        Assert.IsNotNull(gradleReport);
+
+        var elixir = new ElixirToolchainCheck();
+        Assert.AreEqual("elixir", elixir.Command);
+        var elixirReport = await elixir.CheckAsync();
+        Assert.IsNotNull(elixirReport);
     }
 }
 

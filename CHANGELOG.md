@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.3.0] - 2026-09-14
+
+### 🚀 Added: Major Web Frameworks & Languages Ecosystem Integration
+
+- **Dedicated ASP.NET Core & Blazor Web Pack (`RecluseEdit.Extensions.DotNet`)**:
+  - **Blazor & Razor Syntax Highlighting (`RazorSyntaxDefinition`)**: High-fidelity AvalonEdit syntax highlighting for Blazor components (`.razor`) and Razor Pages / MVC views (`.cshtml`), featuring directives (`@page`, `@code`, `@inject`, `@bind`, `@rendermode`, `@model`), HTML elements, and C# expressions.
+  - **Inline Web & API Completions (`DotNetWebCompletionProvider`)**: Contextual completions for ASP.NET Core Minimal APIs (`app.MapGet`, `app.MapPost`, `Results.Ok`), Blazor components (`[Parameter]`, `@bind-Value`, lifecycle hooks), and Entity Framework Core (`DbContext`, `DbSet<T>`, `SaveChangesAsync()`).
+  - **.NET Toolchain Diagnostics (`DotNetToolchainCheck`)**: Active detection and version verification for `.NET SDK` (`dotnet --version`).
+  - **.NET Purple Dark Theme (`DotNetPurpleTheme`)**: Microsoft .NET brand-inspired dark editor theme with `#512BD4` indigo accents.
+
+- **Tailwind CSS & Modern Utility Styling (`RecluseEdit.Extensions.Frontend`)**:
+  - **Tailwind v3 & v4 Completions (`TailwindCompletionProvider`)**: Full utility class and snippet completions across HTML, CSS, JSX, TSX, Vue, Svelte, Astro, and Razor files, including layout, flexbox/grid, spacing, colors, animations, and pseudo-class modifiers (`sm:`, `md:`, `lg:`, `hover:`, `focus:`, `dark:`).
+  - **Tailwind v4 Directives**: First-class support for modern directives (`@theme`, `@utility`, `@apply`, `@tailwind`, `@custom-variant`, `@layer`).
+  - **Tailwind CLI Toolchain Check (`TailwindToolchainCheck`)**: Detects local and global `tailwindcss`, `@tailwindcss/cli`, and `npx tailwindcss`.
+
+- **GraphQL & OpenAPI / API Schema Tooling (`RecluseEdit.Extensions.RestClient`)**:
+  - **GraphQL Language & Highlighting (`GraphQLSyntaxDefinition`)**: Registered `.graphql` and `.gql` file types with syntax highlighting for operations (`query`, `mutation`, `subscription`), SDL declarations (`type`, `interface`, `input`, `enum`), built-in scalars, directives, and variables.
+  - **GraphQL Completions (`GraphQlCompletionProvider`)**: Inline templates for queries, mutations, subscriptions, fragments, and schema types.
+  - **OpenAPI 3.0 / 3.1 Completions (`OpenApiCompletionProvider`)**: Endpoint, path, parameter, and schema templates for OpenAPI YAML and JSON specifications.
+
+- **Rust Web, JVM & Systems Web Ecosystem (`RecluseEdit.Extensions.Scripting`)**:
+  - **Rust Web & WebAssembly (`RustWebCompletionProvider`)**: Templates and completions for **Axum** (`Router`, `get`, `post`, `Json`, `State`), **Actix-web** (`HttpServer`, `App`, `web::get()`), **Leptos** (`#[component]`, `view!`, `create_signal`), **Dioxus** (`rsx!`), and **WebAssembly** (`#[wasm_bindgen]`, `web_sys`).
+  - **Cargo & TOML (`TomlSyntaxDefinition`)**: Registered `.toml` language with dedicated syntax highlighting for Cargo manifests and configurations.
+  - **Java & Spring Boot 3+ (`JavaSyntaxDefinition`, `SpringBootCompletionProvider`)**: Registered `.java` language with syntax highlighting and completions for `@RestController`, `@GetMapping`, `@PostMapping`, `@Service`, `@Entity`, `@Repository`, and application properties.
+  - **Kotlin & Ktor (`KotlinSyntaxDefinition`, `KtorCompletionProvider`)**: Registered `.kt` and `.kts` languages with syntax highlighting and completions for Ktor asynchronous routing, content negotiation, and coroutines.
+  - **Elixir & Phoenix LiveView (`ElixirSyntaxDefinition`, `PhoenixCompletionProvider`)**: Registered `.ex`, `.exs`, `.heex`, and `.eex` languages with syntax highlighting and completions for Phoenix LiveView (`mount`, `handle_event`, `render`), HEEx templates, and pipe operators (`|>`).
+  - **Systems Web Toolchain Checks (`SystemsWebToolchainChecks`)**: Added toolchain checks for **Trunk** (`trunk`), **wasm-pack** (`wasm-pack`), **Java Compiler** (`javac`), **Apache Maven** (`mvn`), **Gradle** (`gradle`), and **Elixir** (`elixir`).
+
+- **Test Suite & Verification**:
+  - Added `DotNetExtensionTests` and expanded `FrontendExtensionTests`, `RestClientExtensionTests`, and `ScriptingExtensionTests`.
+  - Test suite grew from 262 to 281 tests passing with 100% pass rate, 0 compiler warnings, and 0 errors across the solution.
+
 ## [5.2.0] - 2026-09-14
 
 ### 🚀 Added & Enhanced: Core Editor Engine Overhaul (Phases 1 - 4)

@@ -15,7 +15,7 @@ public class FrontendExtension : IExtension
     public string Id => "recluse.frontend";
     public string Name => "Frontend Frameworks & Node Tooling Pack";
     public string Version => "1.0.0";
-    public string Description => "Comprehensive Vue 3, Svelte 5, Astro, SolidJS, Next.js, Remix, and Node compiler/bundler integration.";
+    public string Description => "Comprehensive Vue 3, Svelte 5, Astro, SolidJS, Next.js, Remix, Tailwind CSS v3/v4, and Node compiler/bundler integration.";
     public string Author => "indoctrinatedrecluse";
 
     public Task InitializeAsync(IExtensionHost host, CancellationToken cancellationToken = default)
@@ -78,6 +78,7 @@ public class FrontendExtension : IExtension
         host.RegisterInlineCompletion(new SvelteCompletionProvider());
         host.RegisterInlineCompletion(new AstroCompletionProvider());
         host.RegisterInlineCompletion(new ModernFrameworksCompletionProvider());
+        host.RegisterInlineCompletion(new TailwindCompletionProvider());
 
         // 4. Register Toolchain Checks
         host.RegisterToolchainCheck(new ViteToolchainCheck());
@@ -86,6 +87,7 @@ public class FrontendExtension : IExtension
         host.RegisterToolchainCheck(new TurboToolchainCheck());
         host.RegisterToolchainCheck(new PnpmToolchainCheck());
         host.RegisterToolchainCheck(new BunToolchainCheck());
+        host.RegisterToolchainCheck(new TailwindToolchainCheck());
 
         // 5. Register Extension Themes
         host.RegisterTheme(new Themes.VueEmeraldTheme());

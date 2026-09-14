@@ -52,15 +52,20 @@ public sealed class RestClientExtensionTests
 
         await ext.InitializeAsync(host);
 
-        // Language
+        // Languages
         Assert.IsTrue(host.Languages.Any(l => l.Id == "http" && l.Extensions.Contains(".http") && l.Extensions.Contains(".rest")));
+        Assert.IsTrue(host.Languages.Any(l => l.Id == "graphql" && l.Extensions.Contains(".graphql") && l.Extensions.Contains(".gql")));
 
-        // Syntax
+        // Syntaxes
         Assert.IsTrue(host.Syntaxes.ContainsKey("http"));
         Assert.AreEqual("HTTP", host.Syntaxes["http"].Name);
+        Assert.IsTrue(host.Syntaxes.ContainsKey("graphql"));
+        Assert.AreEqual("GraphQL", host.Syntaxes["graphql"].Name);
 
         // Inline completion
         Assert.IsTrue(host.InlineProviders.Any(p => p.Id == "restclient.http.inline"));
+        Assert.IsTrue(host.InlineProviders.Any(p => p.Id == "restclient.graphql.inline"));
+        Assert.IsTrue(host.InlineProviders.Any(p => p.Id == "restclient.openapi.inline"));
 
         // Toolchain
         Assert.HasCount(1, host.ToolchainChecks);
@@ -179,5 +184,71 @@ public sealed class RestClientExtensionTests
         var report = await curlCheck.CheckAsync();
         Assert.IsNotNull(report);
         Assert.IsTrue(report.Status is ToolchainStatus.Available or ToolchainStatus.Warning or ToolchainStatus.Missing);
+    }
+
+    [TestMethod]
+    public void TestGraphQLSyntaxDefinition()
+    {
+        var def = GraphQLSyntaxDefinition.CreateDefinition();
+        Assert.IsNotNull(def);
+        Assert.AreEqual("GraphQL", def.Name);
+        Assert.IsTrue(def.MainRuleSet.Rules.Count > 0 || def.MainRuleSet.Spans.Count > 0);
+    }
+
+    [TestMethod]
+    public async Task TestGraphQlCompletionProvider()
+    {
+        var provider = new GraphQlCompletionProvider();
+        Assert.AreEqual("restclient.graphql.inline", provider.Id);
+        CollectionAssert.Contains(provider.SupportedLanguages.ToList(), "graphql");
+        CollectionAssert.Contains(provider.SupportedLanguages.ToList(), "gql");
+
+        var querySuggestion = await provider.GetInlineSuggestionAsync(new InlineCompletionContext
+        {
+            CurrentLineText = "query ",
+            TextBeforeCaret = "query ",
+            CaretOffset = 6,
+            LineNumber = 1,
+            ColumnNumber = 6,
+            LanguageId = "graphql",
+            FullText = "query "
+        });
+        Assert.IsNotNull(querySuggestion);
+        StringAssert.Contains(querySuggestion, "GetItems");
+
+        var typeSuggestion = await provider.GetInlineSuggestionAsync(new InlineCompletionContext
+        {
+            CurrentLineText = "type ",
+            TextBeforeCaret = "type ",
+            CaretOffset = 5,
+            LineNumber = 1,
+            ColumnNumber = 5,
+            LanguageId = "graphql",
+            FullText = "type "
+        });
+        Assert.IsNotNull(typeSuggestion);
+        StringAssert.Contains(typeSuggestion, "User");
+    }
+
+    [TestMethod]
+    public async Task TestOpenApiCompletionProvider()
+    {
+        var provider = new OpenApiCompletionProvider();
+        Assert.AreEqual("restclient.openapi.inline", provider.Id);
+        CollectionAssert.Contains(provider.SupportedLanguages.ToList(), "yaml");
+        CollectionAssert.Contains(provider.SupportedLanguages.ToList(), "json");
+
+        var openApiSuggestion = await provider.GetInlineSuggestionAsync(new InlineCompletionContext
+        {
+            CurrentLineText = "openapi: ",
+            TextBeforeCaret = "openapi: ",
+            CaretOffset = 9,
+            LineNumber = 1,
+            ColumnNumber = 9,
+            LanguageId = "yaml",
+            FullText = "openapi: "
+        });
+        Assert.IsNotNull(openApiSuggestion);
+        StringAssert.Contains(openApiSuggestion, "3.1.0");
     }
 }

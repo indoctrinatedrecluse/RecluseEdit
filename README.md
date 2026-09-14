@@ -285,18 +285,26 @@ RecluseEdit comes with fourteen modular extensions built as dedicated targets in
 - **Toolchain Diagnostics**: Actively verifies **Ruby runtime** (`ruby`), **Bundler** (`bundle`), and **Rails CLI** (`rails`).
  
 ### 📜 Scripting & Systems Language Pack (`RecluseEdit.Extensions.Scripting`)
-- Supports **Rust** (`.rs`), **Lua** (`.lua`), **PowerShell** (`.ps1`, `.psm1`, `.psd1`), and **Bash / POSIX Shell** (`.sh`, `.bash`, `.zsh`, `.ksh`, `.command`).
+- Supports **Rust** (`.rs`), **Cargo / TOML** (`.toml`), **Java / Spring Boot** (`.java`), **Kotlin / Ktor** (`.kt`, `.kts`), **Elixir / Phoenix** (`.ex`, `.exs`, `.heex`, `.eex`), **Lua** (`.lua`), **PowerShell** (`.ps1`, `.psm1`, `.psd1`), and **Bash / POSIX Shell** (`.sh`, `.bash`, `.zsh`, `.ksh`, `.command`).
 - **Custom XSHD Syntax Highlighting**:
   - **Rust**: Highlighting for lifetimes (`'a`), macros (`println!`, `vec!`), attributes (`#[derive(...)]`), raw strings (`r#"..."#`), byte strings, standard types, and doc comments (`///`, `//!`).
+  - **Cargo & TOML**: Highlighting for table headers (`[package]`, `[dependencies]`), keys, inline tables, strings, booleans, arrays, and ISO 8601 dates.
+  - **Java & Spring Boot**: Highlighting for Java keywords, types, and enterprise Spring Boot annotations (`@RestController`, `@GetMapping`, `@PostMapping`, `@Service`, `@Autowired`, `@Entity`, `@Repository`).
+  - **Kotlin & Ktor**: Highlighting for Kotlin coroutines (`suspend`), data classes, sealed interfaces, and Ktor routing.
+  - **Elixir & Phoenix LiveView**: Highlighting for modules (`defmodule`), functions (`def`, `defp`), atoms (`:atom`), pipe operators (`|>`), and HEEx template sigils (`~H"""`).
   - **Lua**: Highlighting for multiline block comments (`--[[ ... ]]`), multiline literal strings (`[[ ... ]]`), standard library tables (`string`, `table`, `math`, `io`, etc.), and operators (`..`, `~=`, `//`, `#`).
   - **PowerShell**: Highlighting for Verb-Noun cmdlets (`Get-Process`, `Invoke-WebRequest`), parameters (`-Path`, `-Force`), type accelerators (`[string]`, `[hashtable]`), and environment variables (`$env:PATH`, `$_`).
   - **Bash**: Highlighting for shebangs (`#!/usr/bin/env bash`), parameter expansion (`${VAR:-default}`, `$@`), shell builtins, Unix utilities (`grep`, `awk`, `sed`, `curl`), and test brackets (`[[ ]]`).
 - **Contextual Autocomplete & Snippet Providers**:
   - `RustCompletionProvider`: Functions, pattern matching (`match`, `if let`), tests, structs, enums, derive macros, and standard collections.
+  - `RustWebCompletionProvider`: Axum routing & handlers (`Router::new().route()`, `get()`, `post()`, `Json()`), Actix-web, Leptos reactive UI (`#[component]`, `view!`, `create_signal`), Dioxus (`rsx!`), and WebAssembly bindings (`#[wasm_bindgen]`, `web_sys`).
+  - `SpringBootCompletionProvider`: Spring Boot 3+ REST controller endpoints, JPA entities, repository interfaces, services, and `application.properties`.
+  - `KtorCompletionProvider`: Ktor asynchronous routing, embedded server bootstrap, content negotiation, and coroutines.
+  - `PhoenixCompletionProvider`: Phoenix LiveView reactive modules (`mount/3`, `handle_event/3`), HEEx tags, and component layouts.
   - `LuaCompletionProvider`: Local and member functions, `for pairs`/`ipairs` loops, and `pcall` safe invocation.
   - `PowerShellCompletionProvider`: Advanced cmdlets with `[CmdletBinding()]` and `param()` blocks, `try/catch`, and loop templates.
   - `BashCompletionProvider`: Strict mode templates (`set -euo pipefail`), file testing conditions, and traps.
-- **Toolchain Diagnostics**: Actively detects compiler and shell runtimes: `rustc`, `lua`/`luajit`, `pwsh`/`powershell`, and `bash`.
+- **Toolchain Diagnostics**: Actively detects compilers, runtimes, and build tools: `rustc`, `trunk`, `wasm-pack`, `javac`, `mvn`, `gradle`, `elixir`, `lua`/`luajit`, `pwsh`/`powershell`, and `bash`.
 
 ### 🗄️ Database & SQL Explorer Pack (`RecluseEdit.Extensions.Database`)
 - Supports **SQL** (`.sql`) across ANSI SQL, SQLite, PostgreSQL, MySQL, and T-SQL dialects.
@@ -306,26 +314,32 @@ RecluseEdit comes with fourteen modular extensions built as dedicated targets in
 - **Toolchain Diagnostics**: Verifies `sqlite3`, PostgreSQL (`psql`), and MySQL (`mysql`) CLI utilities on system `PATH`.
 
 ### ⚡ REST Client & API Workbench Pack (`RecluseEdit.Extensions.RestClient`)
-- Supports **HTTP / REST** request files (`.http`, `.rest`).
-- **Custom HTTP Syntax Highlighting**: Dark+ highlighting for HTTP methods (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`), request boundaries (`###`), request headers (`Content-Type`, `Authorization`), variables (`{{...}}`), URLs, and JSON body payloads.
+- Supports **HTTP / REST** request files (`.http`, `.rest`) and **GraphQL** (`.graphql`, `.gql`).
+- **Custom Syntax Highlighting**:
+  - **HTTP**: Dark+ highlighting for HTTP methods (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`), request boundaries (`###`), request headers (`Content-Type`, `Authorization`), variables (`{{...}}`), URLs, and JSON body payloads.
+  - **GraphQL**: Dark+ highlighting for operations (`query`, `mutation`, `subscription`), SDL declarations (`type`, `interface`, `input`, `enum`, `union`), built-in scalars (`String`, `Int`, `Float`, `Boolean`, `ID`), directives, variables (`$var`), and comments (`#`).
 - **Integrated API Workbench Dock**: Dedicated right dock panel with HTTP method dropdown, request URL bar, <kbd>Ctrl+Enter</kbd> execution, real-time HTTP client engine with timing / latency metrics (ms) and content-length counters, status code pill indicators (green 2xx, yellow 3xx, orange 4xx, red 5xx), request headers & body editor tabs, and syntax-formatted JSON response viewer with one-click clipboard copying.
-- **HTTP Inline Completion**: Snippets for request headers (`Content-Type: application/json`, `Authorization: Bearer`), methods, and request templates.
+- **Inline Completion Providers**:
+  - `HttpCompletionProvider`: Snippets for request headers (`Content-Type: application/json`, `Authorization: Bearer`), methods, and request templates.
+  - `GraphQlCompletionProvider`: Queries, mutations, subscriptions, fragments, and SDL schema templates.
+  - `OpenApiCompletionProvider`: Endpoints, methods, request bodies, responses, and schema components for OpenAPI 3.0/3.1 specs.
 - **Toolchain Diagnostics**: Verifies `curl` CLI on system `PATH`.
 
 ### ⚡ Frontend Frameworks & Node Tooling Pack (`RecluseEdit.Extensions.Frontend`)
-- Supports **Vue 3 SFC** (`.vue`), **Svelte 5** (`.svelte`), **Astro** (`.astro`), **SolidJS**, **Next.js App Router**, **Remix**, and modern JavaScript/TypeScript bundlers (**Vite**, **Webpack**, **Turbopack**, **Rollup**).
+- Supports **Vue 3 SFC** (`.vue`), **Svelte 5** (`.svelte`), **Astro** (`.astro`), **SolidJS**, **Next.js App Router**, **Remix**, **Tailwind CSS** (v3 and v4), and modern JavaScript/TypeScript bundlers (**Vite**, **Webpack**, **Turbopack**, **Rollup**).
 - **Custom High-Fidelity XSHD Syntax Highlighting**:
   - **Vue 3**: Highlighting for `<template>`, `<script lang="ts">`, `<style scoped>`, directives (`v-if`, `v-for`, `v-model`, `@click`, `:bind`), and interpolations (`{{ ... }}`).
   - **Svelte 5**: Highlighting for modern Svelte 5 runes (`$state`, `$derived`, `$effect`, `$props`), control flow blocks (`{#if}`, `{#each}`, `{#await}`), and bindings (`bind:`, `on:`).
   - **Astro**: Highlighting for Astro frontmatter code fences (`---`), component hydration directives (`client:load`, `client:idle`, `client:visible`), `<slot />`, and embedded styles.
 - **Modern Frontend Autocomplete & Snippets**:
+  - **Tailwind CSS v3/v4**: Utility class completions and snippets for layout, flexbox/grid, spacing, sizing, typography, colors, animations, responsive variants (`sm:`, `md:`, `lg:`), and state variants (`hover:`, `focus:`, `dark:`), plus modern directives (`@theme`, `@utility`, `@apply`, `@tailwind`, `@custom-variant`, `@layer`).
   - **Vue 3**: `<script setup lang="ts">` boilerplate, reactivity APIs (`ref`, `reactive`, `computed`, `watchEffect`), component macros (`defineProps`, `defineEmits`, `defineModel`), and component template skeletons.
   - **Svelte 5**: Modern rune state declarations, reactive effects, props destructuring with `$props()`, and async markup blocks.
   - **Astro**: Frontmatter skeleton with typed `Astro.props`, slotted layout wrappers, and dynamic islands.
   - **SolidJS**: Fine-grained reactivity (`createSignal`, `createEffect`, `createMemo`), and control components (`<For>`, `<Show>`).
   - **Next.js & Remix**: App Router server/client boundary patterns (`layout.tsx`, `page.tsx`, `'use server'`, `'use client'`, route handlers `GET`/`POST`), and Remix `loader`/`action` functions.
   - **Bundler Configs**: Zero-friction templates for `vite.config.ts`, `webpack.config.js`, `next.config.js`, and `astro.config.mjs`.
-- **Toolchain Diagnostics**: Actively detects Node build tools and runtimes: `vite`, `next`, `astro`, `turbo`, `pnpm`, and `bun`.
+- **Toolchain Diagnostics**: Actively detects Node build tools, CLI frameworks, and runtimes: `vite`, `next`, `astro`, `turbo`, `pnpm`, `bun`, and `tailwindcss`.
 
 ### 🌐 Node Backend & Microservices Pack (`RecluseEdit.Extensions.NodeBackend`)
 - Supports **NestJS**, **Fastify**, **Koa**, and **Socket.io** microservices and realtime web applications. *(Note: Flask, FastAPI, Django, and Express are purposefully and strictly isolated within the Python and existing web packs to eliminate any provider collision or rule overlaps).*
@@ -336,17 +350,27 @@ RecluseEdit comes with fourteen modular extensions built as dedicated targets in
   - **Socket.io**: Real-time event-driven communication, server initialization (`new Server(httpServer)`), connection lifecycle (`io.on('connection')`), room broadcasting, and client event handlers (`socket.emit`, `socket.on`).
 - **Toolchain Diagnostics**: Actively checks backend process managers and CLIs on `PATH`: **NestJS CLI** (`nest`), **PM2 Process Manager** (`pm2`), and **Fastify CLI** (`fastify`).
 
+### 🟣 ASP.NET Core & Blazor Web Pack (`RecluseEdit.Extensions.DotNet`)
+- Supports **Blazor Components** (`.razor`) and **Razor Pages / MVC** (`.cshtml`) on modern .NET 10.
+- **Custom Razor Syntax Highlighting**: AvalonEdit XSHD syntax highlighting for Razor directives (`@page`, `@code`, `@inject`, `@bind`, `@rendermode`, `@model`), HTML tags, C# expressions, and Razor comments (`@* ... *@`).
+- **Web & API Autocomplete**:
+  - **ASP.NET Core Minimal APIs**: `app.MapGet()`, `app.MapPost()`, `app.MapPut()`, `app.MapDelete()`, `Results.Ok()`, `Results.Created()`, and Swagger/OpenAPI setup.
+  - **Blazor Components**: Component lifecycle methods (`OnInitializedAsync`, `OnParametersSetAsync`), parameters (`[Parameter]`, `EventCallback`), and interactive render modes.
+  - **Entity Framework Core**: `DbContext`, `DbSet<T>`, LINQ queries, and async persistence (`SaveChangesAsync`).
+- **Toolchain Diagnostics**: Actively detects the **.NET SDK & CLI** (`dotnet --version`).
+- **Custom Editor Theme**: Included **.NET Purple Dark** theme (`dotnet.purple-dark`) featuring Microsoft .NET `#512BD4` indigo accents.
+
 ---
 
 ## 🤖 Automated CI/CD & GitHub Releases
 
 RecluseEdit includes a fully automated GitHub Actions workflow (`.github/workflows/release.yml`) configured for continuous delivery:
 
-- 🏷️ **Triggered on Tag Push**: Pushing a new version tag (e.g. `git tag v1.0.0 && git push origin v1.0.0`) triggers an automated build pipeline on `windows-latest`.
+- 🏷️ **Triggered on Tag Push**: Pushing a new version tag (e.g. `git tag v5.3.0 && git push origin v5.3.0`) triggers an automated build pipeline on `windows-latest`.
 - 🧪 **Full Verification**: Executes the complete test suite (`dotnet test RecluseEdit.slnx -c Release`) across all projects before packaging.
 - 📦 **Bundle & Package**:
   - Compiles the host editor and all extensions in `Release` configuration.
-  - Bundles the main application executable, dependencies, and all fourteen extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`, `Go`, `Scripting`, `DeepSeek`, `Database`, `RestClient`, `Frontend`, and `NodeBackend`) under `Extensions/`.
+  - Bundles the main application executable, dependencies, and all fifteen extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`, `Go`, `Scripting`, `AiChat`, `Database`, `RestClient`, `Frontend`, `NodeBackend`, and `DotNet`) under `Extensions/`.
   - Packages the entire distribution into a portable archive: `RecluseEdit-windows-<tag>.zip`.
 - 🚀 **GitHub Release**: Automatically creates a new GitHub Release with the bundled `.zip` asset attached and generates release notes.
 - 🕹️ **Manual Trigger**: Can also be executed manually via the **Actions** tab with custom version tags (`workflow_dispatch`).

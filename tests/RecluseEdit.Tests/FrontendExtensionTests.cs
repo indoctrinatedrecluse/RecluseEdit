@@ -30,6 +30,17 @@ public sealed class FrontendExtensionTests
         public void Log(string message) => Logs.Add(message);
     }
 
+    private static InlineCompletionContext CreateContext(string lineText, string lang) => new()
+    {
+        CurrentLineText = lineText,
+        TextBeforeCaret = lineText,
+        CaretOffset = lineText.Length,
+        LineNumber = 1,
+        ColumnNumber = lineText.Length,
+        LanguageId = lang,
+        FullText = lineText
+    };
+
     [TestMethod]
     public void TestFrontendMetadata()
     {
@@ -63,20 +74,22 @@ public sealed class FrontendExtensionTests
         Assert.AreEqual("Astro", host.Syntaxes["astro"].Name);
 
         // Inline providers
-        Assert.HasCount(4, host.InlineProviders);
+        Assert.HasCount(5, host.InlineProviders);
         Assert.IsTrue(host.InlineProviders.Any(p => p.Id == "frontend.vue.inline"));
         Assert.IsTrue(host.InlineProviders.Any(p => p.Id == "frontend.svelte.inline"));
         Assert.IsTrue(host.InlineProviders.Any(p => p.Id == "frontend.astro.inline"));
         Assert.IsTrue(host.InlineProviders.Any(p => p.Id == "frontend.modern.inline"));
+        Assert.IsTrue(host.InlineProviders.Any(p => p.Id == "frontend.tailwind.inline"));
 
         // Toolchain checks
-        Assert.HasCount(6, host.ToolchainChecks);
+        Assert.HasCount(7, host.ToolchainChecks);
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "vite"));
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "next"));
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "astro"));
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "turbo"));
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "pnpm"));
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "bun"));
+        Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "tailwindcss"));
     }
 
     [TestMethod]
@@ -272,6 +285,45 @@ public sealed class FrontendExtensionTests
         Assert.AreEqual("bun", bunCheck.Command);
         var bunReport = await bunCheck.CheckAsync();
         Assert.IsNotNull(bunReport);
+
+        var tailwindCheck = new TailwindToolchainCheck();
+        Assert.AreEqual("tailwindcss", tailwindCheck.Command);
+        var tailwindReport = await tailwindCheck.CheckAsync();
+        Assert.IsNotNull(tailwindReport);
+    }
+
+    [TestMethod]
+    public async Task TestTailwindCompletions()
+    {
+        var provider = new TailwindCompletionProvider();
+        Assert.AreEqual("frontend.tailwind.inline", provider.Id);
+        CollectionAssert.Contains(provider.SupportedLanguages.ToList(), "html");
+        CollectionAssert.Contains(provider.SupportedLanguages.ToList(), "css");
+        CollectionAssert.Contains(provider.SupportedLanguages.ToList(), "vue");
+        CollectionAssert.Contains(provider.SupportedLanguages.ToList(), "svelte");
+        CollectionAssert.Contains(provider.SupportedLanguages.ToList(), "astro");
+
+        // Tailwind v4 / v3 directives
+        var themeSuggestion = await provider.GetInlineSuggestionAsync(CreateContext("@theme", "css"));
+        Assert.IsNotNull(themeSuggestion);
+        StringAssert.Contains(themeSuggestion, "--color-primary");
+
+        var applySuggestion = await provider.GetInlineSuggestionAsync(CreateContext("@apply ", "css"));
+        Assert.IsNotNull(applySuggestion);
+        StringAssert.Contains(applySuggestion, "flex items-center");
+
+        // Class layout snippets
+        var classFlex = await provider.GetInlineSuggestionAsync(CreateContext("class=\"flex ", "html"));
+        Assert.IsNotNull(classFlex);
+        StringAssert.Contains(classFlex, "items-center justify-between");
+
+        var classNameGrid = await provider.GetInlineSuggestionAsync(CreateContext("className=\"grid ", "jsx"));
+        Assert.IsNotNull(classNameGrid);
+        StringAssert.Contains(classNameGrid, "grid-cols-1");
+
+        // Empty prefix
+        var empty = await provider.GetInlineSuggestionAsync(CreateContext("    ", "html"));
+        Assert.IsNull(empty);
     }
 }
 
