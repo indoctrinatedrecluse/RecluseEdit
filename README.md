@@ -403,12 +403,20 @@ Remove-Item .git\index -Force; git reset
 
 ## 🗺️ Planned Roadmap & SDK Evolution (TODO)
 
-All initial planned architectural milestones and SDK evolutions have been completed:
+### 📌 Upcoming for Next Minor Release
+- 🔏 **Release Code-Signing with Self-Signed CA Certificate**:
+  - Implement automated code-signing for all RecluseEdit binaries, assemblies, and release packages (for both local development builds and the GitHub Actions release workflow).
+  - Organization name: `"indoctrinatedrecluse"`.
+  - Automated local certificate workflow: Check if the certificate already exists; if not, run a provisioning script to generate the self-signed Root CA and signing certificate pair, then use it to sign.
+  - Consistent dual-signing pipeline: Integrate the signing mechanism into local build scripts as well as GitHub Actions CI/CD workflows so all release artifacts are verified and signed.
+
+### Completed Milestones
 - ✅ **Pluggable Multi-Model AI Hub (`IAiProvider`)**: Runtime switching across DeepSeek, OpenAI (GPT-4o), Google Antigravity & Gemini 2.5, Anthropic Claude, and local offline Ollama models.
 - ✅ **AI Code Review (<kbd>Ctrl+Shift+R</kbd>) & Inline Generation (<kbd>Ctrl+I</kbd>)**: Real-time auditing and in-editor streaming generation.
 - ✅ **Interactive Status Bar Contribution SDK (`IStatusBarProvider`, `IStatusBarItem`)**: Modular status bar items with dynamic live updates.
 - ✅ **External CLI & Formatters SDK (`IDocumentFormatter`, `ToolchainManager`)**: External command formatters and interactive toolchain validation.
 - ✅ **Consolidated Compiler & SDK Discovery (`SdkPathResolver`, `SdkAutoDetector`, `ToolchainExecutor`)**: Unified cross-platform compiler and runtime detection with environment variables fallback, standard directory tree probes, workspace-local binary resolution, and MSVC detection via `vswhere.exe`.
+- ✅ **Instant Sub-Second Startup & Diagnostics Caching (`ToolchainCacheService`)**: Optimized process execution, cached `%PATH%` scans, and 24-hour persistent cache for instantaneous editor launches.
 - ✅ **Live Diagnostic Squiggle Renderer**: Real-time squiggles for syntax and linter diagnostics in AvalonEdit.
 
 New features, language grammars, and toolchain requests may be proposed via GitHub Issues.
