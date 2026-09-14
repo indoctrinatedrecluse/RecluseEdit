@@ -32,7 +32,7 @@ public static class ToolchainExecutor
         string args = "--version",
         string? workspaceRoot = null,
         string? versionRegex = null,
-        int timeoutMs = 3000,
+        int timeoutMs = 5000,
         CancellationToken cancellationToken = default)
     {
         var resolvedPath = SdkPathResolver.ResolveExecutable(command, workspaceRoot);

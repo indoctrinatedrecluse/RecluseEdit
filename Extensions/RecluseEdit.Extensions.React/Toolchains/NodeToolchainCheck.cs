@@ -1,153 +1,46 @@
-using System.Diagnostics;
-using System.Text.RegularExpressions;
 using RecluseEdit.Sdk.Models;
-using RecluseEdit.Sdk.Providers;
+using RecluseEdit.Sdk.Toolchains;
 
 namespace RecluseEdit.Extensions.React.Toolchains;
 
 /// <summary>
 /// Verifies the presence of the Node.js JavaScript runtime on the system PATH.
 /// </summary>
-public class NodeJsToolchainCheck : IToolchainCheck
+public class NodeJsToolchainCheck : BaseToolchainCheck
 {
-    public string ToolName => "Node.js";
-    public string Command => "node";
-    public string? RequiredVersion => ">= 18.0.0";
-    public string? InstallHelp => "Download Node.js from https://nodejs.org or install via winget: 'winget install OpenJS.NodeJS'";
-
-    public async Task<ToolchainReport> CheckAsync(CancellationToken cancellationToken = default)
-    {
-        var (success, output, path) = await ExecuteCommandAsync("node", "--version", cancellationToken);
-
-        if (!success || string.IsNullOrEmpty(output))
-        {
-            return new ToolchainReport
-            {
-                ToolName = ToolName,
-                Command = Command,
-                Status = ToolchainStatus.Missing,
-                RequiredVersion = RequiredVersion,
-                Description = "Node.js was not detected on system PATH. Required for running React build tools.",
-                InstallHelp = InstallHelp
-            };
-        }
-
-        var versionMatch = Regex.Match(output, @"v?(\d+\.\d+\.\d+)");
-        var version = versionMatch.Success ? versionMatch.Value : output;
-
-        return new ToolchainReport
-        {
-            ToolName = ToolName,
-            Command = Command,
-            Status = ToolchainStatus.Available,
-            DetectedVersion = version,
-            RequiredVersion = RequiredVersion,
-            Description = $"Node.js runtime detected ({version})",
-            InstallHelp = InstallHelp,
-            Path = path
-        };
-    }
-
-    private static async Task<(bool success, string output, string? path)> ExecuteCommandAsync(string cmd, string args, CancellationToken ct)
-    {
-        var res = await RecluseEdit.Sdk.Toolchains.ToolchainExecutor.ExecuteAsync(cmd, args, null, null, 3000, ct);
-        return (res.Success, res.Output, res.ResolvedPath);
-    }
+    public override string ToolName => "Node.js";
+    public override string Command => "node";
+    public override string? RequiredVersion => ">= 18.0.0";
+    public override string? InstallHelp => "Download Node.js from https://nodejs.org or install via winget: 'winget install OpenJS.NodeJS'";
+    public override string? SdkId => KnownSdk.NodeJs;
+    public override string? VersionRegex => @"v?(\d+\.\d+\.\d+)";
+    public override int TimeoutMs => 6000;
 }
 
 /// <summary>
 /// Verifies the presence of npm (Node Package Manager) on the system PATH.
 /// </summary>
-public class NpmToolchainCheck : IToolchainCheck
+public class NpmToolchainCheck : BaseToolchainCheck
 {
-    public string ToolName => "npm";
-    public string Command => "npm";
-    public string? RequiredVersion => ">= 9.0.0";
-    public string? InstallHelp => "npm is bundled with Node.js. Install Node.js from https://nodejs.org";
-
-    public async Task<ToolchainReport> CheckAsync(CancellationToken cancellationToken = default)
-    {
-        var (success, output, path) = await ExecuteCommandAsync("npm", "--version", cancellationToken);
-
-        if (!success || string.IsNullOrEmpty(output))
-        {
-            return new ToolchainReport
-            {
-                ToolName = ToolName,
-                Command = Command,
-                Status = ToolchainStatus.Missing,
-                RequiredVersion = RequiredVersion,
-                Description = "npm package manager not found on PATH.",
-                InstallHelp = InstallHelp
-            };
-        }
-
-        return new ToolchainReport
-        {
-            ToolName = ToolName,
-            Command = Command,
-            Status = ToolchainStatus.Available,
-            DetectedVersion = output,
-            RequiredVersion = RequiredVersion,
-            Description = $"npm package manager detected ({output})",
-            InstallHelp = InstallHelp,
-            Path = path
-        };
-    }
-
-    private static async Task<(bool success, string output, string? path)> ExecuteCommandAsync(string cmd, string args, CancellationToken ct)
-    {
-        var res = await RecluseEdit.Sdk.Toolchains.ToolchainExecutor.ExecuteAsync(cmd, args, null, null, 3000, ct);
-        return (res.Success, res.Output, res.ResolvedPath);
-    }
+    public override string ToolName => "npm";
+    public override string Command => "npm";
+    public override string? RequiredVersion => ">= 9.0.0";
+    public override string? InstallHelp => "npm is bundled with Node.js. Install Node.js from https://nodejs.org";
+    public override string? SdkId => KnownSdk.NodeJs;
+    public override int TimeoutMs => 6000;
 }
 
 /// <summary>
 /// Verifies the presence of the TypeScript compiler (tsc) on the system PATH.
 /// </summary>
-public class TypeScriptToolchainCheck : IToolchainCheck
+public class TypeScriptToolchainCheck : BaseToolchainCheck
 {
-    public string ToolName => "TypeScript (tsc)";
-    public string Command => "tsc";
-    public string? RequiredVersion => ">= 5.0.0";
-    public string? InstallHelp => "Install globally via: 'npm install -g typescript' or within project: 'npm install --save-dev typescript'";
-
-    public async Task<ToolchainReport> CheckAsync(CancellationToken cancellationToken = default)
-    {
-        var (success, output, path) = await ExecuteCommandAsync("tsc", "--version", cancellationToken);
-
-        if (!success || string.IsNullOrEmpty(output))
-        {
-            return new ToolchainReport
-            {
-                ToolName = ToolName,
-                Command = Command,
-                Status = ToolchainStatus.Warning,
-                RequiredVersion = RequiredVersion,
-                Description = "TypeScript compiler (tsc) was not detected. Type checking will be limited to editor diagnostics.",
-                InstallHelp = InstallHelp
-            };
-        }
-
-        var versionMatch = Regex.Match(output, @"Version\s+([0-9\.]+)");
-        var version = versionMatch.Success ? versionMatch.Value : output;
-
-        return new ToolchainReport
-        {
-            ToolName = ToolName,
-            Command = Command,
-            Status = ToolchainStatus.Available,
-            DetectedVersion = version,
-            RequiredVersion = RequiredVersion,
-            Description = $"TypeScript compiler detected ({version})",
-            InstallHelp = InstallHelp,
-            Path = path
-        };
-    }
-
-    private static async Task<(bool success, string output, string? path)> ExecuteCommandAsync(string cmd, string args, CancellationToken ct)
-    {
-        var res = await RecluseEdit.Sdk.Toolchains.ToolchainExecutor.ExecuteAsync(cmd, args, null, null, 3000, ct);
-        return (res.Success, res.Output, res.ResolvedPath);
-    }
+    public override string ToolName => "TypeScript (tsc)";
+    public override string Command => "tsc";
+    public override string? RequiredVersion => ">= 5.0.0";
+    public override string? InstallHelp => "Install globally via: 'npm install -g typescript' or within project: 'npm install --save-dev typescript'";
+    public override ToolchainStatus StatusOnMissing => ToolchainStatus.Warning;
+    public override string DescriptionOnMissing => "TypeScript compiler (tsc) was not detected. Type checking will be limited to editor diagnostics.";
+    public override string? VersionRegex => @"Version\s+([0-9\.]+)";
+    public override int TimeoutMs => 6000;
 }

@@ -32,7 +32,7 @@ public abstract class BaseToolchainCheck : IToolchainCheck
     /// <summary>
     /// Process timeout in milliseconds before aborting check.
     /// </summary>
-    public virtual int TimeoutMs => 3000;
+    public virtual int TimeoutMs => 5000;
 
     /// <summary>
     /// Diagnostic description generated when the tool is successfully detected.
@@ -92,3 +92,4 @@ public abstract class BaseToolchainCheck : IToolchainCheck
         };
     }
 }
+
