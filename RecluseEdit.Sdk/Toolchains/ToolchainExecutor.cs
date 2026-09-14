@@ -36,7 +36,35 @@ public static class ToolchainExecutor
         CancellationToken cancellationToken = default)
     {
         var resolvedPath = SdkPathResolver.ResolveExecutable(command, workspaceRoot);
-        var targetFile = resolvedPath ?? command;
+        var effectiveArgs = args;
+
+        if (resolvedPath == null)
+        {
+            // If command contains spaces (e.g. "php artisan"), try resolving the first token
+            var firstSpace = command.IndexOf(' ');
+            if (firstSpace > 0)
+            {
+                var firstToken = command[..firstSpace];
+                var subArgs = command[(firstSpace + 1)..];
+                resolvedPath = SdkPathResolver.ResolveExecutable(firstToken, workspaceRoot);
+                if (resolvedPath != null)
+                {
+                    effectiveArgs = $"{subArgs} {args}".Trim();
+                }
+            }
+        }
+
+        if (resolvedPath == null)
+        {
+            return new ToolExecutionResult(
+                false,
+                $"{command} was not found on PATH or standard installation locations.",
+                null,
+                null,
+                -1);
+        }
+
+        var targetFile = resolvedPath;
 
         try
         {
@@ -50,7 +78,7 @@ public static class ToolchainExecutor
                 psi = new ProcessStartInfo
                 {
                     FileName = "cmd.exe",
-                    Arguments = $"/c \"\"{targetFile}\" {args}\"",
+                    Arguments = $"/c \"\"{targetFile}\" {effectiveArgs}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -62,7 +90,7 @@ public static class ToolchainExecutor
                 psi = new ProcessStartInfo
                 {
                     FileName = targetFile,
-                    Arguments = args,
+                    Arguments = effectiveArgs,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,

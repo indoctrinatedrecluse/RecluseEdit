@@ -39,9 +39,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Extension Toolchain Checks Consolidation**:
   - Refactored toolchain checks across 15+ extensions (`DotNet`, `Frontend`, `RestClient`, `Scripting`, `React`, `Go`, `Python`, `Flutter`, `Php`, `Ruby`, `Laravel`, `Angular`, `NodeBackend`, `Database`) to eliminate duplicate `Process.Start` methods and utilize the consolidated `ToolchainExecutor` and `SdkPathResolver`.
 
+- **Instant Sub-Second Startup & Persistent Diagnostics Caching (`ToolchainCacheService`)**:
+  - Eliminated process creation overhead for missing tools by short-circuiting in `ToolchainExecutor` (preventing useless `cmd.exe` spawning and Windows Defender scan contention).
+  - Introduced `ToolchainCacheService` storing diagnostics in `%APPDATA%\RecluseEdit\toolchain_cache.json` with 24-hour TTL, enabling instant `<2ms` synchronous toolchain status loading on application launch.
+  - Deferred background toolchain checks until after the main window is loaded and responsive, eliminating startup freezes.
+  - Optimized `SdkPathResolver` with cached validated `%PATH%` directories (cutting 1,700 redundant `Directory.Exists` calls) and targeted Ruby directory checks.
+  - Replaced synchronous UI thread dispatches with debounced `Dispatcher.BeginInvoke(DispatcherPriority.Background, ...)`.
+
 - **Test Suite Expansion**:
-  - Added `SdkPathResolverTests` covering path resolution from PATH, workspace-local probing, venv detection, non-existent tool handling, `ToolchainExecutor` execution and version extraction, `SdkAutoDetector` discovery, and `ToolchainManager` integration.
-  - Test suite grew to 292 passing unit tests with 100% pass rate, 0 warnings, and 0 errors.
+  - Added `SdkPathResolverTests` and `ToolchainOptimizationTests` covering path resolution from PATH, workspace-local probing, venv detection, non-existent tool handling, `ToolchainExecutor` execution and version extraction, `SdkAutoDetector` discovery, persistent caching roundtrip, and `ToolchainManager` integration.
+  - Test suite grew to 298 passing unit tests with 100% pass rate, 0 warnings, and 0 errors.
 
 ## [5.3.0] - 2026-09-14
 

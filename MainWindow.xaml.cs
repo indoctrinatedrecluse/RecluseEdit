@@ -178,6 +178,15 @@ public partial class MainWindow : Window
         _toolchainManager.ToolchainStatusChanged += UpdateExtensionsStatus;
         UpdateExtensionsStatus();
 
+        // Immediately populate toolchain state from persistent cache if available (<2ms)
+        var cachedToolchains = _toolchainManager.CacheService.LoadCache();
+        if (cachedToolchains != null)
+        {
+            _ = _toolchainManager.InitializeWithCacheAsync(forceRefresh: false);
+        }
+
+        Loaded += OnWindowLoaded;
+
         // Create default initial document
         CreateNewFile();
 
@@ -185,9 +194,19 @@ public partial class MainWindow : Window
         _themeManager.LoadPersistedTheme();
     }
 
+    private void OnWindowLoaded(object sender, RoutedEventArgs e)
+    {
+        // Defer toolchain checks to background thread after UI is fully responsive
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(1500);
+            await _toolchainManager.InitializeWithCacheAsync();
+        });
+    }
+
     private void UpdateExtensionsStatus()
     {
-        Dispatcher.Invoke(() =>
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, () =>
         {
             var extCount = _extensionManager.LoadedExtensions.Count;
             if (_toolchainManager.HasIssues)
@@ -1199,8 +1218,9 @@ public partial class MainWindow : Window
 
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "5.4.0";
         MessageBox.Show(this,
-            "RecluseEdit v5.1.0\n\n" +
+            $"RecluseEdit v{version}\n\n" +
             "A fast, modern code editor optimized for web applications.\n\n" +
             "Key Features:\n" +
             "• Multi-Model AI Hub & Code Review (Ctrl+Alt+A, Ctrl+Shift+R, Ctrl+I)\n" +

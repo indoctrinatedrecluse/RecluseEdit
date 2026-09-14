@@ -13,6 +13,9 @@ namespace RecluseEdit.Sdk.Toolchains;
 public static class SdkPathResolver
 {
     private static readonly ConcurrentDictionary<string, string?> PathCache = new(StringComparer.OrdinalIgnoreCase);
+    private static string[]? _cachedValidatedPathDirs;
+    private static string? _cachedMsvcClPath;
+    private static bool _msvcProbeAttempted;
 
     private static readonly string[] WindowsExecutableExtensions = [".exe", ".cmd", ".bat", ".ps1", ""];
     private static readonly string[] UnixExecutableExtensions = [""];
@@ -23,7 +26,13 @@ public static class SdkPathResolver
     /// <summary>
     /// Clears the internal executable resolution cache.
     /// </summary>
-    public static void ClearCache() => PathCache.Clear();
+    public static void ClearCache()
+    {
+        PathCache.Clear();
+        _cachedValidatedPathDirs = null;
+        _cachedMsvcClPath = null;
+        _msvcProbeAttempted = false;
+    }
 
     /// <summary>
     /// Resolves the absolute path to an executable binary using multi-tier heuristics.
@@ -175,25 +184,40 @@ public static class SdkPathResolver
         return null;
     }
 
+    private static string[] GetValidatedPathDirectories()
+    {
+        if (_cachedValidatedPathDirs != null)
+            return _cachedValidatedPathDirs;
+
+        var pathEnv = Environment.GetEnvironmentVariable("PATH");
+        if (string.IsNullOrWhiteSpace(pathEnv))
+            return _cachedValidatedPathDirs = [];
+
+        var separator = OperatingSystem.IsWindows() ? ';' : ':';
+        var dirs = pathEnv.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+        var valid = new List<string>(dirs.Length);
+
+        foreach (var dir in dirs)
+        {
+            var cleanDir = dir.Trim('"', ' ');
+            if (!string.IsNullOrEmpty(cleanDir) && Directory.Exists(cleanDir))
+            {
+                valid.Add(cleanDir);
+            }
+        }
+
+        return _cachedValidatedPathDirs = valid.ToArray();
+    }
+
     /// <summary>
     /// Searches directories listed in the PATH environment variable.
     /// </summary>
     public static string? ProbeSystemPath(string tool)
     {
-        var pathEnv = Environment.GetEnvironmentVariable("PATH");
-        if (string.IsNullOrWhiteSpace(pathEnv))
-            return null;
-
-        var separator = OperatingSystem.IsWindows() ? ';' : ':';
-        var dirs = pathEnv.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-
+        var dirs = GetValidatedPathDirectories();
         foreach (var dir in dirs)
         {
-            var cleanDir = dir.Trim('"', ' ');
-            if (string.IsNullOrEmpty(cleanDir) || !Directory.Exists(cleanDir))
-                continue;
-
-            var match = ProbeDirectoryForBinary(cleanDir, tool);
+            var match = ProbeDirectoryForBinary(dir, tool);
             if (match != null) return match;
         }
 
@@ -405,19 +429,14 @@ public static class SdkPathResolver
                 break;
 
             case "ruby" or "gem" or "bundle" or "rails":
-                try
+                string[] rubyVersions = ["34", "33", "32", "31", "30"];
+                foreach (var v in rubyVersions)
                 {
-                    var drive = Path.GetPathRoot(progFiles) ?? "C:\\";
-                    foreach (var dir in Directory.GetDirectories(drive, "Ruby*"))
-                    {
-                        probeDirs.Add(Path.Combine(dir, "bin"));
-                    }
-                    foreach (var dir in Directory.GetDirectories(Path.Combine(drive, "tools"), "ruby*"))
-                    {
-                        probeDirs.Add(Path.Combine(dir, "bin"));
-                    }
+                    probeDirs.Add($@"C:\Ruby{v}-x64\bin");
+                    probeDirs.Add($@"C:\Ruby{v}\bin");
                 }
-                catch { }
+                probeDirs.Add(@"C:\tools\ruby\bin");
+                probeDirs.Add(Path.Combine(progFiles, "Ruby", "bin"));
                 break;
 
             case "elixir" or "mix" or "iex":
@@ -484,6 +503,9 @@ public static class SdkPathResolver
 
     private static string? ProbeMsvcCompiler(string progFilesX86, string progFiles)
     {
+        if (_msvcProbeAttempted) return _cachedMsvcClPath;
+        _msvcProbeAttempted = true;
+
         // 1. Try vswhere.exe
         var vswhere = Path.Combine(progFilesX86, "Microsoft Visual Studio", "Installer", "vswhere.exe");
         if (File.Exists(vswhere))
@@ -512,7 +534,11 @@ public static class SdkPathResolver
                             if (latestVersion != null)
                             {
                                 var clCandidate = Path.Combine(latestVersion, "bin", "Hostx64", "x64", "cl.exe");
-                                if (File.Exists(clCandidate)) return clCandidate;
+                                if (File.Exists(clCandidate))
+                                {
+                                    _cachedMsvcClPath = clCandidate;
+                                    return clCandidate;
+                                }
                             }
                         }
                     }
