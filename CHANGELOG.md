@@ -46,9 +46,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Optimized `SdkPathResolver` with cached validated `%PATH%` directories (cutting 1,700 redundant `Directory.Exists` calls) and targeted Ruby directory checks.
   - Replaced synchronous UI thread dispatches with debounced `Dispatcher.BeginInvoke(DispatcherPriority.Background, ...)`.
 
+- **Dynamic Assembly Version in About Dialog**:
+  - Dynamically resolves current assembly version (`Assembly.GetExecutingAssembly().GetName().Version`) in the **Help -> About RecluseEdit** dialog, ensuring the displayed version automatically matches the current release without hardcoded strings.
+
 - **Test Suite Expansion**:
-  - Added `SdkPathResolverTests` and `ToolchainOptimizationTests` covering path resolution from PATH, workspace-local probing, venv detection, non-existent tool handling, `ToolchainExecutor` execution and version extraction, `SdkAutoDetector` discovery, persistent caching roundtrip, and `ToolchainManager` integration.
-  - Test suite grew to 298 passing unit tests with 100% pass rate, 0 warnings, and 0 errors.
+  - Added `SdkPathResolverTests` and `ToolchainOptimizationTests` covering path resolution from PATH, workspace-local probing, venv detection, non-existent tool handling, `ToolchainExecutor` execution and version extraction, `SdkAutoDetector` discovery, persistent caching roundtrip, `ToolchainManager` integration, and dynamic version alignment.
+  - Test suite grew to 299 passing unit tests with 100% pass rate, 0 warnings, and 0 errors.
 
 ## [5.3.0] - 2026-09-14
 
