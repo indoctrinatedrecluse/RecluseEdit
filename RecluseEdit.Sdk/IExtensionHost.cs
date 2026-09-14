@@ -15,12 +15,17 @@ public interface IExtensionHost
     void RegisterToolchainCheck(IToolchainCheck toolchainCheck);
     void RegisterSyntaxHighlighting(string languageId, IHighlightingDefinition definition);
     void RegisterSidePanel(ISidePanelProvider panelProvider) {}
+    void ShowSidePanel(string panelId) {}
     void RegisterDocumentFormatter(IDocumentFormatter formatter) {}
     void RegisterTheme(IThemeDefinition theme) {}
+    void RegisterStatusBarProvider(IStatusBarProvider provider) {}
+    void RegisterStatusBarItem(IStatusBarItem item) {}
     IReadOnlyList<LanguageDefinition> GetRegisteredLanguages();
     IReadOnlyList<ISidePanelProvider> RegisteredSidePanels => [];
     IReadOnlyList<IDocumentFormatter> RegisteredFormatters => [];
     IReadOnlyList<IThemeDefinition> RegisteredThemes => [];
+    IReadOnlyList<IStatusBarProvider> RegisteredStatusBarProviders => [];
+    IReadOnlyList<IStatusBarItem> RegisteredStatusBarItems => [];
     IWorkspaceContext WorkspaceContext => null!;
     void Log(string message);
 }

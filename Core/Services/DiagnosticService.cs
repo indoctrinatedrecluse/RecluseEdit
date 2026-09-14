@@ -125,17 +125,13 @@ public class DiagnosticService
             // 2. Check for fenced code blocks at beginning of line
             if (col == 1)
             {
-                int spaceCount = 0;
-                while (i + spaceCount < len && text[i + spaceCount] == ' ' && spaceCount < 4)
                 // Skip any leading whitespace (spaces and tabs)
                 int ws = 0;
                 while (i + ws < len && (text[i + ws] == ' ' || text[i + ws] == '\t'))
                 {
-                    spaceCount++;
                     ws++;
                 }
 
-                int fenceIdx = i + spaceCount;
                 // Optional blockquote prefix '>'
                 if (i + ws < len && text[i + ws] == '>')
                 {
@@ -158,30 +154,19 @@ public class DiagnosticService
 
                     if (count >= 3)
                     {
-                        if (!inFencedCode)
                         // Check what follows the backticks/tildes on the same line
                         int afterFence = fenceIdx + count;
                         int lineEnd = afterFence;
                         while (lineEnd < len && text[lineEnd] != '\n')
                         {
-                            inFencedCode = true;
-                            fenceChar = fChar;
-                            fenceCount = count;
-                            fenceStartLine = line;
-                            fenceStartCol = col + spaceCount;
                             lineEnd++;
                         }
-                        else if (fChar == fenceChar && count >= fenceCount)
 
                         string restOfLine = text.Substring(afterFence, lineEnd - afterFence).TrimEnd('\r', ' ', '\t');
 
                         if (inFencedCode)
                         {
-                            inFencedCode = false;
-                            fenceChar = '\0';
-                            fenceCount = 0;
                             // A closing fence: matches if it has 3+ fence characters (matching type or any standard fence)
-                            bool isClosing = (fChar == fenceChar || fChar == '`' || fChar == '~') && count >= 3;
                             // and nothing else except whitespace (or a closing comment) on the line
                             bool isClosing = (fChar == fenceChar || fChar == '`' || fChar == '~') && count >= 3 &&
                                 (restOfLine.Trim().Length == 0 || restOfLine.Trim().StartsWith("//") || restOfLine.Trim().StartsWith("#"));
@@ -202,14 +187,10 @@ public class DiagnosticService
                         }
                         else
                         {
-                            // Check if this is a single-line code block: e.g. ``` npm install ```
-                            if (restOfLine.TrimStart().Length > 0 &&
-                                (restOfLine.EndsWith(new string(fChar, count)) || (count >= 3 && (restOfLine.EndsWith("```") || restOfLine.EndsWith("~~~")))))
                             // Check if this is a single-line code block or inline code at the start of a line:
                             // e.g. ``` npm install ``` or ```code``` is cool
                             if (restOfLine.Contains(new string(fChar, count)) || (count >= 3 && (restOfLine.Contains("```") || restOfLine.Contains("~~~"))))
                             {
-                                // Single-line code block! Opens and closes on the same line.
                                 // Single-line code block! Opens and closes on the same line, does not toggle inFencedCode.
                                 while (i < len && text[i] != '\n')
                                 {
@@ -219,17 +200,10 @@ public class DiagnosticService
                                 continue;
                             }
 
-                        // Skip to end of line
-                        while (i < len && text[i] != '\n')
-                        {
-                            col++;
-                            i++;
                             // Check if the rest of the line is a prose sentence rather than an info string.
-                            // Valid info string: single word like "csharp", "json", "bash", "ts", "python" (no spaces).
                             // Valid info string: single word like "csharp", "json", "bash", "ts", "python", or language with attributes.
                             // But if it starts with space followed by words, or contains multiple spaces like "``` is used to...", it's prose.
                             string info = restOfLine.Trim();
-                            bool isProseSentence = info.Contains(' ') && !info.StartsWith("{");
                             bool isProseSentence = (restOfLine.StartsWith(" ") || restOfLine.StartsWith("\t")) && info.Contains(' ') && !info.StartsWith("{");
                             if (!isProseSentence)
                             {
@@ -248,7 +222,6 @@ public class DiagnosticService
                                 continue;
                             }
                         }
-                        continue;
                     }
                 }
             }

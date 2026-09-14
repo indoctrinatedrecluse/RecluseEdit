@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using RecluseEdit.Core.Services.Formatters;
 using RecluseEdit.Sdk.Models;
 using RecluseEdit.Sdk.Providers;
 
@@ -17,6 +18,21 @@ namespace RecluseEdit.Core.Services;
 public class DocumentFormattingService
 {
     private readonly List<IDocumentFormatter> _customFormatters = [];
+
+    public DocumentFormattingService()
+    {
+        RegisterBuiltInCliFormatters();
+    }
+
+    private void RegisterBuiltInCliFormatters()
+    {
+        RegisterFormatter(new PrettierCliFormatter());
+        RegisterFormatter(new BlackCliFormatter());
+        RegisterFormatter(new RuffCliFormatter());
+        RegisterFormatter(new GoFmtCliFormatter());
+        RegisterFormatter(new RustFmtCliFormatter());
+        RegisterFormatter(new DartFormatCliFormatter());
+    }
 
     public void RegisterFormatter(IDocumentFormatter formatter)
     {

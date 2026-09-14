@@ -557,11 +557,15 @@
             </StatusBar.ItemsPanel>
 
             <StatusBarItem Grid.Column="0">
-                <TextBlock x:Name="StatusMessage" Text="Ready" FontSize="11" />
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="StatusMessage" Text="Ready" FontSize="11" />
+                    <StackPanel x:Name="LeftStatusBarContributions" Orientation="Horizontal" Margin="8,0,0,0" />
+                </StackPanel>
             </StatusBarItem>
 
             <StatusBarItem Grid.Column="1">
                 <StackPanel Orientation="Horizontal">
+                    <StackPanel x:Name="RightStatusBarContributions" Orientation="Horizontal" Margin="0,0,8,0" />
                     <TextBlock x:Name="StatusCaret" Text="Ln 1, Col 1" FontSize="11" Margin="8,0" />
                     <TextBlock Text="|" Opacity="0.5" />
                     <TextBlock x:Name="StatusLength" Text="Length: 0" FontSize="11" Margin="8,0" />

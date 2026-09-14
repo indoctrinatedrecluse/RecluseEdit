@@ -21,6 +21,7 @@ public partial class EditorControl : UserControl
 {
     private readonly GhostTextRenderer _ghostRenderer;
     private readonly BracketHighlightRenderer _bracketRenderer;
+    private readonly DiagnosticSquiggleRenderer _diagnosticRenderer;
     private readonly GitDiffMargin _gitDiffMargin;
     private readonly GitService _gitService = new();
     private CancellationTokenSource? _suggestionCts;
@@ -28,6 +29,7 @@ public partial class EditorControl : UserControl
     private CompletionWindow? _completionWindow;
     private FoldingManager? _foldingManager;
     private XmlFoldingStrategy? _xmlFoldingStrategy;
+    private ToolTip? _diagnosticToolTip;
 
     public string? WorkspacePath { get; set; }
     public TextEditor UnderlyingEditor => Editor;
@@ -87,6 +89,7 @@ public partial class EditorControl : UserControl
             _gitDiffMargin.Hunks = [];
             _ghostRenderer.Clear();
             _bracketRenderer.Clear();
+            _diagnosticRenderer.Clear();
             FindReplace.Visibility = Visibility.Collapsed;
         }
     }
@@ -102,8 +105,13 @@ public partial class EditorControl : UserControl
 
         _ghostRenderer = new GhostTextRenderer(Editor.TextArea.TextView);
         _bracketRenderer = new BracketHighlightRenderer(Editor.TextArea.TextView);
+        _diagnosticRenderer = new DiagnosticSquiggleRenderer(Editor.TextArea.TextView);
         Editor.TextArea.TextView.BackgroundRenderers.Add(_ghostRenderer);
         Editor.TextArea.TextView.BackgroundRenderers.Add(_bracketRenderer);
+        Editor.TextArea.TextView.BackgroundRenderers.Add(_diagnosticRenderer);
+
+        Editor.TextArea.TextView.MouseHover += OnTextViewMouseHover;
+        Editor.TextArea.TextView.MouseHoverStopped += OnTextViewMouseHoverStopped;
 
         Editor.TextArea.Caret.PositionChanged += OnCaretPositionChanged;
         Editor.TextArea.TextEntering += OnTextEntering;
@@ -131,6 +139,66 @@ public partial class EditorControl : UserControl
     {
         var selected = Editor.SelectedText;
         FindReplace.ShowReplace(string.IsNullOrEmpty(selected) ? null : selected);
+    }
+
+    public void SetDiagnostics(IReadOnlyList<DiagnosticItem> diagnostics)
+    {
+        _diagnosticRenderer.SetDiagnostics(Editor.Document, diagnostics);
+    }
+
+    public void ClearDiagnostics()
+    {
+        _diagnosticRenderer.Clear();
+    }
+
+    private void OnTextViewMouseHover(object sender, MouseEventArgs e)
+    {
+        if (Editor.Document == null) return;
+
+        var pos = Editor.GetPositionFromPoint(e.GetPosition(Editor));
+        if (pos.HasValue)
+        {
+            try
+            {
+                int offset = Editor.Document.GetOffset(pos.Value.Line, pos.Value.Column);
+                var marker = _diagnosticRenderer.GetMarkerAtOffset(offset);
+                if (marker != null)
+                {
+                    _diagnosticToolTip = new ToolTip
+                    {
+                        Placement = System.Windows.Controls.Primitives.PlacementMode.RelativePoint,
+                        PlacementTarget = Editor,
+                        HorizontalOffset = e.GetPosition(Editor).X + 10,
+                        VerticalOffset = e.GetPosition(Editor).Y + 16,
+                        Content = new TextBlock
+                        {
+                            Text = $"[{marker.Severity}] {marker.Message}",
+                            Foreground = marker.Severity switch
+                            {
+                                DiagnosticSeverity.Error => Brushes.Red,
+                                DiagnosticSeverity.Warning => Brushes.Orange,
+                                _ => Brushes.DeepSkyBlue
+                            },
+                            FontSize = 12
+                        },
+                        IsOpen = true
+                    };
+                    e.Handled = true;
+                }
+            }
+            catch
+            {
+            }
+        }
+    }
+
+    private void OnTextViewMouseHoverStopped(object sender, MouseEventArgs e)
+    {
+        if (_diagnosticToolTip != null)
+        {
+            _diagnosticToolTip.IsOpen = false;
+            _diagnosticToolTip = null;
+        }
     }
 
     private void OnDocumentTextChanged(object? sender, EventArgs e)

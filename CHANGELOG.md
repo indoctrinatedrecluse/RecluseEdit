@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🚀 Added
+- **Custom Status Bar Contributions (`IStatusBarProvider`)**:
+  - Added public `IStatusBarProvider`, `IStatusBarItem`, `StatusBarItem`, and `StatusBarAlignment` interfaces in `RecluseEdit.Sdk`.
+  - Added `IExtensionHost.RegisterStatusBarProvider`, `RegisterStatusBarItem`, and `ShowSidePanel` hooks.
+  - Interactive Left/Right status bar contribution containers with reactive visual updates and click command callbacks.
+  - Implemented SQL status bar contribution in `RecluseEdit.Extensions.Database` with one-click side panel activation.
+- **External CLI Formatters & Linter Adapters (`CliDocumentFormatter`)**:
+  - Added `CliDocumentFormatter` base class in `RecluseEdit.Sdk` with process piping, timeout management, and PATH auto-discovery.
+  - Added built-in CLI adapters for `prettier`, `black`, `ruff`, `gofmt`, `rustfmt`, and `dart format`.
+  - Automatic fallback to built-in pure C# formatters if external CLI tools are not installed.
+- **Live In-Editor Diagnostic Squiggles & Tooltips**:
+  - Integrated `DiagnosticSquiggleRenderer` in AvalonEdit rendering wavy squiggles under syntax error/warning tokens.
+  - Color-coded by severity: Red for Error, Amber for Warning, Cyan for Info.
+  - Hover tooltips displaying diagnostic messages and severity.
+- **Test Suite Expansion**:
+  - Added 11 new tests across `StatusBarProviderTests`, `CliDocumentFormatterTests`, and `DiagnosticSquiggleTests`, bringing total test count to 203.
+
 ---
 
 ## [4.0.1] - 2026-09-13

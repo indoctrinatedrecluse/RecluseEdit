@@ -136,11 +136,18 @@ public partial class MainWindow : Window
         TabItemsControl.ItemsSource = _documentManager.Documents;
         CmbLanguage.ItemsSource = _syntaxManager.SupportedLanguages;
 
-        // Initialize extensions and side panels
+        // Initialize extensions, side panels, and status bar contributions
         _extensionManager.SidePanelRegistered += OnSidePanelRegistered;
+        _extensionManager.SidePanelRequested += panelId => Dispatcher.Invoke(() => ActivateSidePanelById(panelId));
         foreach (var panel in _extensionManager.RegisteredSidePanels)
         {
             OnSidePanelRegistered(panel);
+        }
+
+        _extensionManager.StatusBarItemRegistered += OnStatusBarItemRegistered;
+        foreach (var item in _extensionManager.RegisteredStatusBarItems)
+        {
+            OnStatusBarItemRegistered(item);
         }
 
         _ = _extensionManager.InitializeAsync();
@@ -436,6 +443,86 @@ public partial class MainWindow : Window
             MenuRightPane.IsChecked = true;
             BtnToggleAiChat.IsChecked = true;
         }
+    }
+
+    public void ActivateSidePanelById(string panelId)
+    {
+        var panel = _registeredSidePanels.FirstOrDefault(p => p.Id == panelId);
+        if (panel != null)
+        {
+            ActivateSidePanel(panel);
+        }
+    }
+
+    private readonly Dictionary<string, FrameworkElement> _statusBarUiElements = [];
+
+    private void OnStatusBarItemRegistered(IStatusBarItem item)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            if (_statusBarUiElements.ContainsKey(item.Id))
+                return;
+
+            var container = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(4, 0, 4, 0),
+                Cursor = item.OnClick != null ? Cursors.Hand : Cursors.Arrow,
+                Visibility = item.IsVisible ? Visibility.Visible : Visibility.Collapsed,
+                ToolTip = item.Tooltip
+            };
+
+            var sep = new TextBlock
+            {
+                Text = "|",
+                Opacity = 0.5,
+                Margin = new Thickness(0, 0, 8, 0),
+                FontSize = 11,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            var textBlock = new TextBlock
+            {
+                Text = item.Text,
+                FontSize = 11,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            if (item.Alignment == StatusBarAlignment.Right)
+            {
+                container.Children.Add(textBlock);
+                container.Children.Add(sep);
+            }
+            else
+            {
+                container.Children.Add(sep);
+                container.Children.Add(textBlock);
+            }
+
+            if (item.OnClick != null)
+            {
+                container.MouseLeftButtonDown += (_, _) => item.OnClick?.Invoke();
+            }
+
+            void UpdateUi()
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    textBlock.Text = item.Text;
+                    container.ToolTip = item.Tooltip;
+                    container.Visibility = item.IsVisible ? Visibility.Visible : Visibility.Collapsed;
+                    container.Cursor = item.OnClick != null ? Cursors.Hand : Cursors.Arrow;
+                });
+            }
+
+            item.Changed += (_, _) => UpdateUi();
+
+            _statusBarUiElements[item.Id] = container;
+
+            var parent = item.Alignment == StatusBarAlignment.Left ? LeftStatusBarContributions : RightStatusBarContributions;
+            parent.Children.Add(container);
+        });
     }
 
     #endregion
@@ -1140,11 +1227,13 @@ public partial class MainWindow : Window
         if (doc == null)
         {
             ProblemsPane.ClearProblems();
+            EditorHost.ClearDiagnostics();
             return;
         }
 
         var items = _diagnosticService.AnalyzeDocument(EditorHost.UnderlyingEditor.Text, doc.Language.Id, doc.FilePath ?? string.Empty);
         ProblemsPane.SetProblems(items);
+        EditorHost.SetDiagnostics(items);
     }
 
     private void NavigateToProblem(DiagnosticItem diag)

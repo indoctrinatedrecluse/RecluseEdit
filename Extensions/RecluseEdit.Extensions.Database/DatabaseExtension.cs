@@ -3,6 +3,7 @@ using RecluseEdit.Extensions.Database.Syntaxes;
 using RecluseEdit.Extensions.Database.Toolchains;
 using RecluseEdit.Sdk;
 using RecluseEdit.Sdk.Models;
+using RecluseEdit.Sdk.Providers;
 
 namespace RecluseEdit.Extensions.Database;
 
@@ -38,6 +39,13 @@ public class DatabaseExtension : IExtension
 
         // 5. Side Panel
         host.RegisterSidePanel(new DatabaseSidePanelProvider());
+
+        // 6. Status Bar Item
+        host.RegisterStatusBarItem(new StatusBarItem("database.status", "🗄️ SQL: Ready", StatusBarAlignment.Right, priority: 15)
+        {
+            Tooltip = "Database Explorer - Ready. Click to open Database Explorer side panel.",
+            OnClick = () => host.ShowSidePanel("database.explorer")
+        });
 
         return Task.CompletedTask;
     }

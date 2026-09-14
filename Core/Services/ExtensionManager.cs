@@ -22,18 +22,25 @@ public class ExtensionManager : IExtensionHost
     private readonly List<ISidePanelProvider> _sidePanels = [];
     private readonly List<IDocumentFormatter> _formatters = [];
     private readonly List<IThemeDefinition> _extensionThemes = [];
+    private readonly List<IStatusBarProvider> _statusBarProviders = [];
+    private readonly List<IStatusBarItem> _statusBarItems = [];
     private readonly List<string> _logs = [];
 
     public IReadOnlyList<IExtension> LoadedExtensions => _loadedExtensions.AsReadOnly();
     public IReadOnlyList<ISidePanelProvider> RegisteredSidePanels => _sidePanels.AsReadOnly();
     public IReadOnlyList<IDocumentFormatter> RegisteredFormatters => _formatters.AsReadOnly();
     public IReadOnlyList<IThemeDefinition> RegisteredThemes => _themeManager?.RegisteredThemes ?? _extensionThemes.AsReadOnly();
+    public IReadOnlyList<IStatusBarProvider> RegisteredStatusBarProviders => _statusBarProviders.AsReadOnly();
+    public IReadOnlyList<IStatusBarItem> RegisteredStatusBarItems => _statusBarItems.AsReadOnly();
     public IWorkspaceContext WorkspaceContext => _workspaceContext;
     public IReadOnlyList<string> Logs => _logs.AsReadOnly();
     public ToolchainManager ToolchainManager => _toolchainManager;
 
     public event Action? ExtensionsChanged;
     public event Action<ISidePanelProvider>? SidePanelRegistered;
+    public event Action<string>? SidePanelRequested;
+    public event Action<IStatusBarItem>? StatusBarItemRegistered;
+    public event Action<IStatusBarProvider>? StatusBarProviderRegistered;
 
     public ExtensionManager(
         SyntaxManager syntaxManager,
@@ -175,6 +182,12 @@ public class ExtensionManager : IExtensionHost
         }
     }
 
+    public void ShowSidePanel(string panelId)
+    {
+        Log($"Extension requested side panel '{panelId}'");
+        SidePanelRequested?.Invoke(panelId);
+    }
+
     public void RegisterDocumentFormatter(IDocumentFormatter formatter)
     {
         if (!_formatters.Any(f => f.FormatterId == formatter.FormatterId))
@@ -191,6 +204,39 @@ public class ExtensionManager : IExtensionHost
             _extensionThemes.Add(theme);
             _themeManager?.RegisterTheme(theme);
             Log($"Registered theme '{theme.DisplayName}' ({theme.Id})");
+        }
+    }
+
+    public void RegisterStatusBarItem(IStatusBarItem item)
+    {
+        if (!_statusBarItems.Any(i => i.Id == item.Id))
+        {
+            _statusBarItems.Add(item);
+            Log($"Registered status bar item '{item.Text}' ({item.Id})");
+            StatusBarItemRegistered?.Invoke(item);
+        }
+    }
+
+    public void RegisterStatusBarProvider(IStatusBarProvider provider)
+    {
+        if (!_statusBarProviders.Any(p => p.Id == provider.Id))
+        {
+            _statusBarProviders.Add(provider);
+            Log($"Registered status bar provider ({provider.Id})");
+            StatusBarProviderRegistered?.Invoke(provider);
+
+            foreach (var item in provider.GetItems())
+            {
+                RegisterStatusBarItem(item);
+            }
+
+            provider.ItemsChanged += (_, _) =>
+            {
+                foreach (var item in provider.GetItems())
+                {
+                    RegisterStatusBarItem(item);
+                }
+            };
         }
     }
 
