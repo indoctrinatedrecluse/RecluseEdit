@@ -1,18 +1,23 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using RecluseEdit.Extensions.DeepSeek.Models;
+using System.Threading;
+using System.Threading.Tasks;
+using RecluseEdit.Extensions.AiChat.Models;
 using RecluseEdit.Sdk;
 
-namespace RecluseEdit.Extensions.DeepSeek.Services;
+namespace RecluseEdit.Extensions.AiChat.Services;
 
 /// <summary>
-/// Client for interacting with the DeepSeek API or compatible OpenAI endpoints.
+/// Universal client for interacting with AI models (DeepSeek, OpenAI/ChatGPT, Google Antigravity/Gemini, Anthropic Claude, Ollama, Custom).
 /// Supports conversational turns, streaming SSE responses, and tool invocation (read, write, list, execute).
 /// </summary>
-public class DeepSeekApiClient
+public class AiChatApiClient
 {
     private static readonly HttpClient DefaultHttpClient = new()
     {
@@ -21,7 +26,7 @@ public class DeepSeekApiClient
 
     private readonly HttpClient _httpClient;
 
-    public DeepSeekApiClient(HttpClient? httpClient = null)
+    public AiChatApiClient(HttpClient? httpClient = null)
     {
         _httpClient = httpClient ?? DefaultHttpClient;
     }
@@ -113,7 +118,7 @@ public class DeepSeekApiClient
     /// Generates a direct streaming completion without workspace tool calling.
     /// </summary>
     public async Task<string> GenerateCompletionDirectAsync(
-        DeepSeekSettings settings,
+        AiChatSettings settings,
         AiProviderDescriptor? providerDescriptor,
         string prompt,
         string? systemPrompt = null,
@@ -141,7 +146,7 @@ public class DeepSeekApiClient
     /// Sends a conversational turn with streaming output and automatic tool call execution.
     /// </summary>
     public async Task<string> SendChatStreamAsync(
-        DeepSeekSettings settings,
+        AiChatSettings settings,
         List<ChatMessage> conversationHistory,
         IWorkspaceContext? workspaceContext,
         Action<string> onDeltaReceived,
@@ -153,7 +158,7 @@ public class DeepSeekApiClient
 
         if (!settings.IsLocalNoAuth && string.IsNullOrWhiteSpace(effectiveToken))
         {
-            throw new InvalidOperationException($"API key / access token is missing for provider '{provider.DisplayName}'. Please configure your credentials in the AI settings drawer.");
+            throw new InvalidOperationException($"API key / access token is missing for provider '{provider.DisplayName}'. Please configure your credentials in the AI Chat panel.");
         }
 
         var endpoint = provider.NormalizeEndpoint(settings.ApiEndpoint);
@@ -428,4 +433,12 @@ public class DeepSeekApiClient
         public string Name { get; set; } = "";
         public StringBuilder Args { get; } = new();
     }
+}
+
+/// <summary>
+/// Backward-compatibility alias for DeepSeekApiClient.
+/// </summary>
+public class DeepSeekApiClient : AiChatApiClient
+{
+    public DeepSeekApiClient(HttpClient? httpClient = null) : base(httpClient) { }
 }

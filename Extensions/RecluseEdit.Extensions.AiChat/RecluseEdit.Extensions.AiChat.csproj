@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <RootNamespace>RecluseEdit.Extensions.DeepSeek</RootNamespace>
-    <AssemblyName>RecluseEdit.Extensions.DeepSeek</AssemblyName>
+    <RootNamespace>RecluseEdit.Extensions.AiChat</RootNamespace>
+    <AssemblyName>RecluseEdit.Extensions.AiChat</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,8 +15,8 @@
 
   <Target Name="CopyExtensionToHost" AfterTargets="Build">
     <PropertyGroup>
-      <ExtensionOutputDir Condition="'$(SolutionDir)' != '' and '$(SolutionDir)' != '*Undefined*'">$(SolutionDir)bin\$(Configuration)\net10.0-windows\Extensions\DeepSeek\</ExtensionOutputDir>
-      <ExtensionOutputDir Condition="'$(ExtensionOutputDir)' == ''">$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\net10.0-windows\Extensions\DeepSeek\</ExtensionOutputDir>
+      <ExtensionOutputDir Condition="'$(SolutionDir)' != '' and '$(SolutionDir)' != '*Undefined*'">$(SolutionDir)bin\$(Configuration)\net10.0-windows\Extensions\AiChat\</ExtensionOutputDir>
+      <ExtensionOutputDir Condition="'$(ExtensionOutputDir)' == ''">$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\net10.0-windows\Extensions\AiChat\</ExtensionOutputDir>
     </PropertyGroup>
     <ItemGroup>
       <ExtensionFiles Include="$(TargetDir)$(TargetName).dll" />

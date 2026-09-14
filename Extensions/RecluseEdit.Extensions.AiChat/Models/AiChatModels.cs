@@ -1,12 +1,14 @@
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace RecluseEdit.Extensions.DeepSeek.Models;
+namespace RecluseEdit.Extensions.AiChat.Models;
 
 /// <summary>
-/// User-configurable settings for DeepSeek AI API access.
+/// User-configurable settings for AI Chat API access and model selection.
 /// </summary>
-public class DeepSeekSettings
+public class AiChatSettings
 {
     [JsonPropertyName("provider")]
     public string Provider { get; set; } = "deepseek";
@@ -75,6 +77,13 @@ public class DeepSeekSettings
     public bool IsLocalNoAuth =>
         string.Equals(Provider, "ollama", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(AuthMode, "local_no_auth", StringComparison.OrdinalIgnoreCase);
+}
+
+/// <summary>
+/// Backward-compatibility alias for DeepSeekSettings.
+/// </summary>
+public class DeepSeekSettings : AiChatSettings
+{
 }
 
 public class ChatMessage
@@ -237,4 +246,3 @@ public class UsageInfo
     [JsonPropertyName("total_tokens")]
     public int TotalTokens { get; set; }
 }
-

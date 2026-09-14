@@ -4,56 +4,328 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using RecluseEdit.Extensions.DeepSeek.Models;
-using RecluseEdit.Extensions.DeepSeek.Rendering;
-using RecluseEdit.Extensions.DeepSeek.Services;
+using RecluseEdit.Extensions.AiChat.Models;
+using RecluseEdit.Extensions.AiChat.Rendering;
+using RecluseEdit.Extensions.AiChat.Services;
 using RecluseEdit.Sdk;
 using RecluseEdit.Sdk.Models;
 using RecluseEdit.Sdk.Providers;
 
-namespace RecluseEdit.Extensions.DeepSeek.Views;
+namespace RecluseEdit.Extensions.AiChat.Views;
 
 /// <summary>
-/// Interaction logic for DeepSeekChatView.xaml
+/// Interaction logic for AiChatView.xaml
+/// Provides unified AI chat across DeepSeek, OpenAI, Gemini, Antigravity, Claude, Ollama, and custom endpoints.
+/// Features in-chat quick model selection and inline credential management.
 /// </summary>
-public partial class DeepSeekChatView : UserControl, IAiChatView
+public partial class AiChatView : UserControl, IAiChatView
 {
+    public class ModelChoiceItem
+    {
+        public string ProviderId { get; set; } = "";
+        public string ProviderName { get; set; } = "";
+        public string ModelId { get; set; } = "";
+        public string DisplayText { get; set; } = "";
+
+        public override string ToString() => DisplayText;
+    }
+
     private readonly IWorkspaceContext _workspaceContext;
-    private readonly DeepSeekSettingsService _settingsService;
-    private readonly DeepSeekApiClient _apiClient;
+    private readonly AiChatSettingsService _settingsService;
+    private readonly AiChatApiClient _apiClient;
 
     private readonly List<ChatMessage> _conversationHistory = [];
     private readonly List<UIElement> _currentQueryStatusBadges = [];
     private CancellationTokenSource? _currentCts;
+    private bool _isPopulatingHeaderModels;
 
-    public DeepSeekChatView(
+    public AiChatView(
         IWorkspaceContext workspaceContext,
-        DeepSeekSettingsService? settingsService = null,
-        DeepSeekApiClient? apiClient = null)
+        AiChatSettingsService? settingsService = null,
+        AiChatApiClient? apiClient = null)
     {
         InitializeComponent();
 
         _workspaceContext = workspaceContext;
-        _settingsService = settingsService ?? new DeepSeekSettingsService();
-        _apiClient = apiClient ?? new DeepSeekApiClient();
+        _settingsService = settingsService ?? new AiChatSettingsService();
+        _apiClient = apiClient ?? new AiChatApiClient();
 
-        LoadSettingsToUI();
+        PopulateHeaderModelPicker();
+        LoadSettingsToDrawerUI();
+        UpdateHeaderAuthBadge();
         UpdateActiveFileBadge();
     }
 
-    private void LoadSettingsToUI()
+    #region Model Selection & Header Setup
+
+    private void PopulateHeaderModelPicker()
+    {
+        _isPopulatingHeaderModels = true;
+        try
+        {
+            var items = new List<ModelChoiceItem>();
+            foreach (var provider in AiProviderRegistry.Providers)
+            {
+                if (provider.RecommendedModels.Count > 0)
+                {
+                    foreach (var model in provider.RecommendedModels)
+                    {
+                        items.Add(new ModelChoiceItem
+                        {
+                            ProviderId = provider.Id,
+                            ProviderName = provider.DisplayName,
+                            ModelId = model,
+                            DisplayText = $"{provider.DisplayName}: {model}"
+                        });
+                    }
+                }
+                else
+                {
+                    items.Add(new ModelChoiceItem
+                    {
+                        ProviderId = provider.Id,
+                        ProviderName = provider.DisplayName,
+                        ModelId = provider.DefaultModel,
+                        DisplayText = $"{provider.DisplayName}: {provider.DefaultModel}"
+                    });
+                }
+            }
+
+            CmbHeaderModel.ItemsSource = items;
+
+            // Select active model from settings
+            var settings = _settingsService.CurrentSettings;
+            var currentProvider = settings.Provider;
+            var currentModel = settings.Model;
+
+            var match = items.FirstOrDefault(i =>
+                string.Equals(i.ProviderId, currentProvider, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(i.ModelId, currentModel, StringComparison.OrdinalIgnoreCase))
+                ?? items.FirstOrDefault(i => string.Equals(i.ProviderId, currentProvider, StringComparison.OrdinalIgnoreCase))
+                ?? items.FirstOrDefault(i => string.Equals(i.ProviderId, "deepseek", StringComparison.OrdinalIgnoreCase))
+                ?? items.FirstOrDefault();
+
+            if (match != null)
+            {
+                CmbHeaderModel.SelectedItem = match;
+            }
+        }
+        finally
+        {
+            _isPopulatingHeaderModels = false;
+        }
+    }
+
+    private void OnHeaderModelSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isPopulatingHeaderModels) return;
+        if (CmbHeaderModel.SelectedItem is not ModelChoiceItem selected) return;
+
+        var settings = _settingsService.CurrentSettings;
+        var prevProvider = settings.Provider;
+        settings.Provider = selected.ProviderId;
+        settings.Model = selected.ModelId;
+
+        // If provider switched, update endpoint if default was in use
+        var provider = AiProviderRegistry.GetProvider(selected.ProviderId);
+        if (prevProvider != selected.ProviderId)
+        {
+            settings.ApiEndpoint = provider.DefaultEndpoint;
+            settings.AuthMode = provider.DefaultAuthMode switch
+            {
+                AiAuthMode.LocalNoAuth => "local_no_auth",
+                AiAuthMode.AccountToken => "account_token",
+                _ => "api_key"
+            };
+        }
+
+        _settingsService.SaveSettings(settings);
+        UpdateHeaderAuthBadge();
+        SyncDrawerWithCurrentSettings();
+
+        // If key is missing for non-local auth, automatically open inline auth banner
+        if (!settings.IsLocalNoAuth && string.IsNullOrWhiteSpace(settings.GetEffectiveToken()))
+        {
+            OpenInlineAuthBanner();
+        }
+        else
+        {
+            InlineAuthBanner.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void UpdateHeaderAuthBadge()
     {
         var settings = _settingsService.CurrentSettings;
+        var provider = AiProviderRegistry.GetProvider(settings.Provider);
 
-        // Provider ComboBox
+        if (settings.IsLocalNoAuth)
+        {
+            TxtHeaderAuthIcon.Text = "🟢";
+            TxtHeaderAuthLabel.Text = "Offline";
+            TxtHeaderAuthLabel.Foreground = new SolidColorBrush(Color.FromRgb(137, 209, 133));
+            BtnHeaderAuth.ToolTip = $"{provider.DisplayName}: Local model, no authentication required";
+            TxtWelcomeAuthHint.Text = $"Active model: {provider.DisplayName} ({settings.Model}) - Offline local execution.";
+        }
+        else if (!string.IsNullOrWhiteSpace(settings.GetEffectiveToken()))
+        {
+            TxtHeaderAuthIcon.Text = "🔑";
+            TxtHeaderAuthLabel.Text = "Ready";
+            TxtHeaderAuthLabel.Foreground = new SolidColorBrush(Color.FromRgb(137, 209, 133));
+            BtnHeaderAuth.ToolTip = $"{provider.DisplayName}: Key configured. Click to view or change.";
+            TxtWelcomeAuthHint.Text = $"Active model: {provider.DisplayName} ({settings.Model}) - Credentials configured.";
+        }
+        else
+        {
+            TxtHeaderAuthIcon.Text = "⚠️";
+            TxtHeaderAuthLabel.Text = "No Key";
+            TxtHeaderAuthLabel.Foreground = new SolidColorBrush(Color.FromRgb(224, 108, 117));
+            BtnHeaderAuth.ToolTip = $"{provider.DisplayName}: Missing API Key or Token. Click to authenticate.";
+            TxtWelcomeAuthHint.Text = $"Active model: {provider.DisplayName} ({settings.Model}) - Click 'No Key' above to authenticate.";
+        }
+    }
+
+    #endregion
+
+    #region Inline Authentication Banner
+
+    private void OnToggleInlineAuthClick(object sender, RoutedEventArgs e)
+    {
+        if (InlineAuthBanner.Visibility == Visibility.Visible)
+        {
+            InlineAuthBanner.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            OpenInlineAuthBanner();
+        }
+    }
+
+    private void OpenInlineAuthBanner()
+    {
+        var settings = _settingsService.CurrentSettings;
+        var provider = AiProviderRegistry.GetProvider(settings.Provider);
+
+        TxtInlineAuthTitle.Text = $"🔑 Credentials for {provider.DisplayName} ({settings.Model})";
+        var currentToken = settings.GetEffectiveToken();
+        TxtInlineApiKey.Password = currentToken;
+        TxtInlineApiKeyVisible.Text = currentToken;
+        TxtInlineStatus.Visibility = Visibility.Collapsed;
+
+        if (settings.IsLocalNoAuth)
+        {
+            TxtInlineApiKey.IsEnabled = false;
+            TxtInlineApiKeyVisible.IsEnabled = false;
+            TxtInlineStatus.Text = "This local provider requires no API key.";
+            TxtInlineStatus.Foreground = new SolidColorBrush(Color.FromRgb(137, 209, 133));
+            TxtInlineStatus.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            TxtInlineApiKey.IsEnabled = true;
+            TxtInlineApiKeyVisible.IsEnabled = true;
+        }
+
+        InlineAuthBanner.Visibility = Visibility.Visible;
+        if (TxtInlineApiKey.IsEnabled)
+        {
+            TxtInlineApiKey.Focus();
+        }
+    }
+
+    private void OnCloseInlineAuthClick(object sender, RoutedEventArgs e)
+    {
+        InlineAuthBanner.Visibility = Visibility.Collapsed;
+    }
+
+    private void OnToggleInlineShowKey(object sender, RoutedEventArgs e)
+    {
+        if (ChkInlineShowKey.IsChecked == true)
+        {
+            TxtInlineApiKeyVisible.Text = TxtInlineApiKey.Password;
+            TxtInlineApiKey.Visibility = Visibility.Collapsed;
+            TxtInlineApiKeyVisible.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            TxtInlineApiKey.Password = TxtInlineApiKeyVisible.Text;
+            TxtInlineApiKeyVisible.Visibility = Visibility.Collapsed;
+            TxtInlineApiKey.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void OnInlineKeyKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            e.Handled = true;
+            OnSaveInlineAuthClick(sender, e);
+        }
+    }
+
+    private async void OnInlineAutoDetectClick(object sender, RoutedEventArgs e)
+    {
+        var settings = _settingsService.CurrentSettings;
+        var provider = AiProviderRegistry.GetProvider(settings.Provider);
+
+        BtnInlineAutoDetect.IsEnabled = false;
+        TxtInlineStatus.Visibility = Visibility.Visible;
+        TxtInlineStatus.Text = $"Detecting credentials for {provider.DisplayName}...";
+        TxtInlineStatus.Foreground = (Brush)FindResource("TextSecondary");
+
+        var result = await AiProviderRegistry.AutoDetectCredentialsAsync(provider.Id);
+        BtnInlineAutoDetect.IsEnabled = true;
+
+        if (result.Found)
+        {
+            if (!string.IsNullOrEmpty(result.Token))
+            {
+                TxtInlineApiKey.Password = result.Token;
+                TxtInlineApiKeyVisible.Text = result.Token;
+            }
+
+            TxtInlineStatus.Text = $"✔ {result.Info}";
+            TxtInlineStatus.Foreground = new SolidColorBrush(Color.FromRgb(137, 209, 133));
+        }
+        else
+        {
+            TxtInlineStatus.Text = $"ℹ {result.Info}";
+            TxtInlineStatus.Foreground = new SolidColorBrush(Color.FromRgb(224, 108, 117));
+        }
+    }
+
+    private void OnSaveInlineAuthClick(object sender, RoutedEventArgs e)
+    {
+        var settings = _settingsService.CurrentSettings;
+        var token = (ChkInlineShowKey.IsChecked == true ? TxtInlineApiKeyVisible.Text : TxtInlineApiKey.Password).Trim();
+
+        if (settings.AuthMode == "account_token")
+        {
+            settings.AccountToken = token;
+            settings.ApiKey = token;
+        }
+        else
+        {
+            settings.ApiKey = token;
+            settings.AccountToken = null;
+        }
+
+        _settingsService.SaveSettings(settings);
+        UpdateHeaderAuthBadge();
+        SyncDrawerWithCurrentSettings();
+        InlineAuthBanner.Visibility = Visibility.Collapsed;
+    }
+
+    #endregion
+
+    #region Drawer Settings (Advanced)
+
+    private void LoadSettingsToDrawerUI()
+    {
         CmbProvider.ItemsSource = AiProviderRegistry.Providers;
         CmbProvider.DisplayMemberPath = "DisplayName";
         CmbProvider.SelectedValuePath = "Id";
 
-        var currentProvider = AiProviderRegistry.GetProvider(settings.Provider);
-        CmbProvider.SelectedValue = currentProvider.Id;
-
-        // Auth Mode ComboBox
         CmbAuthMode.ItemsSource = new[]
         {
             new { Id = "api_key", Name = "Standard API Key" },
@@ -62,47 +334,31 @@ public partial class DeepSeekChatView : UserControl, IAiChatView
         };
         CmbAuthMode.DisplayMemberPath = "Name";
         CmbAuthMode.SelectedValuePath = "Id";
+
+        SyncDrawerWithCurrentSettings();
+    }
+
+    private void SyncDrawerWithCurrentSettings()
+    {
+        var settings = _settingsService.CurrentSettings;
+        var currentProvider = AiProviderRegistry.GetProvider(settings.Provider);
+
+        CmbProvider.SelectedValue = currentProvider.Id;
         CmbAuthMode.SelectedValue = string.IsNullOrWhiteSpace(settings.AuthMode) ? "api_key" : settings.AuthMode;
 
-        UpdateModelList(currentProvider, settings.Model);
+        UpdateDrawerModelList(currentProvider, settings.Model);
 
         TxtApiEndpoint.Text = settings.ApiEndpoint;
         var effectiveKey = settings.GetEffectiveToken();
         TxtApiKey.Password = effectiveKey;
         TxtApiKeyVisible.Text = effectiveKey;
-        UpdateModelBadge(settings);
     }
 
-    private void UpdateModelList(AiProviderDescriptor provider, string? selectedModel)
+    private void UpdateDrawerModelList(AiProviderDescriptor provider, string? selectedModel)
     {
         CmbModel.ItemsSource = provider.RecommendedModels;
         CmbModel.Text = string.IsNullOrWhiteSpace(selectedModel) ? provider.DefaultModel : selectedModel;
     }
-
-    private void UpdateModelBadge(DeepSeekSettings settings)
-    {
-        var provider = AiProviderRegistry.GetProvider(settings.Provider);
-        var model = string.IsNullOrWhiteSpace(settings.Model) ? provider.DefaultModel : settings.Model;
-        TxtModelBadge.Text = $"{provider.DisplayName}: {model}";
-    }
-
-    private void UpdateActiveFileBadge()
-    {
-        var activePath = _workspaceContext.ActiveFilePath;
-        if (!string.IsNullOrEmpty(activePath))
-        {
-            var fileName = Path.GetFileName(activePath);
-            TxtActiveFileBadge.Text = $"📄 {fileName}";
-            TxtActiveFileBadge.ToolTip = $"Active: {activePath}";
-        }
-        else
-        {
-            TxtActiveFileBadge.Text = "📄 No file";
-            TxtActiveFileBadge.ToolTip = "No active document tab open";
-        }
-    }
-
-    #region Settings Drawer Handlers
 
     private void OnToggleSettingsClick(object sender, RoutedEventArgs e)
     {
@@ -116,14 +372,13 @@ public partial class DeepSeekChatView : UserControl, IAiChatView
         if (CmbProvider.SelectedItem is AiProviderDescriptor provider)
         {
             TxtApiEndpoint.Text = provider.DefaultEndpoint;
-            UpdateModelList(provider, provider.DefaultModel);
+            UpdateDrawerModelList(provider, provider.DefaultModel);
             CmbAuthMode.SelectedValue = provider.DefaultAuthMode switch
             {
                 AiAuthMode.LocalNoAuth => "local_no_auth",
                 AiAuthMode.AccountToken => "account_token",
                 _ => "api_key"
             };
-            TxtAutoDetectStatus.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -135,35 +390,31 @@ public partial class DeepSeekChatView : UserControl, IAiChatView
             LblSecretKey.Text = "No Authentication Required (Local)";
             TxtApiKey.IsEnabled = false;
             TxtApiKeyVisible.IsEnabled = false;
-            BtnAutoDetect.IsEnabled = true;
+            BtnDrawerAutoDetect.IsEnabled = true;
         }
         else if (authMode == "account_token")
         {
             LblSecretKey.Text = "Account Bearer / Session Token:";
             TxtApiKey.IsEnabled = true;
             TxtApiKeyVisible.IsEnabled = true;
-            BtnAutoDetect.IsEnabled = true;
+            BtnDrawerAutoDetect.IsEnabled = true;
         }
         else
         {
             LblSecretKey.Text = "API Key / Secret:";
             TxtApiKey.IsEnabled = true;
             TxtApiKeyVisible.IsEnabled = true;
-            BtnAutoDetect.IsEnabled = true;
+            BtnDrawerAutoDetect.IsEnabled = true;
         }
     }
 
-    private async void OnAutoDetectClick(object sender, RoutedEventArgs e)
+    private async void OnDrawerAutoDetectClick(object sender, RoutedEventArgs e)
     {
         if (CmbProvider.SelectedItem is not AiProviderDescriptor provider) return;
 
-        BtnAutoDetect.IsEnabled = false;
-        TxtAutoDetectStatus.Visibility = Visibility.Visible;
-        TxtAutoDetectStatus.Text = $"Detecting credentials for {provider.DisplayName}...";
-        TxtAutoDetectStatus.Foreground = (Brush)FindResource("TextSecondary");
-
+        BtnDrawerAutoDetect.IsEnabled = false;
         var result = await AiProviderRegistry.AutoDetectCredentialsAsync(provider.Id);
-        BtnAutoDetect.IsEnabled = true;
+        BtnDrawerAutoDetect.IsEnabled = true;
 
         if (result.Found)
         {
@@ -178,13 +429,11 @@ public partial class DeepSeekChatView : UserControl, IAiChatView
                 CmbModel.Text = result.SuggestedModel;
             }
 
-            TxtAutoDetectStatus.Text = $"✔ {result.Info}";
-            TxtAutoDetectStatus.Foreground = new SolidColorBrush(Color.FromRgb(137, 209, 133));
+            MessageBox.Show(result.Info, "Credentials Detected", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         else
         {
-            TxtAutoDetectStatus.Text = $"ℹ {result.Info}";
-            TxtAutoDetectStatus.Foreground = new SolidColorBrush(Color.FromRgb(224, 108, 117));
+            MessageBox.Show(result.Info, "Auto-Detect Status", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -228,9 +477,30 @@ public partial class DeepSeekChatView : UserControl, IAiChatView
         settings.Model = string.IsNullOrWhiteSpace(model) ? selectedProvider.DefaultModel : model;
 
         _settingsService.SaveSettings(settings);
-        UpdateModelBadge(settings);
+        PopulateHeaderModelPicker();
+        UpdateHeaderAuthBadge();
 
         SettingsDrawer.Visibility = Visibility.Collapsed;
+    }
+
+    #endregion
+
+    #region Workspace Context & Active File Badge
+
+    private void UpdateActiveFileBadge()
+    {
+        var activePath = _workspaceContext.ActiveFilePath;
+        if (!string.IsNullOrEmpty(activePath))
+        {
+            var fileName = Path.GetFileName(activePath);
+            TxtActiveFileBadge.Text = $"📄 {fileName}";
+            TxtActiveFileBadge.ToolTip = $"Active: {activePath}";
+        }
+        else
+        {
+            TxtActiveFileBadge.Text = "📄 No file";
+            TxtActiveFileBadge.ToolTip = "No active document tab open";
+        }
     }
 
     #endregion
@@ -241,8 +511,8 @@ public partial class DeepSeekChatView : UserControl, IAiChatView
     {
         Dispatcher.Invoke(() =>
         {
-            TxtInput.Text = prompt;
-            OnSendClick(this, new RoutedEventArgs());
+            TxtPromptInput.Text = prompt;
+            OnSendPromptClick(this, new RoutedEventArgs());
         });
     }
 
@@ -283,30 +553,28 @@ public partial class DeepSeekChatView : UserControl, IAiChatView
         MessagePanel.Children.Clear();
         WelcomeBorder.Visibility = Visibility.Visible;
         MessagePanel.Children.Add(WelcomeBorder);
+        UpdateHeaderAuthBadge();
     }
 
-    private void OnInputPreviewKeyDown(object sender, KeyEventArgs e)
+    private void OnPromptInputPreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter && (Keyboard.Modifiers & ModifierKeys.Shift) == 0)
         {
             e.Handled = true;
-            OnSendClick(sender, e);
+            OnSendPromptClick(sender, e);
         }
     }
 
-    private async void OnSendClick(object sender, RoutedEventArgs e)
+    private async void OnSendPromptClick(object sender, RoutedEventArgs e)
     {
-        var input = TxtInput.Text.Trim();
+        var input = TxtPromptInput.Text.Trim();
         if (string.IsNullOrWhiteSpace(input)) return;
 
         var settings = _settingsService.CurrentSettings;
         var effectiveToken = settings.GetEffectiveToken();
         if (!settings.IsLocalNoAuth && string.IsNullOrWhiteSpace(effectiveToken))
         {
-            SettingsDrawer.Visibility = Visibility.Visible;
-            var provName = AiProviderRegistry.GetProvider(settings.Provider).DisplayName;
-            MessageBox.Show($"Please provide an API key or access token for '{provName}' in the configuration drawer above.",
-                "AI Configuration Required", MessageBoxButton.OK, MessageBoxImage.Information);
+            OpenInlineAuthBanner();
             return;
         }
 
@@ -323,7 +591,7 @@ public partial class DeepSeekChatView : UserControl, IAiChatView
         {
             var activePath = _workspaceContext.ActiveFilePath;
             var content = _workspaceContext.ActiveDocumentContent ?? "";
-            var truncated = content.Length > 8000 ? content.Substring(0, 8000) + "\n...[truncated]" : content;
+            var truncated = content.Length > 8000 ? content[..8000] + "\n...[truncated]" : content;
             promptToSend = $"[Active File: {activePath}]\n```\n{truncated}\n```\n\n{input}";
         }
 
@@ -335,7 +603,7 @@ public partial class DeepSeekChatView : UserControl, IAiChatView
 
         // Add user bubble
         AddMessageBubble("user", input);
-        TxtInput.Text = "";
+        TxtPromptInput.Text = "";
 
         // Add to history
         if (_conversationHistory.Count == 0 && !string.IsNullOrWhiteSpace(settings.SystemPrompt))
@@ -356,9 +624,10 @@ public partial class DeepSeekChatView : UserControl, IAiChatView
         var assistantMsg = AddAssistantMessageContainer();
 
         // Set busy state
-        BtnSend.IsEnabled = false;
-        StatusBarBorder.Visibility = Visibility.Visible;
-        TxtStatus.Text = "DeepSeek is thinking...";
+        BtnSendPrompt.IsEnabled = false;
+        BtnStopGeneration.Visibility = Visibility.Visible;
+        var provider = AiProviderRegistry.GetProvider(settings.Provider);
+        TxtStatusIndicator.Text = $"{provider.DisplayName} is thinking...";
 
         _currentCts = new CancellationTokenSource();
         var ct = _currentCts.Token;
@@ -382,7 +651,7 @@ public partial class DeepSeekChatView : UserControl, IAiChatView
                 {
                     Dispatcher.Invoke(() =>
                     {
-                        TxtStatus.Text = status;
+                        TxtStatusIndicator.Text = status;
                         AddStatusBadge(status);
                     });
                 },
@@ -411,14 +680,15 @@ public partial class DeepSeekChatView : UserControl, IAiChatView
             // Finalize: delete intermediate tool run logs & render Markdown output
             FinalizeAssistantMessage(assistantMsg);
 
-            BtnSend.IsEnabled = true;
-            StatusBarBorder.Visibility = Visibility.Collapsed;
+            BtnSendPrompt.IsEnabled = true;
+            BtnStopGeneration.Visibility = Visibility.Collapsed;
+            TxtStatusIndicator.Text = "Idle";
             ScrollToBottom();
             UpdateActiveFileBadge();
         }
     }
 
-    private void OnStopClick(object sender, RoutedEventArgs e)
+    private void OnStopGenerationClick(object sender, RoutedEventArgs e)
     {
         _currentCts?.Cancel();
     }
@@ -481,7 +751,7 @@ public partial class DeepSeekChatView : UserControl, IAiChatView
 
     private void FinalizeAssistantMessage(AssistantMessageContainer assistant)
     {
-        // 1. Delete all intermediate tool run logs as requested
+        // 1. Delete intermediate tool run logs
         foreach (var badge in _currentQueryStatusBadges)
         {
             MessagePanel.Children.Remove(badge);
@@ -576,4 +846,3 @@ public partial class DeepSeekChatView : UserControl, IAiChatView
 
     #endregion
 }
-

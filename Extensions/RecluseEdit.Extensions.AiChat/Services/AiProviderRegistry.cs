@@ -5,11 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using RecluseEdit.Extensions.AiChat.Models;
 using RecluseEdit.Sdk.Models;
 using RecluseEdit.Sdk.Providers;
 
-namespace RecluseEdit.Extensions.DeepSeek.Services;
+namespace RecluseEdit.Extensions.AiChat.Services;
 
 /// <summary>
 /// Pre-configured metadata for an AI provider.
@@ -60,9 +62,9 @@ public record AiProviderDescriptor(
         Action<string>? onDeltaReceived = null,
         CancellationToken ct = default)
     {
-        var settingsService = new DeepSeekSettingsService();
+        var settingsService = new AiChatSettingsService();
         var settings = settingsService.CurrentSettings;
-        var client = new DeepSeekApiClient();
+        var client = new AiChatApiClient();
         return await client.GenerateCompletionDirectAsync(settings, this, prompt, systemPrompt, onDeltaReceived, ct);
     }
 }

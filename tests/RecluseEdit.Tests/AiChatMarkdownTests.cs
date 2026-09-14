@@ -4,12 +4,12 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RecluseEdit.Extensions.DeepSeek.Rendering;
+using RecluseEdit.Extensions.AiChat.Rendering;
 
 namespace RecluseEdit.Tests;
 
 [TestClass]
-public class DeepSeekMarkdownTests
+public class AiChatMarkdownTests
 {
     [STATestMethod]
     public void TestMarkdownBlockRenderer_RendersHeadings()

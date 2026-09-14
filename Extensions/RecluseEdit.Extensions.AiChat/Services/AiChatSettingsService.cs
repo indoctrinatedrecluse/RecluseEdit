@@ -1,81 +1,86 @@
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using RecluseEdit.Extensions.DeepSeek.Models;
+using RecluseEdit.Extensions.AiChat.Models;
 
-namespace RecluseEdit.Extensions.DeepSeek.Services;
+namespace RecluseEdit.Extensions.AiChat.Services;
 
 /// <summary>
-/// Persists and manages user configuration for the DeepSeek AI extension,
+/// Persists and manages user configuration for the AI Chat extension,
 /// ensuring all API keys and secrets are stored in encrypted formats on disk.
+/// Automatically migrates legacy DeepSeek settings if present.
 /// </summary>
-public class DeepSeekSettingsService
+public class AiChatSettingsService
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true
     };
 
-    private static readonly byte[] Entropy = "RecluseEdit::DeepSeek::SecretStorage::v1"u8.ToArray();
+    private static readonly byte[] Entropy = "RecluseEdit::AiChat::SecretStorage::v1"u8.ToArray();
+    private static readonly byte[] LegacyEntropy = "RecluseEdit::DeepSeek::SecretStorage::v1"u8.ToArray();
 
     private readonly string _settingsFilePath;
-    private DeepSeekSettings _currentSettings;
+    private readonly string? _legacyFilePath;
+    private AiChatSettings _currentSettings;
 
-    public event Action<DeepSeekSettings>? SettingsChanged;
+    public event Action<AiChatSettings>? SettingsChanged;
 
-    public DeepSeekSettings CurrentSettings => _currentSettings;
+    public AiChatSettings CurrentSettings => _currentSettings;
 
-    public DeepSeekSettingsService(string? customPath = null)
+    public AiChatSettingsService(string? customPath = null)
     {
         if (!string.IsNullOrEmpty(customPath))
         {
             _settingsFilePath = customPath;
+            _legacyFilePath = null;
         }
         else
         {
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var recluseDir = Path.Combine(appData, "RecluseEdit");
-            _settingsFilePath = Path.Combine(recluseDir, "deepseek_settings.json");
+            _settingsFilePath = Path.Combine(recluseDir, "aichat_settings.json");
+            _legacyFilePath = Path.Combine(recluseDir, "deepseek_settings.json");
         }
 
         _currentSettings = LoadSettings();
     }
 
-    public DeepSeekSettings LoadSettings()
+    public AiChatSettings LoadSettings()
     {
         try
         {
+            // 1. Try loading primary aichat_settings.json
             if (File.Exists(_settingsFilePath))
             {
                 var json = File.ReadAllText(_settingsFilePath);
-                var loaded = JsonSerializer.Deserialize<DeepSeekSettings>(json);
+                var loaded = JsonSerializer.Deserialize<AiChatSettings>(json);
                 if (loaded != null)
                 {
-                    var migrated = false;
-
-                    // Decrypt stored API key
-                    if (!string.IsNullOrEmpty(loaded.EncryptedApiKey))
-                    {
-                        loaded.ApiKey = DecryptSecret(loaded.EncryptedApiKey);
-                    }
-                    else if (!string.IsNullOrEmpty(loaded.LegacyPlaintextApiKey))
-                    {
-                        // One-way migration: encrypt existing plaintext key and scrub plaintext from disk
-                        loaded.ApiKey = loaded.LegacyPlaintextApiKey;
-                        loaded.EncryptedApiKey = EncryptSecret(loaded.ApiKey);
-                        loaded.LegacyPlaintextApiKey = null;
-                        migrated = true;
-                    }
-
+                    var hadPlaintext = !string.IsNullOrEmpty(loaded.LegacyPlaintextApiKey);
+                    DecryptSettingsKey(loaded, isLegacy: false);
                     _currentSettings = loaded;
-
-                    if (migrated)
+                    if (hadPlaintext)
                     {
                         SaveSettings(loaded);
                     }
-
                     return loaded;
+                }
+            }
+
+            // 2. Try migrating from legacy deepseek_settings.json if present
+            if (!string.IsNullOrEmpty(_legacyFilePath) && File.Exists(_legacyFilePath))
+            {
+                var legacyJson = File.ReadAllText(_legacyFilePath);
+                var legacyLoaded = JsonSerializer.Deserialize<AiChatSettings>(legacyJson);
+                if (legacyLoaded != null)
+                {
+                    DecryptSettingsKey(legacyLoaded, isLegacy: true);
+                    _currentSettings = legacyLoaded;
+                    SaveSettings(legacyLoaded);
+                    return legacyLoaded;
                 }
             }
         }
@@ -84,16 +89,29 @@ public class DeepSeekSettingsService
             // Fall back to default settings on read error
         }
 
-        _currentSettings = new DeepSeekSettings();
+        _currentSettings = new AiChatSettings();
         return _currentSettings;
     }
 
-    public void SaveSettings(DeepSeekSettings settings)
+    private void DecryptSettingsKey(AiChatSettings settings, bool isLegacy)
+    {
+        if (!string.IsNullOrEmpty(settings.EncryptedApiKey))
+        {
+            settings.ApiKey = DecryptSecret(settings.EncryptedApiKey, isLegacy);
+        }
+        else if (!string.IsNullOrEmpty(settings.LegacyPlaintextApiKey))
+        {
+            settings.ApiKey = settings.LegacyPlaintextApiKey;
+            settings.EncryptedApiKey = EncryptSecret(settings.ApiKey);
+            settings.LegacyPlaintextApiKey = null;
+        }
+    }
+
+    public void SaveSettings(AiChatSettings settings)
     {
         _currentSettings = settings;
         try
         {
-            // Ensure API key is encrypted for disk storage
             if (!string.IsNullOrEmpty(settings.ApiKey))
             {
                 settings.EncryptedApiKey = EncryptSecret(settings.ApiKey);
@@ -103,7 +121,6 @@ public class DeepSeekSettingsService
                 settings.EncryptedApiKey = null;
             }
 
-            // Guarantee legacy plaintext is never written
             settings.LegacyPlaintextApiKey = null;
 
             var dir = Path.GetDirectoryName(_settingsFilePath);
@@ -118,13 +135,10 @@ public class DeepSeekSettingsService
         }
         catch
         {
-            // Ignore write errors (e.g. read-only envs)
+            // Ignore write errors
         }
     }
 
-    /// <summary>
-    /// Encrypts sensitive secret strings using Windows DPAPI (CurrentUser) or machine-bound AES fallback.
-    /// </summary>
     public static string EncryptSecret(string plainText)
     {
         if (string.IsNullOrEmpty(plainText))
@@ -149,10 +163,7 @@ public class DeepSeekSettingsService
         return "aes:" + AesEncrypt(plainText);
     }
 
-    /// <summary>
-    /// Decrypts sensitive secret strings stored on disk.
-    /// </summary>
-    public static string DecryptSecret(string cipherText)
+    public static string DecryptSecret(string cipherText, bool checkLegacy = false)
     {
         if (string.IsNullOrEmpty(cipherText))
         {
@@ -165,8 +176,16 @@ public class DeepSeekSettingsService
             {
                 var payload = cipherText["dpapi:".Length..];
                 var encryptedBytes = Convert.FromBase64String(payload);
-                var decryptedBytes = ProtectedData.Unprotect(encryptedBytes, Entropy, DataProtectionScope.CurrentUser);
-                return Encoding.UTF8.GetString(decryptedBytes);
+                try
+                {
+                    var decryptedBytes = ProtectedData.Unprotect(encryptedBytes, Entropy, DataProtectionScope.CurrentUser);
+                    return Encoding.UTF8.GetString(decryptedBytes);
+                }
+                catch when (checkLegacy)
+                {
+                    var decryptedBytes = ProtectedData.Unprotect(encryptedBytes, LegacyEntropy, DataProtectionScope.CurrentUser);
+                    return Encoding.UTF8.GetString(decryptedBytes);
+                }
             }
 
             if (cipherText.StartsWith("aes:", StringComparison.OrdinalIgnoreCase))
@@ -175,7 +194,6 @@ public class DeepSeekSettingsService
                 return AesDecrypt(payload);
             }
 
-            // Raw base64 or legacy DPAPI attempt
             try
             {
                 var rawBytes = Convert.FromBase64String(cipherText);
@@ -195,7 +213,7 @@ public class DeepSeekSettingsService
 
     private static byte[] GetMachineKey()
     {
-        var raw = $"RecluseEdit::{Environment.MachineName}::{Environment.UserName}::SecretVault";
+        var raw = $"RecluseEdit::{Environment.MachineName}::{Environment.UserName}::AiChatSecretVault";
         return SHA256.HashData(Encoding.UTF8.GetBytes(raw));
     }
 
@@ -234,4 +252,12 @@ public class DeepSeekSettingsService
         using var sr = new StreamReader(cs, Encoding.UTF8);
         return sr.ReadToEnd();
     }
+}
+
+/// <summary>
+/// Backward-compatibility alias for DeepSeekSettingsService.
+/// </summary>
+public class DeepSeekSettingsService : AiChatSettingsService
+{
+    public DeepSeekSettingsService(string? customPath = null) : base(customPath) { }
 }

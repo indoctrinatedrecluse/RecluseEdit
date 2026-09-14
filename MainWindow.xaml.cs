@@ -931,9 +931,13 @@ public partial class MainWindow : Window
         }
 
         var fileName = EditorHost.DocumentModel?.FileName ?? "ActiveDocument";
-        ActivateSidePanelById("deepseek.chat");
+        var panelId = _sidePanelViews.Keys.FirstOrDefault(k => k == "aichat.panel" || k == "deepseek.chat")
+            ?? _registeredSidePanels.FirstOrDefault(p => p.Id == "aichat.panel" || p.Id == "deepseek.chat")?.Id
+            ?? _sidePanelViews.FirstOrDefault(kvp => kvp.Value is IAiChatView).Key
+            ?? "aichat.panel";
+        ActivateSidePanelById(panelId);
 
-        if (_sidePanelViews.TryGetValue("deepseek.chat", out var view) && view is IAiChatView chatView)
+        if (_sidePanelViews.TryGetValue(panelId, out var view) && view is IAiChatView chatView)
         {
             chatView.StartCodeReview(code, fileName);
             StatusMessage.Text = $"Starting AI Code Review for {fileName}...";
@@ -1015,7 +1019,7 @@ public partial class MainWindow : Window
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
         MessageBox.Show(this,
-            "RecluseEdit v5.0.0\n\n" +
+            "RecluseEdit v5.1.0\n\n" +
             "A fast, modern code editor optimized for web applications.\n\n" +
             "Key Features:\n" +
             "• Multi-Model AI Hub & Code Review (Ctrl+Alt+A, Ctrl+Shift+R, Ctrl+I)\n" +

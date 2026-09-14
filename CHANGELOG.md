@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.1.0] - 2026-09-14
+
+### 🚀 Added & Enhanced: Universal AI Chat & Direct In-Chat Controls
+- **Universal AI Chat Extension (`RecluseEdit.Extensions.AiChat`)**:
+  - Rebranded and refactored the legacy DeepSeek extension into the general **AI Chat** extension (`RecluseEdit.Extensions.AiChat`).
+  - Set **DeepSeek** (`deepseek-chat` / V3) as the default active intelligence engine out of the box.
+- **In-Chat Quick Model Selector**:
+  - Integrated model selector dropdown directly into the AI Chat header toolbar (`CmbHeaderModel`), allowing immediate switching between DeepSeek, OpenAI (GPT-4o), Google Gemini & Antigravity, Anthropic Claude, and Ollama without opening settings drawers.
+- **Inline Authentication Banner & Status Badge**:
+  - Added in-chat authentication banner (`InlineAuthBanner`) displaying credentials, password visibility toggle, and one-click `🔍 Auto-Detect`.
+  - Added header authentication status badge (`BtnHeaderAuth`) reflecting credential state (`Ready`, `No Key`, `Offline`) with direct click-to-edit.
+- **Automatic Settings & Credentials Migration**:
+  - Seamlessly migrates existing encrypted tokens and configurations from `%APPDATA%\RecluseEdit\deepseek_settings.json` into `aichat_settings.json` with DPAPI encryption and zero data loss.
+- **Complete Legacy Code Cleanup & Compatibility**:
+  - Removed all redundant legacy `extensions/RecluseEdit.Extensions.DeepSeek/` project code.
+  - Provided backwards-compatibility wrappers in `RecluseEdit.Extensions.DeepSeek` namespace for external plugins and existing references.
+- **Test Suite & Verification**:
+  - Updated all unit and integration tests to target `RecluseEdit.Extensions.AiChat`, verifying 226 tests passing with 0 warnings and 0 errors.
+
 ## [5.0.0] - 2026-09-14
 
 ### 🚀 Added

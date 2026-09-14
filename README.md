@@ -24,7 +24,7 @@
 - ⚡ **Universal Command Palette**: Modal fuzzy command launcher (<kbd>Ctrl+Shift+P</kbd>, <kbd>F1</kbd>) to search and execute any command, quick-open workspace files and tabs (<kbd>Ctrl+P</kbd>), jump to line numbers (<kbd>Ctrl+G</kbd>), and query help commands (`?`).
 - ✂️ **Advanced Line & Multiline Editing**: Move lines up/down (<kbd>Alt+&uarr;/&darr;</kbd>), duplicate lines (<kbd>Shift+Alt+&uarr;/&darr;</kbd>), toggle comments (<kbd>Ctrl+/</kbd>), delete lines (<kbd>Ctrl+Shift+K</kbd>), join lines (<kbd>Ctrl+J</kbd>), transform case (<kbd>Ctrl+Shift+U</kbd>, <kbd>Ctrl+U</kbd>), sort lines, trim trailing whitespace, and rectangular column cursor editing (<kbd>Ctrl+Alt+&uarr;/&darr;</kbd>).
 - 🗂️ **Web Workspace Explorer**: Open entire project directories (`Ctrl+Shift+O`), browse files via a collapsible tree sidebar (`Ctrl+B`), and double-click to open.
-- 🤖 **DeepSeek AI Chat Assistant**: Collapsible right-pane conversational AI panel (<kbd>Ctrl+Alt+A</kbd>) with real-time streaming, configurable API endpoints & keys, secure file read/write permissions, and interactive confirmation prompts before running terminal commands.
+- 🤖 **Universal AI Chat Assistant**: Collapsible right-pane conversational AI panel (<kbd>Ctrl+Alt+A</kbd>) with default DeepSeek intelligence, instant in-chat model switching (OpenAI GPT-4o, Google Gemini & Antigravity, Anthropic Claude, Ollama), inline authentication with auto-discovery, secure workspace file read/write operations, and user confirmation before terminal commands.
 - 💻 **Integrated Multi-Terminal Dock**: Persistent multi-tab terminal (<kbd>Ctrl+`</kbd>) supporting PowerShell, CMD, Git Bash, WSL, and custom verified executables.
 - 📑 **Multi-File Tabbed Workspace**: Seamlessly open, edit, and switch between multiple tabs. Middle-click tab to close, and right-click for tab context actions (*Close Others*, *Close to Right*, *Copy Path*, *Reveal in Explorer*).
 - 🎨 **Exhaustive High-Fidelity Syntax Highlighting**: Custom, dedicated XSHD syntax definitions across all supported languages (Vue 3 SFC, Svelte 5 runes, Astro, SQL, HTTP/REST, Markdown, modern ECMAScript/TypeScript, CSS3/SCSS/LESS, PHP 8+, React JSX/TSX, GraphQL, Angular HTML templates, Angular TypeScript, Dart 3, Ruby on Rails, Go, Python, Rust, Lua, PowerShell, Bash, JSON, and XML/XAML), beautifully tuned with a rich VS Code Dark+ color palette.
@@ -206,7 +206,10 @@ RecluseEdit features a modular, decoupled extension architecture. Each extension
 
 RecluseEdit comes with fourteen modular extensions built as dedicated targets in `RecluseEdit.slnx`:
 
-### 🤖 Multi-Model AI Hub & Assistant Pack (`RecluseEdit.Extensions.DeepSeek`)
+### 🤖 Universal AI Chat Assistant Pack (`RecluseEdit.Extensions.AiChat`)
+- **Default DeepSeek Intelligence**: Powered out-of-the-box by DeepSeek (`deepseek-chat` / V3 and `deepseek-reasoner` / R1) for exceptional reasoning and code synthesis.
+- **In-Chat Quick Model Selector**: Switch models and providers instantly via the dropdown menu right in the chat header, without diving into buried configuration menus.
+- **In-Chat Authentication Banner & Auto-Detect**: Convenient inline credential banner directly within the chat view when keys are missing or updated, featuring one-click credential auto-detection (`🔍 Auto-Detect`).
 - **Pluggable Multi-Model AI Architecture (`IAiProvider`)**: Seamless runtime switching between:
   - **DeepSeek**: `deepseek-chat` (V3) and `deepseek-reasoner` (R1) with native reasoning support.
   - **OpenAI / ChatGPT**: `gpt-4o`, `gpt-4o-mini`, `o1`, `o3-mini`, `chatgpt-4o-latest` via standard API key OR ChatGPT subscription bearer/session tokens.
@@ -214,7 +217,7 @@ RecluseEdit comes with fourteen modular extensions built as dedicated targets in
   - **Anthropic Claude**: `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet`, `claude-3-5-haiku` via direct API key or OpenAI-compatible proxies.
   - **Ollama (Local Offline)**: Zero-auth private offline LLMs (`llama3.3`, `qwen2.5-coder`, `deepseek-r1`, `mistral`) running on `http://localhost:11434`.
   - **Custom Endpoints**: Any OpenAI-compatible gateway (Groq, Together, OpenRouter, vLLM, LM Studio).
-- **One-Click Credential Discovery (`🔍 Auto-Detect`)**: Intelligently discovers environment credentials (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`), gcloud CLI OAuth access tokens, or local Ollama instances with a single click.
+- **Seamless Settings Migration**: Automatically discovers and migrates legacy `deepseek_settings.json` credentials into the new `aichat_settings.json` format encrypted with DPAPI/AES.
 - **AI Code Review (<kbd>Ctrl+Shift+R</kbd>)**: Audits selected code snippets or the active document for potential bugs, performance bottlenecks, security vulnerabilities, and clean code idiomatic practices directly in the AI Chat panel.
 - **AI In-line Prompt & Generation (<kbd>Ctrl+I</kbd>)**: Floating in-editor prompt bar anchored above the caret to stream refactorings, docstrings, or unit tests in real time, with keyboard shortcuts for Accept (<kbd>Ctrl+Enter</kbd>), Discard (<kbd>Esc</kbd>), and Cancel (<kbd>Esc</kbd>).
 - **Dual Authentication Modes**: API Key or Account Bearer/Session Token, securely encrypted on disk using the Windows Data Protection API (DPAPI, `CurrentUser` scope) with an AES fallback.

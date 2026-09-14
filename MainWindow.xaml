@@ -219,7 +219,7 @@
                                          x:Name="BtnToggleAiChat" 
                                          Content="🤖 AI Chat" 
                                          IsChecked="True"
-                                         ToolTip="Toggle DeepSeek AI Chat (Ctrl+Alt+A)"
+                                         ToolTip="Toggle AI Chat (Ctrl+Alt+A)"
                                          Padding="8,4" Margin="2,1"
                                          FontSize="12"
                                          Click="OnToggleAiChatClick" />

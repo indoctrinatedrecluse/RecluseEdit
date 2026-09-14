@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 
-namespace RecluseEdit.Extensions.DeepSeek.Rendering;
+namespace RecluseEdit.Extensions.AiChat.Rendering;
 
 /// <summary>
 /// Renders standard Markdown text into styled WPF UI elements for chat message presentation.

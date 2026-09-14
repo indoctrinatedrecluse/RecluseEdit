@@ -8,10 +8,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RecluseEdit.Core.Services;
-using RecluseEdit.Extensions.DeepSeek;
-using RecluseEdit.Extensions.DeepSeek.Models;
-using RecluseEdit.Extensions.DeepSeek.Services;
-using RecluseEdit.Extensions.DeepSeek.Views;
+using RecluseEdit.Extensions.AiChat;
+using RecluseEdit.Extensions.AiChat.Models;
+using RecluseEdit.Extensions.AiChat.Services;
+using RecluseEdit.Extensions.AiChat.Views;
 using RecluseEdit.Sdk;
 using RecluseEdit.Sdk.Models;
 using RecluseEdit.Sdk.Providers;
@@ -181,14 +181,14 @@ public class AiProviderTests
     }
 
     [TestMethod]
-    public async Task DeepSeekExtension_RegistersAllAiProvidersWithHost()
+    public async Task AiChatExtension_RegistersAllAiProvidersWithHost()
     {
         var host = new TestHost();
-        var extension = new DeepSeekExtension();
+        var extension = new AiChatExtension();
 
         await extension.InitializeAsync(host);
 
-        Assert.IsTrue(host.SidePanels.Any(p => p.Id == "deepseek.chat"));
+        Assert.IsTrue(host.SidePanels.Any(p => p.Id == "aichat.panel"));
         Assert.IsGreaterThanOrEqualTo(host.Providers.Count, 6, "All AI providers should be registered with host");
         Assert.IsTrue(host.Providers.Any(p => p.Id == "google_antigravity"));
         Assert.IsTrue(host.Providers.Any(p => p.Id == "openai"));
