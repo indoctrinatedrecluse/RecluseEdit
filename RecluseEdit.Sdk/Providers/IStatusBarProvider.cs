@@ -212,3 +212,4 @@ public class StatusBarItem : IStatusBarItem
         Changed?.Invoke(this, EventArgs.Empty);
     }
 }
+

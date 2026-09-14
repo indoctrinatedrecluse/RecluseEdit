@@ -80,10 +80,33 @@
         <!-- 1. Settings Drawer (Collapsible) -->
         <Border x:Name="SettingsDrawer" Grid.Row="1" Background="{StaticResource SectionBg}" BorderBrush="{StaticResource BorderBrushColor}" BorderThickness="0,0,0,1" Padding="10" Visibility="Collapsed">
             <StackPanel>
+                <!-- Provider Selector -->
+                <TextBlock Text="AI Provider:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,3" />
+                <ComboBox x:Name="CmbProvider" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="4,3" FontSize="11" Margin="0,0,0,8" SelectionChanged="OnProviderSelectionChanged" />
+
+                <!-- Auth Mode & Discovery -->
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Authentication Mode:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,3" />
+                        <ComboBox x:Name="CmbAuthMode" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="4,3" FontSize="11" SelectionChanged="OnAuthModeSelectionChanged" />
+                    </StackPanel>
+                    <Button x:Name="BtnAutoDetect" Grid.Column="1" VerticalAlignment="Bottom" Margin="8,0,0,0" Padding="8,4" Background="#3E3E42" Foreground="{StaticResource TextPrimary}" BorderThickness="0" FontSize="11" Cursor="Hand" Click="OnAutoDetectClick" ToolTip="Detect credentials from environment variables or gcloud CLI">
+                        <TextBlock Text="🔍 Auto-Detect" />
+                    </Button>
+                </Grid>
+
+                <TextBlock x:Name="TxtAutoDetectStatus" Text="" Foreground="#89D185" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,6" Visibility="Collapsed" />
+
+                <!-- Endpoint URL -->
                 <TextBlock Text="API Endpoint URL:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,3" />
                 <TextBox x:Name="TxtApiEndpoint" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="4,3" FontSize="11" Margin="0,0,0,8" />
 
-                <TextBlock Text="API Key / Secret:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,3" />
+                <!-- API Key / Token -->
+                <TextBlock x:Name="LblSecretKey" Text="API Key / Access Token:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,3" />
                 <Grid Margin="0,0,0,8">
                     <PasswordBox x:Name="TxtApiKey" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="4,3" FontSize="11" />
                     <TextBox x:Name="TxtApiKeyVisible" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="4,3" FontSize="11" Visibility="Collapsed" />
@@ -97,7 +120,7 @@
                     <CheckBox x:Name="ChkShowKey" Content="Show Key" Foreground="{StaticResource TextSecondary}" FontSize="10" Checked="OnToggleShowKey" Unchecked="OnToggleShowKey" VerticalAlignment="Center" />
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                         <TextBlock Text="Model: " Foreground="{StaticResource TextSecondary}" FontSize="11" VerticalAlignment="Center" />
-                        <TextBox x:Name="TxtModelName" Width="110" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="3,2" FontSize="11" />
+                        <ComboBox x:Name="CmbModel" Width="140" IsEditable="True" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="3,2" FontSize="11" />
                     </StackPanel>
                 </Grid>
 
@@ -113,12 +136,13 @@
                 <!-- Welcome placeholder if empty -->
                 <Border x:Name="WelcomeBorder" Background="{StaticResource SectionBg}" CornerRadius="6" Padding="14" Margin="0,10,0,0">
                     <StackPanel>
-                        <TextBlock Text="👋 DeepSeek AI Assistant" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" FontSize="13" Margin="0,0,0,6" />
-                        <TextBlock Text="Ask questions, request code edits, or ask to run terminal tasks. This AI can:" TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,6" />
+                        <TextBlock Text="👋 AI Developer Assistant" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" FontSize="13" Margin="0,0,0,6" />
+                        <TextBlock Text="Supports DeepSeek, OpenAI GPT-4o, Google Gemini / Antigravity, Anthropic Claude, and Local Ollama." TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,6" />
                         <TextBlock Text="• Read &amp; understand workspace files" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="8,0,0,2" />
                         <TextBlock Text="• Write and create project files directly" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="8,0,0,2" />
-                        <TextBlock Text="• Execute terminal commands (with your approval)" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="8,0,0,8" />
-                        <TextBlock Text="Click ⚙️ Config above to enter your DeepSeek API key." Foreground="{StaticResource AccentColor}" FontSize="11" />
+                        <TextBlock Text="• Execute terminal commands (with your approval)" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="8,0,0,2" />
+                        <TextBlock Text="• Press Ctrl+Shift+R for instant AI Code Review" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="8,0,0,8" />
+                        <TextBlock Text="Click ⚙️ Config above to switch model providers or auto-detect keys." Foreground="{StaticResource AccentColor}" FontSize="11" />
                     </StackPanel>
                 </Border>
             </StackPanel>

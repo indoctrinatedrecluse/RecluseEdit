@@ -176,3 +176,4 @@ public abstract class CliDocumentFormatter : IDocumentFormatter
         return null;
     }
 }
+

@@ -14,10 +14,17 @@ namespace RecluseEdit.Extensions.DeepSeek.Services;
 /// </summary>
 public class DeepSeekApiClient
 {
-    private static readonly HttpClient HttpClient = new()
+    private static readonly HttpClient DefaultHttpClient = new()
     {
         Timeout = TimeSpan.FromMinutes(5)
     };
+
+    private readonly HttpClient _httpClient;
+
+    public DeepSeekApiClient(HttpClient? httpClient = null)
+    {
+        _httpClient = httpClient ?? DefaultHttpClient;
+    }
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -99,28 +106,35 @@ public class DeepSeekApiClient
 
     public string NormalizeEndpoint(string endpoint)
     {
-        var ep = endpoint.Trim();
-        if (string.IsNullOrWhiteSpace(ep))
-        {
-            return "https://api.deepseek.com/chat/completions";
-        }
+        return AiProviderRegistry.GetProvider("deepseek").NormalizeEndpoint(endpoint);
+    }
 
-        if (ep.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase))
+    /// <summary>
+    /// Generates a direct streaming completion without workspace tool calling.
+    /// </summary>
+    public async Task<string> GenerateCompletionDirectAsync(
+        DeepSeekSettings settings,
+        AiProviderDescriptor? providerDescriptor,
+        string prompt,
+        string? systemPrompt = null,
+        Action<string>? onDeltaReceived = null,
+        CancellationToken ct = default)
+    {
+        var provider = providerDescriptor ?? AiProviderRegistry.GetProvider(settings.Provider);
+        var messages = new List<ChatMessage>();
+        if (!string.IsNullOrWhiteSpace(systemPrompt))
         {
-            return ep;
+            messages.Add(new ChatMessage { Role = "system", Content = systemPrompt });
         }
+        messages.Add(new ChatMessage { Role = "user", Content = prompt });
 
-        if (ep.EndsWith("/v1", StringComparison.OrdinalIgnoreCase))
-        {
-            return $"{ep}/chat/completions";
-        }
-
-        if (ep.EndsWith("/"))
-        {
-            return $"{ep}chat/completions";
-        }
-
-        return $"{ep}/chat/completions";
+        return await SendChatStreamAsync(
+            settings,
+            messages,
+            null,
+            onDeltaReceived ?? (_ => { }),
+            null,
+            ct);
     }
 
     /// <summary>
@@ -129,48 +143,83 @@ public class DeepSeekApiClient
     public async Task<string> SendChatStreamAsync(
         DeepSeekSettings settings,
         List<ChatMessage> conversationHistory,
-        IWorkspaceContext workspaceContext,
+        IWorkspaceContext? workspaceContext,
         Action<string> onDeltaReceived,
         Action<string>? onStatusUpdate = null,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(settings.ApiKey))
+        var provider = AiProviderRegistry.GetProvider(settings.Provider);
+        var effectiveToken = settings.GetEffectiveToken();
+
+        if (!settings.IsLocalNoAuth && string.IsNullOrWhiteSpace(effectiveToken))
         {
-            throw new InvalidOperationException("API key is missing. Please configure your DeepSeek API key in the extension settings.");
+            throw new InvalidOperationException($"API key / access token is missing for provider '{provider.DisplayName}'. Please configure your credentials in the AI settings drawer.");
         }
 
-        var endpoint = NormalizeEndpoint(settings.ApiEndpoint);
-
-        // Prepare request
-        var requestPayload = new ChatCompletionRequest
-        {
-            Model = string.IsNullOrWhiteSpace(settings.Model) ? "deepseek-chat" : settings.Model,
-            Messages = conversationHistory,
-            Tools = AvailableTools,
-            Stream = true,
-            Temperature = settings.Temperature,
-            MaxTokens = settings.MaxTokens > 0 ? settings.MaxTokens : null
-        };
+        var endpoint = provider.NormalizeEndpoint(settings.ApiEndpoint);
+        bool isAnthropicNative = provider.Type == RecluseEdit.Sdk.Models.AiProviderType.Anthropic && 
+            (endpoint.Contains("api.anthropic.com") || endpoint.EndsWith("/messages", StringComparison.OrdinalIgnoreCase));
 
         using var requestMessage = new HttpRequestMessage(HttpMethod.Post, endpoint);
-        requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", settings.ApiKey.Trim());
         requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
-        var json = JsonSerializer.Serialize(requestPayload, JsonOpts);
-        requestMessage.Content = new StringContent(json, Encoding.UTF8, "application/json");
+        if (isAnthropicNative)
+        {
+            requestMessage.Headers.Add("x-api-key", effectiveToken);
+            requestMessage.Headers.Add("anthropic-version", "2023-06-01");
 
-        using var response = await HttpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, ct);
+            var systemPrompt = conversationHistory.FirstOrDefault(m => m.Role == "system")?.Content;
+            var anthropicMessages = conversationHistory
+                .Where(m => m.Role != "system" && m.Role != "tool")
+                .Select(m => new { role = m.Role == "assistant" ? "assistant" : "user", content = m.Content ?? "" })
+                .ToList();
+
+            var anthropicPayload = new
+            {
+                model = string.IsNullOrWhiteSpace(settings.Model) ? provider.DefaultModel : settings.Model,
+                messages = anthropicMessages,
+                system = string.IsNullOrWhiteSpace(systemPrompt) ? null : systemPrompt,
+                max_tokens = settings.MaxTokens > 0 ? settings.MaxTokens : 4096,
+                stream = true,
+                temperature = settings.Temperature
+            };
+
+            var json = JsonSerializer.Serialize(anthropicPayload, JsonOpts);
+            requestMessage.Content = new StringContent(json, Encoding.UTF8, "application/json");
+        }
+        else
+        {
+            if (!settings.IsLocalNoAuth && !string.IsNullOrWhiteSpace(effectiveToken))
+            {
+                requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", effectiveToken);
+            }
+
+            var requestPayload = new ChatCompletionRequest
+            {
+                Model = string.IsNullOrWhiteSpace(settings.Model) ? provider.DefaultModel : settings.Model,
+                Messages = conversationHistory,
+                Tools = (provider.Type == RecluseEdit.Sdk.Models.AiProviderType.Ollama || workspaceContext == null) ? null : AvailableTools,
+                Stream = true,
+                Temperature = settings.Temperature,
+                MaxTokens = settings.MaxTokens > 0 ? settings.MaxTokens : null
+            };
+
+            var json = JsonSerializer.Serialize(requestPayload, JsonOpts);
+            requestMessage.Content = new StringContent(json, Encoding.UTF8, "application/json");
+        }
+
+        using var response = await _httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, ct);
         if (!response.IsSuccessStatusCode)
         {
             var errorBody = await response.Content.ReadAsStringAsync(ct);
-            throw new HttpRequestException($"API request failed with status {(int)response.StatusCode} ({response.StatusCode}): {errorBody}");
+            throw new HttpRequestException($"API request to {provider.DisplayName} failed with status {(int)response.StatusCode} ({response.StatusCode}): {errorBody}");
         }
 
         using var stream = await response.Content.ReadAsStreamAsync(ct);
         using var reader = new StreamReader(stream, Encoding.UTF8);
 
         var fullAssistantContent = new StringBuilder();
-        var pendingToolCalls = new Dictionary<int, (string id, string name, StringBuilder args)>();
+        var pendingToolCalls = new Dictionary<int, PendingToolCall>();
 
         while (true)
         {
@@ -186,32 +235,60 @@ public class DeepSeekApiClient
 
             try
             {
-                var chunk = JsonSerializer.Deserialize<ChatCompletionResponse>(dataPayload, JsonOpts);
-                var choice = chunk?.Choices?.FirstOrDefault();
-                if (choice?.Delta != null)
-                {
-                    // Delta text content
-                    if (!string.IsNullOrEmpty(choice.Delta.Content))
-                    {
-                        fullAssistantContent.Append(choice.Delta.Content);
-                        onDeltaReceived(choice.Delta.Content);
-                    }
+                using var doc = JsonDocument.Parse(dataPayload);
+                var root = doc.RootElement;
 
-                    // Delta tool calls
-                    if (choice.Delta.ToolCalls != null)
+                // 1. OpenAI-compatible format
+                if (root.TryGetProperty("choices", out var choicesElem) && choicesElem.GetArrayLength() > 0)
+                {
+                    var choice = choicesElem[0];
+                    if (choice.TryGetProperty("delta", out var deltaElem))
                     {
-                        foreach (var tc in choice.Delta.ToolCalls)
+                        if (deltaElem.TryGetProperty("content", out var contentElem))
                         {
-                            var idx = tc.Index ?? 0;
-                            if (!pendingToolCalls.TryGetValue(idx, out var existing))
+                            var content = contentElem.GetString();
+                            if (!string.IsNullOrEmpty(content))
                             {
-                                existing = (tc.Id ?? Guid.NewGuid().ToString(), tc.Function?.Name ?? "", new StringBuilder());
-                                pendingToolCalls[idx] = existing;
+                                fullAssistantContent.Append(content);
+                                onDeltaReceived(content);
                             }
-                            if (!string.IsNullOrEmpty(tc.Id)) existing.id = tc.Id;
-                            if (!string.IsNullOrEmpty(tc.Function?.Name)) existing.name = tc.Function.Name;
-                            if (!string.IsNullOrEmpty(tc.Function?.Arguments)) existing.args.Append(tc.Function.Arguments);
                         }
+
+                        // Delta tool calls
+                        if (deltaElem.TryGetProperty("tool_calls", out var tcElem) && tcElem.ValueKind == JsonValueKind.Array)
+                        {
+                            foreach (var tc in tcElem.EnumerateArray())
+                            {
+                                int idx = tc.TryGetProperty("index", out var ie) ? ie.GetInt32() : 0;
+                                if (!pendingToolCalls.TryGetValue(idx, out var existing))
+                                {
+                                    string id = tc.TryGetProperty("id", out var idElem) ? idElem.GetString() ?? Guid.NewGuid().ToString() : Guid.NewGuid().ToString();
+                                    existing = new PendingToolCall { Id = id };
+                                    pendingToolCalls[idx] = existing;
+                                }
+
+                                if (tc.TryGetProperty("id", out var idVal) && !string.IsNullOrEmpty(idVal.GetString()))
+                                    existing.Id = idVal.GetString()!;
+
+                                if (tc.TryGetProperty("function", out var fnElem))
+                                {
+                                    if (fnElem.TryGetProperty("name", out var nameVal) && !string.IsNullOrEmpty(nameVal.GetString()))
+                                        existing.Name = nameVal.GetString()!;
+                                    if (fnElem.TryGetProperty("arguments", out var argVal) && !string.IsNullOrEmpty(argVal.GetString()))
+                                        existing.Args.Append(argVal.GetString());
+                                }
+                            }
+                        }
+                    }
+                }
+                // 2. Anthropic SSE format
+                else if (root.TryGetProperty("delta", out var anthropicDelta) && anthropicDelta.TryGetProperty("text", out var textElem))
+                {
+                    var text = textElem.GetString();
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        fullAssistantContent.Append(text);
+                        onDeltaReceived(text);
                     }
                 }
             }
@@ -221,20 +298,20 @@ public class DeepSeekApiClient
             }
         }
 
-        // If tools were called, execute them and continue the conversation
-        if (pendingToolCalls.Count > 0)
+        // If tools were called and a workspace context was provided, execute them and continue the conversation
+        if (workspaceContext != null && pendingToolCalls.Count > 0)
         {
             var toolCallsList = new List<ToolCall>();
             foreach (var kvp in pendingToolCalls.OrderBy(p => p.Key))
             {
                 toolCallsList.Add(new ToolCall
                 {
-                    Id = kvp.Value.id,
+                    Id = kvp.Value.Id,
                     Type = "function",
                     Function = new FunctionCall
                     {
-                        Name = kvp.Value.name,
-                        Arguments = kvp.Value.args.ToString()
+                        Name = kvp.Value.Name,
+                        Arguments = kvp.Value.Args.ToString()
                     }
                 });
             }
@@ -264,7 +341,7 @@ public class DeepSeekApiClient
                 });
             }
 
-            onStatusUpdate?.Invoke("DeepSeek is processing tool output...");
+            onStatusUpdate?.Invoke($"{provider.DisplayName} is processing tool output...");
 
             // Recurse to let model generate final response using tool results
             return await SendChatStreamAsync(settings, conversationHistory, workspaceContext, onDeltaReceived, onStatusUpdate, ct);
@@ -343,5 +420,12 @@ public class DeepSeekApiClient
         {
             return $"Tool execution failed: {ex.Message}";
         }
+    }
+
+    private class PendingToolCall
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Name { get; set; } = "";
+        public StringBuilder Args { get; } = new();
     }
 }

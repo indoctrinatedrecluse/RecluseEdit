@@ -8,6 +8,16 @@ namespace RecluseEdit.Extensions.DeepSeek.Models;
 /// </summary>
 public class DeepSeekSettings
 {
+    [JsonPropertyName("provider")]
+    public string Provider { get; set; } = "deepseek";
+
+    [JsonPropertyName("auth_mode")]
+    public string AuthMode { get; set; } = "api_key";
+
+    [JsonPropertyName("account_token")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? AccountToken { get; set; }
+
     [JsonPropertyName("api_endpoint")]
     public string ApiEndpoint { get; set; } = "https://api.deepseek.com/chat/completions";
 
@@ -48,6 +58,23 @@ public class DeepSeekSettings
 
     [JsonPropertyName("max_tokens")]
     public int MaxTokens { get; set; } = 4096;
+
+    /// <summary>
+    /// Returns the active authentication token (API key or account session/bearer token).
+    /// </summary>
+    public string GetEffectiveToken()
+    {
+        if (AuthMode == "account_token" && !string.IsNullOrWhiteSpace(AccountToken))
+            return AccountToken.Trim();
+        return ApiKey?.Trim() ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Indicates whether the selected provider runs locally without requiring authentication (e.g. Ollama).
+    /// </summary>
+    public bool IsLocalNoAuth =>
+        string.Equals(Provider, "ollama", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(AuthMode, "local_no_auth", StringComparison.OrdinalIgnoreCase);
 }
 
 public class ChatMessage

@@ -10,6 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### 🚀 Added
+- **Extensible Multi-Model AI Hub (`IAiProvider`)**:
+  - Added `IAiProvider`, `AiProviderType`, `AiAuthMode`, `AiModelInfo`, and `IAiChatView` in `RecluseEdit.Sdk`.
+  - Added `AiProviderRegistry` in `RecluseEdit.Extensions.DeepSeek` supporting DeepSeek (`deepseek-chat`, `deepseek-reasoner`), OpenAI/ChatGPT (`gpt-4o`, `gpt-4o-mini`, `o1`, `o3-mini`, `chatgpt-4o-latest`), Google Antigravity & Gemini (`gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-2.0-flash`), Anthropic Claude (`claude-3-7-sonnet`, `claude-3-5-sonnet`, `claude-3-5-haiku`), and Local Offline Ollama (`llama3.3`, `qwen2.5-coder`, `deepseek-r1`, `mistral`).
+  - Added dual authentication support: standard API key or Account Bearer/Session Token (ChatGPT tokens or Google Account OAuth / Antigravity ADC tokens via `gcloud auth print-access-token`), and local zero-authentication for Ollama.
+  - Added one-click **"🔍 Auto-Detect"** discovering credentials from environment variables (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`), gcloud CLI OAuth access tokens, or running Ollama services on `localhost:11434`.
+  - Added support for both OpenAI-compatible SSE chunk streaming and Anthropic native SSE streaming formats in `DeepSeekApiClient`.
+- **AI Code Review (<kbd>Ctrl+Shift+R</kbd>)**:
+  - Added instant code auditing for selected text or active document directly in the AI Chat panel.
+  - Automatically structures reviews across Bugs & Edge Cases, Performance & Efficiency, Security Vulnerabilities, Clean Code Practices, and Concrete Improvement Suggestions.
+- **AI In-line Prompt & Generation (<kbd>Ctrl+I</kbd>)**:
+  - Added floating `InlineAiPromptBar` anchored in AvalonEdit with real-time in-place code streaming.
+  - Integrated keyboard shortcuts for Accept (<kbd>Ctrl+Enter</kbd>), Discard (<kbd>Esc</kbd>), and Stop (<kbd>Esc</kbd>).
 - **Custom Status Bar Contributions (`IStatusBarProvider`)**:
   - Added public `IStatusBarProvider`, `IStatusBarItem`, `StatusBarItem`, and `StatusBarAlignment` interfaces in `RecluseEdit.Sdk`.
   - Added `IExtensionHost.RegisterStatusBarProvider`, `RegisterStatusBarItem`, and `ShowSidePanel` hooks.
@@ -24,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Color-coded by severity: Red for Error, Amber for Warning, Cyan for Info.
   - Hover tooltips displaying diagnostic messages and severity.
 - **Test Suite Expansion**:
-  - Added 11 new tests across `StatusBarProviderTests`, `CliDocumentFormatterTests`, and `DiagnosticSquiggleTests`, bringing total test count to 203.
+  - Added comprehensive tests across `AiProviderTests`, `StatusBarProviderTests`, `CliDocumentFormatterTests`, and `DiagnosticSquiggleTests`, bringing total test count to 224 tests passing (0 failed, 0 skipped).
 
 ---
 

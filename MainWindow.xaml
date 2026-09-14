@@ -66,6 +66,8 @@
         <KeyBinding Modifiers="Shift+Alt" Key="F" Command="{x:Static local:MainWindow.FormatDocumentCommand}" />
         <KeyBinding Modifiers="Control+Shift" Key="V" Command="{x:Static local:MainWindow.ToggleLivePreviewCommand}" />
         <KeyBinding Modifiers="Control+Alt" Key="T" Command="{x:Static local:MainWindow.SelectThemeCommand}" />
+        <KeyBinding Modifiers="Control+Shift" Key="R" Command="{x:Static local:MainWindow.AiCodeReviewCommand}" />
+        <KeyBinding Modifiers="Control" Key="I" Command="{x:Static local:MainWindow.AiInlinePromptCommand}" />
     </Window.InputBindings>
 
     <Grid>
@@ -109,6 +111,9 @@
                 <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="_Format Document" InputGestureText="Shift+Alt+F" Click="OnFormatDocumentClick" />
                 <MenuItem x:Name="MenuFormatOnSave" Header="Format on _Save" IsCheckable="True" IsChecked="False" Click="OnToggleFormatOnSaveClick" />
+                <Separator Background="{DynamicResource BorderDark}" />
+                <MenuItem Header="AI _Code Review" InputGestureText="Ctrl+Shift+R" Click="OnAiCodeReviewClick" />
+                <MenuItem Header="AI _Inline Generation..." InputGestureText="Ctrl+I" Click="OnAiInlinePromptClick" />
                 <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="_Line Operations">
                     <MenuItem Header="Toggle Line _Comment" InputGestureText="Ctrl+/" Click="OnToggleCommentClick" />

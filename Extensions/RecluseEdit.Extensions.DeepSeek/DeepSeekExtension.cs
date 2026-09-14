@@ -21,7 +21,12 @@ public class DeepSeekExtension : IExtension
         var sidePanelProvider = new DeepSeekSidePanelProvider();
         host.RegisterSidePanel(sidePanelProvider);
 
-        host.Log("DeepSeek AI Chat extension initialized successfully.");
+        foreach (var provider in Services.AiProviderRegistry.Providers)
+        {
+            host.RegisterAiProvider(provider);
+        }
+
+        host.Log("DeepSeek AI Chat & Multi-Model Providers initialized successfully.");
         return Task.CompletedTask;
     }
 

@@ -71,7 +71,9 @@
 | <kbd>Ctrl</kbd> + <kbd>W</kbd> | Close Active Tab |
 | <kbd>Ctrl</kbd> + <kbd>`</kbd> | Toggle Terminal / Bottom Dock Panel |
 | <kbd>Ctrl</kbd> + <kbd>B</kbd> | Toggle Sidebar (Explorer / Source Control) |
-| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>A</kbd> | Toggle DeepSeek AI Chat Right Pane |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>A</kbd> | Toggle AI Chat / Side Panels Right Pane |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> | AI Code Review (Instant Bug, Quality & Security Audit) |
+| <kbd>Ctrl</kbd> + <kbd>I</kbd> | AI Inline Prompt & Generation (Floating Streaming Refactor Bar) |
 | <kbd>Ctrl</kbd> + <kbd>F</kbd> | Find in Document |
 | <kbd>Ctrl</kbd> + <kbd>H</kbd> | Find & Replace in Document |
 | <kbd>Ctrl</kbd> + <kbd>Space</kbd> | Trigger IntelliSense Completion Popup |
@@ -204,18 +206,20 @@ RecluseEdit features a modular, decoupled extension architecture. Each extension
 
 RecluseEdit comes with fourteen modular extensions built as dedicated targets in `RecluseEdit.slnx`:
 
-### 🤖 DeepSeek AI Chat Assistant Pack (`RecluseEdit.Extensions.DeepSeek`)
-- **Right Pane AI Interface**: Integrated collapsible right-side dock (<kbd>Ctrl+Alt+A</kbd>) styled seamlessly in dark theme, with live conversation history, auto-scroll, message bubbles, and status updates.
-- **Configurable Endpoint & Encrypted API Secret Storage**: User-configurable API Endpoint URL (defaulting to `https://api.deepseek.com/chat/completions` or custom local OpenAI/Ollama-compatible services) and API secret. Secrets are stored strictly in encrypted formats on disk (`%APPDATA%\RecluseEdit\deepseek_settings.json`) using the Windows Data Protection API (DPAPI, `CurrentUser` scope) with an AES fallback; plaintext credentials are never persisted to disk.
-- **Live Token Streaming**: Server-Sent Events (SSE) streaming engine delivering instantaneous token-by-token responses.
-- **Autonomous Tool Calling**:
-  - `read_file`: Reads full text contents of workspace files to analyze code context.
-  - `write_file`: Directly creates or modifies files in the project workspace with automatic tab buffer synchronization.
-  - `list_files`: Traverses and enumerates directory trees within the workspace.
-  - `execute_command`: Spawns terminal commands with workspace working directories.
-- **Interactive Security Confirmation Dialog**: DeepSeek will never execute shell commands silently; users are explicitly prompted with interactive confirmation dialogs to approve or deny terminal execution.
-- **Active Document Context**: One-click checkbox to attach the active editor tab's file path and code content to the prompt.
-- **Extensible Side Panel SDK**: Leverages `ISidePanelProvider` and `IWorkspaceContext` in `RecluseEdit.Sdk`.
+### 🤖 Multi-Model AI Hub & Assistant Pack (`RecluseEdit.Extensions.DeepSeek`)
+- **Pluggable Multi-Model AI Architecture (`IAiProvider`)**: Seamless runtime switching between:
+  - **DeepSeek**: `deepseek-chat` (V3) and `deepseek-reasoner` (R1) with native reasoning support.
+  - **OpenAI / ChatGPT**: `gpt-4o`, `gpt-4o-mini`, `o1`, `o3-mini`, `chatgpt-4o-latest` via standard API key OR ChatGPT subscription bearer/session tokens.
+  - **Google Antigravity & Gemini**: `gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-2.0-flash` via Gemini API key OR Google Account OAuth / Antigravity access token (`gcloud auth print-access-token` / ADC).
+  - **Anthropic Claude**: `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet`, `claude-3-5-haiku` via direct API key or OpenAI-compatible proxies.
+  - **Ollama (Local Offline)**: Zero-auth private offline LLMs (`llama3.3`, `qwen2.5-coder`, `deepseek-r1`, `mistral`) running on `http://localhost:11434`.
+  - **Custom Endpoints**: Any OpenAI-compatible gateway (Groq, Together, OpenRouter, vLLM, LM Studio).
+- **One-Click Credential Discovery (`🔍 Auto-Detect`)**: Intelligently discovers environment credentials (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`), gcloud CLI OAuth access tokens, or local Ollama instances with a single click.
+- **AI Code Review (<kbd>Ctrl+Shift+R</kbd>)**: Audits selected code snippets or the active document for potential bugs, performance bottlenecks, security vulnerabilities, and clean code idiomatic practices directly in the AI Chat panel.
+- **AI In-line Prompt & Generation (<kbd>Ctrl+I</kbd>)**: Floating in-editor prompt bar anchored above the caret to stream refactorings, docstrings, or unit tests in real time, with keyboard shortcuts for Accept (<kbd>Ctrl+Enter</kbd>), Discard (<kbd>Esc</kbd>), and Cancel (<kbd>Esc</kbd>).
+- **Dual Authentication Modes**: API Key or Account Bearer/Session Token, securely encrypted on disk using the Windows Data Protection API (DPAPI, `CurrentUser` scope) with an AES fallback.
+- **Autonomous Tool Calling**: Reads workspace files, creates/overwrites project files, lists directories, and executes terminal commands with explicit user security confirmation dialogs.
+- **Live Token Streaming & Rich Markdown**: Server-Sent Events (SSE) streaming engine delivering instantaneous token-by-token responses rendered with syntax-highlighted code blocks.
 
 ### 🐹 Go Backend & Language Pack (`RecluseEdit.Extensions.Go`)
 - Supports **Go** (`.go`), **Go Modules & Workspaces** (`go.mod`, `go.work`, `go.sum`), and **Go Templates** (`.gotmpl`, `.gohtml`).
@@ -369,11 +373,14 @@ Remove-Item .git\index -Force; git reset
 
 ## 🗺️ Planned Roadmap & SDK Evolution (TODO)
 
-The following architectural evolutions and modular APIs are planned for upcoming milestones:
+All initial planned architectural milestones and SDK evolutions have been completed:
+- ✅ **Pluggable Multi-Model AI Hub (`IAiProvider`)**: Runtime switching across DeepSeek, OpenAI (GPT-4o), Google Antigravity & Gemini 2.5, Anthropic Claude, and local offline Ollama models.
+- ✅ **AI Code Review (<kbd>Ctrl+Shift+R</kbd>) & Inline Generation (<kbd>Ctrl+I</kbd>)**: Real-time auditing and in-editor streaming generation.
+- ✅ **Interactive Status Bar Contribution SDK (`IStatusBarProvider`, `IStatusBarItem`)**: Modular status bar items with dynamic live updates.
+- ✅ **External CLI & Formatters SDK (`IDocumentFormatter`, `ToolchainManager`)**: External command formatters and interactive toolchain validation.
+- ✅ **Live Diagnostic Squiggle Renderer**: Real-time squiggles for syntax and linter diagnostics in AvalonEdit.
 
-### 1. Extensible Multi-Model AI Hub (`IAiProvider`)
-- **Multi-Model Provider Abstraction**: Evolve `RecluseEdit.Extensions.DeepSeek` into a pluggable multi-model provider architecture with `IAiProvider`, enabling runtime switching between DeepSeek, OpenAI (GPT-4o), Anthropic (Claude 3.5 Sonnet), Google Gemini 2.5, and local offline Ollama models.
-- **AI Code Review & In-line Generation**: Inline prompt generation and streaming code actions directly inside the AvalonEdit editor surface.
+New features, language grammars, and toolchain requests may be proposed via GitHub Issues.
 
 ---
 

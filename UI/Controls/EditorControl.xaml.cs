@@ -34,6 +34,7 @@ public partial class EditorControl : UserControl
     public string? WorkspacePath { get; set; }
     public TextEditor UnderlyingEditor => Editor;
     public FindReplaceControl FindReplaceBar => FindReplace;
+    public InlineAiPromptBar InlineAiPromptBar => InlineAiPrompt;
 
     public SyntaxManager? SyntaxManager { get; set; }
     public AutocompleteManager? AutocompleteManager { get; set; }
@@ -91,6 +92,7 @@ public partial class EditorControl : UserControl
             _bracketRenderer.Clear();
             _diagnosticRenderer.Clear();
             FindReplace.Visibility = Visibility.Collapsed;
+            InlineAiPrompt.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -102,6 +104,7 @@ public partial class EditorControl : UserControl
         Editor.TextArea.LeftMargins.Add(_gitDiffMargin);
 
         FindReplace.Editor = Editor;
+        InlineAiPrompt.Editor = Editor;
 
         _ghostRenderer = new GhostTextRenderer(Editor.TextArea.TextView);
         _bracketRenderer = new BracketHighlightRenderer(Editor.TextArea.TextView);
@@ -139,6 +142,12 @@ public partial class EditorControl : UserControl
     {
         var selected = Editor.SelectedText;
         FindReplace.ShowReplace(string.IsNullOrEmpty(selected) ? null : selected);
+    }
+
+    public void OpenInlineAi()
+    {
+        FindReplace.Visibility = Visibility.Collapsed;
+        InlineAiPrompt.Show();
     }
 
     public void SetDiagnostics(IReadOnlyList<DiagnosticItem> diagnostics)
@@ -364,6 +373,14 @@ public partial class EditorControl : UserControl
         if (e.Key == Key.H && Keyboard.Modifiers == ModifierKeys.Control)
         {
             OpenReplace();
+            e.Handled = true;
+            return;
+        }
+
+        // 3b. Ctrl+I triggers Inline AI Prompt & Generation
+        if (e.Key == Key.I && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            OpenInlineAi();
             e.Handled = true;
             return;
         }

@@ -25,5 +25,12 @@
                                      HorizontalAlignment="Right"
                                      Margin="0,8,20,0"
                                      Visibility="Collapsed" />
+
+        <!-- Floating Inline AI Prompt & Generation Bar (Ctrl+I) -->
+        <controls:InlineAiPromptBar x:Name="InlineAiPrompt"
+                                    VerticalAlignment="Top"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,16,0,0"
+                                    Visibility="Collapsed" />
     </Grid>
 </UserControl>

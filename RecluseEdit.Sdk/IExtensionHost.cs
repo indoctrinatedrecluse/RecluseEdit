@@ -20,12 +20,14 @@ public interface IExtensionHost
     void RegisterTheme(IThemeDefinition theme) {}
     void RegisterStatusBarProvider(IStatusBarProvider provider) {}
     void RegisterStatusBarItem(IStatusBarItem item) {}
+    void RegisterAiProvider(IAiProvider provider) {}
     IReadOnlyList<LanguageDefinition> GetRegisteredLanguages();
     IReadOnlyList<ISidePanelProvider> RegisteredSidePanels => [];
     IReadOnlyList<IDocumentFormatter> RegisteredFormatters => [];
     IReadOnlyList<IThemeDefinition> RegisteredThemes => [];
     IReadOnlyList<IStatusBarProvider> RegisteredStatusBarProviders => [];
     IReadOnlyList<IStatusBarItem> RegisteredStatusBarItems => [];
+    IReadOnlyList<IAiProvider> RegisteredAiProviders => [];
     IWorkspaceContext WorkspaceContext => null!;
     void Log(string message);
 }

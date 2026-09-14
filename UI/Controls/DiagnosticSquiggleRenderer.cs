@@ -252,3 +252,4 @@ public class DiagnosticSquiggleRenderer : IBackgroundRenderer
         dc.DrawGeometry(null, pen, geometry);
     }
 }
+

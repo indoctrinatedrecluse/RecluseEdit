@@ -24,6 +24,7 @@ public class ExtensionManager : IExtensionHost
     private readonly List<IThemeDefinition> _extensionThemes = [];
     private readonly List<IStatusBarProvider> _statusBarProviders = [];
     private readonly List<IStatusBarItem> _statusBarItems = [];
+    private readonly List<IAiProvider> _aiProviders = [];
     private readonly List<string> _logs = [];
 
     public IReadOnlyList<IExtension> LoadedExtensions => _loadedExtensions.AsReadOnly();
@@ -32,6 +33,7 @@ public class ExtensionManager : IExtensionHost
     public IReadOnlyList<IThemeDefinition> RegisteredThemes => _themeManager?.RegisteredThemes ?? _extensionThemes.AsReadOnly();
     public IReadOnlyList<IStatusBarProvider> RegisteredStatusBarProviders => _statusBarProviders.AsReadOnly();
     public IReadOnlyList<IStatusBarItem> RegisteredStatusBarItems => _statusBarItems.AsReadOnly();
+    public IReadOnlyList<IAiProvider> RegisteredAiProviders => _aiProviders.AsReadOnly();
     public IWorkspaceContext WorkspaceContext => _workspaceContext;
     public IReadOnlyList<string> Logs => _logs.AsReadOnly();
     public ToolchainManager ToolchainManager => _toolchainManager;
@@ -41,6 +43,7 @@ public class ExtensionManager : IExtensionHost
     public event Action<string>? SidePanelRequested;
     public event Action<IStatusBarItem>? StatusBarItemRegistered;
     public event Action<IStatusBarProvider>? StatusBarProviderRegistered;
+    public event Action<IAiProvider>? AiProviderRegistered;
 
     public ExtensionManager(
         SyntaxManager syntaxManager,
@@ -237,6 +240,16 @@ public class ExtensionManager : IExtensionHost
                     RegisterStatusBarItem(item);
                 }
             };
+        }
+    }
+
+    public void RegisterAiProvider(IAiProvider provider)
+    {
+        if (!_aiProviders.Any(p => p.Id == provider.Id))
+        {
+            _aiProviders.Add(provider);
+            Log($"Registered AI provider '{provider.DisplayName}' ({provider.Id})");
+            AiProviderRegistered?.Invoke(provider);
         }
     }
 

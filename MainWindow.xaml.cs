@@ -41,6 +41,8 @@ public partial class MainWindow : Window
     public static readonly RoutedUICommand FormatDocumentCommand = new("Format Document", "FormatDocument", typeof(MainWindow));
     public static readonly RoutedUICommand ToggleLivePreviewCommand = new("Toggle Live Preview", "ToggleLivePreview", typeof(MainWindow));
     public static readonly RoutedUICommand SelectThemeCommand = new("Select Color Theme", "SelectTheme", typeof(MainWindow));
+    public static readonly RoutedUICommand AiCodeReviewCommand = new("AI Code Review", "AiCodeReview", typeof(MainWindow));
+    public static readonly RoutedUICommand AiInlinePromptCommand = new("AI Inline Generation", "AiInlinePrompt", typeof(MainWindow));
 
     private readonly SyntaxManager _syntaxManager;
     private readonly AutocompleteManager _autocompleteManager;
@@ -105,6 +107,8 @@ public partial class MainWindow : Window
         CommandBindings.Add(new CommandBinding(FormatDocumentCommand, (_, _) => FormatActiveDocument()));
         CommandBindings.Add(new CommandBinding(ToggleLivePreviewCommand, (_, _) => ToggleLivePreview()));
         CommandBindings.Add(new CommandBinding(SelectThemeCommand, (_, _) => OpenThemePickerDialog()));
+        CommandBindings.Add(new CommandBinding(AiCodeReviewCommand, (_, _) => PerformAiCodeReview()));
+        CommandBindings.Add(new CommandBinding(AiInlinePromptCommand, (_, _) => OpenAiInlinePrompt()));
 
         PreviewKeyDown += OnWindowPreviewKeyDown;
         _themeManager.ThemeChanged += OnThemeChanged;
@@ -136,7 +140,7 @@ public partial class MainWindow : Window
         TabItemsControl.ItemsSource = _documentManager.Documents;
         CmbLanguage.ItemsSource = _syntaxManager.SupportedLanguages;
 
-        // Initialize extensions, side panels, and status bar contributions
+        // Initialize extensions, side panels, AI providers, and status bar contributions
         _extensionManager.SidePanelRegistered += OnSidePanelRegistered;
         _extensionManager.SidePanelRequested += panelId => Dispatcher.Invoke(() => ActivateSidePanelById(panelId));
         foreach (var panel in _extensionManager.RegisteredSidePanels)
@@ -149,6 +153,17 @@ public partial class MainWindow : Window
         {
             OnStatusBarItemRegistered(item);
         }
+
+        _extensionManager.AiProviderRegistered += provider =>
+        {
+            Dispatcher.Invoke(() =>
+            {
+                if (EditorHost.InlineAiPromptBar.ActiveProvider == null)
+                {
+                    EditorHost.InlineAiPromptBar.ActiveProvider = provider;
+                }
+            });
+        };
 
         _ = _extensionManager.InitializeAsync();
         _extensionManager.ExtensionsChanged += UpdateExtensionsStatus;
@@ -901,6 +916,42 @@ public partial class MainWindow : Window
     private void OnFindClick(object sender, RoutedEventArgs e) => EditorHost.OpenFind();
     private void OnReplaceClick(object sender, RoutedEventArgs e) => EditorHost.OpenReplace();
 
+    public void PerformAiCodeReview()
+    {
+        var code = EditorHost.UnderlyingEditor.SelectedText;
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            code = EditorHost.UnderlyingEditor.Text;
+        }
+
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            StatusMessage.Text = "No active code to review.";
+            return;
+        }
+
+        var fileName = EditorHost.DocumentModel?.FileName ?? "ActiveDocument";
+        ActivateSidePanelById("deepseek.chat");
+
+        if (_sidePanelViews.TryGetValue("deepseek.chat", out var view) && view is IAiChatView chatView)
+        {
+            chatView.StartCodeReview(code, fileName);
+            StatusMessage.Text = $"Starting AI Code Review for {fileName}...";
+        }
+    }
+
+    public void OpenAiInlinePrompt()
+    {
+        if (EditorHost.InlineAiPromptBar.ActiveProvider == null && _extensionManager.RegisteredAiProviders.Count > 0)
+        {
+            EditorHost.InlineAiPromptBar.ActiveProvider = _extensionManager.RegisteredAiProviders[0];
+        }
+        EditorHost.OpenInlineAi();
+    }
+
+    private void OnAiCodeReviewClick(object sender, RoutedEventArgs e) => PerformAiCodeReview();
+    private void OnAiInlinePromptClick(object sender, RoutedEventArgs e) => OpenAiInlinePrompt();
+
     private void OnToggleWordWrapClick(object sender, RoutedEventArgs e)
     {
         var wrap = MenuWordWrap.IsChecked;
@@ -1368,6 +1419,8 @@ public partial class MainWindow : Window
             new() { Id = "edit.find", Title = "Find in Document", Category = "Edit", InputGestureText = "Ctrl+F", Icon = "🔍", Action = () => EditorHost.OpenFind() },
             new() { Id = "edit.replace", Title = "Replace in Document", Category = "Edit", InputGestureText = "Ctrl+H", Icon = "🔄", Action = () => EditorHost.OpenReplace() },
             new() { Id = "edit.gotoLine", Title = "Go to Line...", Category = "Edit", InputGestureText = "Ctrl+G", Icon = "📍", Action = OpenGoToLine },
+            new() { Id = "ai.codeReview", Title = "AI Code Review", Category = "AI & Tools", InputGestureText = "Ctrl+Shift+R", Icon = "🔍", Action = PerformAiCodeReview },
+            new() { Id = "ai.inlineGenerate", Title = "AI Inline Generation...", Category = "AI & Tools", InputGestureText = "Ctrl+I", Icon = "✨", Action = OpenAiInlinePrompt },
 
             // Line Operations
             new() { Id = "line.comment", Title = "Toggle Line Comment", Category = "Line Operations", InputGestureText = "Ctrl+/", Icon = "💬", Action = () => EditorHost.ToggleLineComment() },

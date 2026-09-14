@@ -8,13 +8,15 @@ using RecluseEdit.Extensions.DeepSeek.Models;
 using RecluseEdit.Extensions.DeepSeek.Rendering;
 using RecluseEdit.Extensions.DeepSeek.Services;
 using RecluseEdit.Sdk;
+using RecluseEdit.Sdk.Models;
+using RecluseEdit.Sdk.Providers;
 
 namespace RecluseEdit.Extensions.DeepSeek.Views;
 
 /// <summary>
 /// Interaction logic for DeepSeekChatView.xaml
 /// </summary>
-public partial class DeepSeekChatView : UserControl
+public partial class DeepSeekChatView : UserControl, IAiChatView
 {
     private readonly IWorkspaceContext _workspaceContext;
     private readonly DeepSeekSettingsService _settingsService;
@@ -42,11 +44,46 @@ public partial class DeepSeekChatView : UserControl
     private void LoadSettingsToUI()
     {
         var settings = _settingsService.CurrentSettings;
+
+        // Provider ComboBox
+        CmbProvider.ItemsSource = AiProviderRegistry.Providers;
+        CmbProvider.DisplayMemberPath = "DisplayName";
+        CmbProvider.SelectedValuePath = "Id";
+
+        var currentProvider = AiProviderRegistry.GetProvider(settings.Provider);
+        CmbProvider.SelectedValue = currentProvider.Id;
+
+        // Auth Mode ComboBox
+        CmbAuthMode.ItemsSource = new[]
+        {
+            new { Id = "api_key", Name = "Standard API Key" },
+            new { Id = "account_token", Name = "Account Bearer / Session Token" },
+            new { Id = "local_no_auth", Name = "Local Offline (No Auth)" }
+        };
+        CmbAuthMode.DisplayMemberPath = "Name";
+        CmbAuthMode.SelectedValuePath = "Id";
+        CmbAuthMode.SelectedValue = string.IsNullOrWhiteSpace(settings.AuthMode) ? "api_key" : settings.AuthMode;
+
+        UpdateModelList(currentProvider, settings.Model);
+
         TxtApiEndpoint.Text = settings.ApiEndpoint;
-        TxtApiKey.Password = settings.ApiKey;
-        TxtApiKeyVisible.Text = settings.ApiKey;
-        TxtModelName.Text = settings.Model;
-        TxtModelBadge.Text = string.IsNullOrWhiteSpace(settings.Model) ? "deepseek-chat" : settings.Model;
+        var effectiveKey = settings.GetEffectiveToken();
+        TxtApiKey.Password = effectiveKey;
+        TxtApiKeyVisible.Text = effectiveKey;
+        UpdateModelBadge(settings);
+    }
+
+    private void UpdateModelList(AiProviderDescriptor provider, string? selectedModel)
+    {
+        CmbModel.ItemsSource = provider.RecommendedModels;
+        CmbModel.Text = string.IsNullOrWhiteSpace(selectedModel) ? provider.DefaultModel : selectedModel;
+    }
+
+    private void UpdateModelBadge(DeepSeekSettings settings)
+    {
+        var provider = AiProviderRegistry.GetProvider(settings.Provider);
+        var model = string.IsNullOrWhiteSpace(settings.Model) ? provider.DefaultModel : settings.Model;
+        TxtModelBadge.Text = $"{provider.DisplayName}: {model}";
     }
 
     private void UpdateActiveFileBadge()
@@ -74,6 +111,83 @@ public partial class DeepSeekChatView : UserControl
             : Visibility.Visible;
     }
 
+    private void OnProviderSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (CmbProvider.SelectedItem is AiProviderDescriptor provider)
+        {
+            TxtApiEndpoint.Text = provider.DefaultEndpoint;
+            UpdateModelList(provider, provider.DefaultModel);
+            CmbAuthMode.SelectedValue = provider.DefaultAuthMode switch
+            {
+                AiAuthMode.LocalNoAuth => "local_no_auth",
+                AiAuthMode.AccountToken => "account_token",
+                _ => "api_key"
+            };
+            TxtAutoDetectStatus.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void OnAuthModeSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        var authMode = CmbAuthMode.SelectedValue as string ?? "api_key";
+        if (authMode == "local_no_auth")
+        {
+            LblSecretKey.Text = "No Authentication Required (Local)";
+            TxtApiKey.IsEnabled = false;
+            TxtApiKeyVisible.IsEnabled = false;
+            BtnAutoDetect.IsEnabled = true;
+        }
+        else if (authMode == "account_token")
+        {
+            LblSecretKey.Text = "Account Bearer / Session Token:";
+            TxtApiKey.IsEnabled = true;
+            TxtApiKeyVisible.IsEnabled = true;
+            BtnAutoDetect.IsEnabled = true;
+        }
+        else
+        {
+            LblSecretKey.Text = "API Key / Secret:";
+            TxtApiKey.IsEnabled = true;
+            TxtApiKeyVisible.IsEnabled = true;
+            BtnAutoDetect.IsEnabled = true;
+        }
+    }
+
+    private async void OnAutoDetectClick(object sender, RoutedEventArgs e)
+    {
+        if (CmbProvider.SelectedItem is not AiProviderDescriptor provider) return;
+
+        BtnAutoDetect.IsEnabled = false;
+        TxtAutoDetectStatus.Visibility = Visibility.Visible;
+        TxtAutoDetectStatus.Text = $"Detecting credentials for {provider.DisplayName}...";
+        TxtAutoDetectStatus.Foreground = (Brush)FindResource("TextSecondary");
+
+        var result = await AiProviderRegistry.AutoDetectCredentialsAsync(provider.Id);
+        BtnAutoDetect.IsEnabled = true;
+
+        if (result.Found)
+        {
+            if (!string.IsNullOrEmpty(result.Token))
+            {
+                TxtApiKey.Password = result.Token;
+                TxtApiKeyVisible.Text = result.Token;
+            }
+
+            if (!string.IsNullOrEmpty(result.SuggestedModel))
+            {
+                CmbModel.Text = result.SuggestedModel;
+            }
+
+            TxtAutoDetectStatus.Text = $"✔ {result.Info}";
+            TxtAutoDetectStatus.Foreground = new SolidColorBrush(Color.FromRgb(137, 209, 133));
+        }
+        else
+        {
+            TxtAutoDetectStatus.Text = $"ℹ {result.Info}";
+            TxtAutoDetectStatus.Foreground = new SolidColorBrush(Color.FromRgb(224, 108, 117));
+        }
+    }
+
     private void OnToggleShowKey(object sender, RoutedEventArgs e)
     {
         if (ChkShowKey.IsChecked == true)
@@ -92,16 +206,65 @@ public partial class DeepSeekChatView : UserControl
 
     private void OnSaveSettingsClick(object sender, RoutedEventArgs e)
     {
-        var key = ChkShowKey.IsChecked == true ? TxtApiKeyVisible.Text : TxtApiKey.Password;
         var settings = _settingsService.CurrentSettings;
+        var selectedProvider = CmbProvider.SelectedItem as AiProviderDescriptor ?? AiProviderRegistry.GetProvider("deepseek");
+        var authMode = CmbAuthMode.SelectedValue as string ?? "api_key";
+        var keyOrToken = (ChkShowKey.IsChecked == true ? TxtApiKeyVisible.Text : TxtApiKey.Password).Trim();
+        var model = CmbModel.Text.Trim();
+
+        settings.Provider = selectedProvider.Id;
+        settings.AuthMode = authMode;
         settings.ApiEndpoint = TxtApiEndpoint.Text.Trim();
-        settings.ApiKey = key.Trim();
-        settings.Model = TxtModelName.Text.Trim();
+        if (authMode == "account_token")
+        {
+            settings.AccountToken = keyOrToken;
+            settings.ApiKey = keyOrToken;
+        }
+        else
+        {
+            settings.ApiKey = keyOrToken;
+            settings.AccountToken = null;
+        }
+        settings.Model = string.IsNullOrWhiteSpace(model) ? selectedProvider.DefaultModel : model;
 
         _settingsService.SaveSettings(settings);
-        TxtModelBadge.Text = string.IsNullOrWhiteSpace(settings.Model) ? "deepseek-chat" : settings.Model;
+        UpdateModelBadge(settings);
 
         SettingsDrawer.Visibility = Visibility.Collapsed;
+    }
+
+    #endregion
+
+    #region IAiChatView Implementation
+
+    public void SubmitPrompt(string prompt)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            TxtInput.Text = prompt;
+            OnSendClick(this, new RoutedEventArgs());
+        });
+    }
+
+    public void StartCodeReview(string code, string? fileName = null)
+    {
+        var fn = !string.IsNullOrEmpty(fileName) ? fileName : "Active File";
+        var ext = Path.GetExtension(fn).TrimStart('.');
+        var sb = new StringBuilder();
+        sb.AppendLine($"Please perform a thorough AI Code Review for the following code snippet from `{fn}`:");
+        sb.AppendLine();
+        sb.AppendLine($"```{ext}");
+        sb.AppendLine(code);
+        sb.AppendLine("```");
+        sb.AppendLine();
+        sb.AppendLine("Please structure your review as follows:");
+        sb.AppendLine("1. 🐛 Potential Bugs & Edge Cases (null/undefined safety, race conditions, boundary conditions)");
+        sb.AppendLine("2. ⚡ Performance & Efficiency (algorithmic complexity, memory overhead, unnecessary allocations)");
+        sb.AppendLine("3. 🛡️ Security Vulnerabilities (injection hazards, input validation, sensitive data exposure)");
+        sb.AppendLine("4. 🧼 Clean Code & Idiomatic Best Practices (readability, modern language features, architecture)");
+        sb.AppendLine("5. 💡 Actionable Improvement Suggestions (provide concrete refactored code snippets)");
+
+        SubmitPrompt(sb.ToString());
     }
 
     #endregion
@@ -137,11 +300,13 @@ public partial class DeepSeekChatView : UserControl
         if (string.IsNullOrWhiteSpace(input)) return;
 
         var settings = _settingsService.CurrentSettings;
-        if (string.IsNullOrWhiteSpace(settings.ApiKey))
+        var effectiveToken = settings.GetEffectiveToken();
+        if (!settings.IsLocalNoAuth && string.IsNullOrWhiteSpace(effectiveToken))
         {
             SettingsDrawer.Visibility = Visibility.Visible;
-            MessageBox.Show("Please provide your DeepSeek API key in the configuration drawer above.",
-                "DeepSeek AI Configuration Required", MessageBoxButton.OK, MessageBoxImage.Information);
+            var provName = AiProviderRegistry.GetProvider(settings.Provider).DisplayName;
+            MessageBox.Show($"Please provide an API key or access token for '{provName}' in the configuration drawer above.",
+                "AI Configuration Required", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
