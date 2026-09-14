@@ -759,10 +759,10 @@ public partial class AiChatView : UserControl, IAiChatView
         _currentQueryStatusBadges.Clear();
 
         // 2. Render response as rich Markdown
-        var textPrimary = (Brush)FindResource("TextPrimary");
-        var accent = (Brush)FindResource("AccentColor");
-        var codeBg = (Brush)FindResource("SectionBg");
-        var codeBorder = (Brush)FindResource("BorderBrushColor");
+        var textPrimary = (Brush)(TryFindResource("FgPrimary") ?? FindResource("TextPrimary"));
+        var accent = (Brush)(TryFindResource("AccentBlue") ?? FindResource("AccentColor"));
+        var codeBg = (Brush)(TryFindResource("BgTertiary") ?? FindResource("SectionBg"));
+        var codeBorder = (Brush)(TryFindResource("BorderDark") ?? FindResource("BorderBrushColor"));
 
         MarkdownBlockRenderer.RenderInto(
             assistant.ContentPanel,
@@ -785,15 +785,26 @@ public partial class AiChatView : UserControl, IAiChatView
             HorizontalAlignment = isUser ? HorizontalAlignment.Right : HorizontalAlignment.Stretch
         };
 
+        var bg = isUser
+            ? (Brush)(TryFindResource("UserBubbleBg") ?? TryFindResource("AccentBlue") ?? FindResource("UserBubbleBg"))
+            : (Brush)(TryFindResource("BgSecondary") ?? TryFindResource("AssistantBubbleBg") ?? FindResource("AssistantBubbleBg"));
+        var borderBrush = isUser
+            ? null
+            : (Brush)(TryFindResource("BorderDark") ?? TryFindResource("BorderBrushColor") ?? FindResource("BorderBrushColor"));
+
         var border = new Border
         {
             CornerRadius = new CornerRadius(6),
             Padding = new Thickness(10, 8, 10, 8),
-            Background = (Brush)FindResource(isUser ? "UserBubbleBg" : "AssistantBubbleBg"),
-            BorderBrush = isUser ? null : (Brush)FindResource("BorderBrushColor"),
+            Background = bg,
+            BorderBrush = borderBrush,
             BorderThickness = isUser ? new Thickness(0) : new Thickness(1),
             MaxWidth = isUser ? 300 : double.PositiveInfinity
         };
+
+        var fg = isUser
+            ? Brushes.White
+            : (Brush)(TryFindResource("FgPrimary") ?? TryFindResource("TextPrimary") ?? FindResource("TextPrimary"));
 
         var textBox = new TextBox
         {
@@ -801,7 +812,7 @@ public partial class AiChatView : UserControl, IAiChatView
             TextWrapping = TextWrapping.Wrap,
             IsReadOnly = true,
             Background = Brushes.Transparent,
-            Foreground = isUser ? Brushes.White : (Brush)FindResource("TextPrimary"),
+            Foreground = fg,
             BorderThickness = new Thickness(0),
             FontSize = 12,
             FontFamily = new FontFamily("Segoe UI")
@@ -817,10 +828,13 @@ public partial class AiChatView : UserControl, IAiChatView
 
     private void AddStatusBadge(string message)
     {
+        var bg = (Brush)(TryFindResource("BgTertiary") ?? TryFindResource("ToolBubbleBg") ?? FindResource("ToolBubbleBg"));
+        var fg = (Brush)(TryFindResource("FgSecondary") ?? TryFindResource("TextSecondary") ?? FindResource("TextSecondary"));
+
         var border = new Border
         {
             CornerRadius = new CornerRadius(4),
-            Background = (Brush)FindResource("ToolBubbleBg"),
+            Background = bg,
             Padding = new Thickness(8, 4, 8, 4),
             Margin = new Thickness(0, 2, 0, 2),
             HorizontalAlignment = HorizontalAlignment.Center
@@ -829,7 +843,7 @@ public partial class AiChatView : UserControl, IAiChatView
         var tb = new TextBlock
         {
             Text = $"⚡ {message}",
-            Foreground = (Brush)FindResource("TextSecondary"),
+            Foreground = fg,
             FontSize = 10
         };
 

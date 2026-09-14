@@ -19,9 +19,165 @@
         <SolidColorBrush x:Key="AccentColor" Color="#007ACC" />
         <SolidColorBrush x:Key="ButtonHover" Color="#3E3E42" />
 
+        <!-- ComboBox Toggle Button Template -->
+        <ControlTemplate x:Key="AiChatComboBoxToggleButtonTemplate" TargetType="ToggleButton">
+            <Border x:Name="Border" 
+                    Background="{TemplateBinding Background}" 
+                    BorderBrush="{TemplateBinding BorderBrush}" 
+                    BorderThickness="{TemplateBinding BorderThickness}" 
+                    CornerRadius="4" 
+                    SnapsToDevicePixels="True">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="20" />
+                    </Grid.ColumnDefinitions>
+                    <Path x:Name="Arrow" 
+                          Grid.Column="1" 
+                          HorizontalAlignment="Center" 
+                          VerticalAlignment="Center" 
+                          Data="M 0 0 L 3.5 3.5 L 7 0 Z" 
+                          Fill="{DynamicResource FgSecondary}" />
+                </Grid>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Border" Property="Background" Value="{DynamicResource BgHover}" />
+                    <Setter TargetName="Arrow" Property="Fill" Value="{DynamicResource FgPrimary}" />
+                </Trigger>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter TargetName="Border" Property="Background" Value="{DynamicResource BgHover}" />
+                    <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource AccentBlue}" />
+                    <Setter TargetName="Arrow" Property="Fill" Value="{DynamicResource AccentBlue}" />
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <!-- ComboBox Item Template & Style -->
+        <Style x:Key="AiChatComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource FgPrimary}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="7,4" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="ItemBorder" 
+                                Background="{TemplateBinding Background}" 
+                                BorderThickness="0" 
+                                CornerRadius="3" 
+                                Margin="1,1" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource BgHover}" />
+                                <Setter Property="Foreground" Value="{DynamicResource FgAccent}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource AccentBlue}" />
+                                <Setter Property="Foreground" Value="#FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{DynamicResource FgMuted}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Universal AI Chat ComboBox Style -->
+        <Style x:Key="AiChatComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Background" Value="{DynamicResource BgTertiary}" />
+            <Setter Property="Foreground" Value="{DynamicResource FgPrimary}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="6,3" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="ItemContainerStyle" Value="{StaticResource AiChatComboBoxItemStyle}" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid x:Name="MainGrid" SnapsToDevicePixels="True">
+                            <Popup x:Name="PART_Popup" 
+                                   AllowsTransparency="True" 
+                                   Placement="Bottom" 
+                                   IsOpen="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" 
+                                   Focusable="False" 
+                                   PopupAnimation="Slide">
+                                <Border x:Name="DropDownBorder" 
+                                        Background="{DynamicResource BgSecondary}" 
+                                        BorderBrush="{DynamicResource BorderDark}" 
+                                        BorderThickness="1" 
+                                        CornerRadius="4" 
+                                        Margin="0,2,0,4" 
+                                        MinWidth="{Binding ActualWidth, ElementName=MainGrid}" 
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="8" ShadowDepth="3" Direction="270" Color="#000000" Opacity="0.5" />
+                                    </Border.Effect>
+                                    <ScrollViewer CanContentScroll="True" VerticalScrollBarVisibility="Auto">
+                                        <ItemsPresenter x:Name="ItemsPresenter" KeyboardNavigation.DirectionalNavigation="Contained" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+
+                            <ToggleButton Background="{TemplateBinding Background}" 
+                                          BorderBrush="{TemplateBinding BorderBrush}" 
+                                          BorderThickness="{TemplateBinding BorderThickness}" 
+                                          IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" 
+                                          Focusable="False" 
+                                          ClickMode="Press" 
+                                          Template="{StaticResource AiChatComboBoxToggleButtonTemplate}" />
+
+                            <ContentPresenter x:Name="ContentSite" 
+                                              IsHitTestVisible="False" 
+                                              Content="{TemplateBinding SelectionBoxItem}" 
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" 
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" 
+                                              Margin="{TemplateBinding Padding}" 
+                                              VerticalAlignment="Center" 
+                                              HorizontalAlignment="Left" />
+
+                            <TextBox x:Name="PART_EditableTextBox" 
+                                     Style="{x:Null}" 
+                                     Background="Transparent" 
+                                     Foreground="{DynamicResource FgPrimary}" 
+                                     CaretBrush="{DynamicResource FgPrimary}" 
+                                     BorderThickness="0" 
+                                     Padding="{TemplateBinding Padding}" 
+                                     IsReadOnly="{TemplateBinding IsReadOnly}" 
+                                     Visibility="Collapsed" 
+                                     VerticalAlignment="Center" 
+                                     HorizontalAlignment="Stretch" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEditable" Value="True">
+                                <Setter Property="IsTabStop" Value="False" />
+                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="ContentSite" Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                            <Trigger Property="HasItems" Value="False">
+                                <Setter TargetName="DropDownBorder" Property="MinHeight" Value="24" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.6" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="IconButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
+            <Setter Property="Foreground" Value="{DynamicResource FgSecondary}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="6,4" />
             <Setter Property="Cursor" Value="Hand" />
@@ -33,8 +189,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{StaticResource ButtonHover}" />
-                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}" />
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource BgHover}" />
+                                <Setter Property="Foreground" Value="{DynamicResource FgPrimary}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -43,7 +199,7 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Background="{StaticResource PanelBg}">
+    <Grid Background="{DynamicResource BgPrimary}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" /> <!-- 0. Sub-Header Toolbar with Model Picker -->
             <RowDefinition Height="Auto" /> <!-- 1. Inline Authentication Banner -->
@@ -54,7 +210,7 @@
         </Grid.RowDefinitions>
 
         <!-- 0. Sub-Header Toolbar with Direct Model & Auth in Chat -->
-        <Border Grid.Row="0" Background="{StaticResource HeaderBg}" BorderBrush="{StaticResource BorderBrushColor}" BorderThickness="0,0,0,1" Padding="6,4">
+        <Border Grid.Row="0" Background="{DynamicResource BgSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1" Padding="6,4">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -63,18 +219,27 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Model Selector right in chat header -->
+                <!-- Model Selector right in chat header with high-contrast visible text & theme support -->
                 <ComboBox x:Name="CmbHeaderModel" 
                           Grid.Column="0"
                           VerticalAlignment="Center"
                           Margin="0,0,4,0"
-                          Background="#1E1E1E" 
-                          Foreground="{StaticResource TextPrimary}" 
-                          BorderBrush="{StaticResource BorderBrushColor}" 
-                          Padding="4,2" 
-                          FontSize="11" 
+                          Style="{StaticResource AiChatComboBoxStyle}"
                           SelectionChanged="OnHeaderModelSelectionChanged"
-                          ToolTip="Switch AI Model &amp; Provider" />
+                          ToolTip="Switch AI Model &amp; Provider">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="2,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="🤖" FontSize="11" Margin="0,0,5,0" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource FgPrimary}" VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
 
                 <!-- Auth status badge / action button -->
                 <Button x:Name="BtnHeaderAuth" 
@@ -100,7 +265,7 @@
         </Border>
 
         <!-- 1. Inline Authentication Banner (Visible directly in Chat when key needed or requested) -->
-        <Border x:Name="InlineAuthBanner" Grid.Row="1" Background="#263238" BorderBrush="#007ACC" BorderThickness="0,0,0,1" Padding="10,8" Visibility="Collapsed">
+        <Border x:Name="InlineAuthBanner" Grid.Row="1" Background="{DynamicResource BgTertiary}" BorderBrush="{DynamicResource AccentBlue}" BorderThickness="0,0,0,1" Padding="10,8" Visibility="Collapsed">
             <StackPanel>
                 <Grid Margin="0,0,0,6">
                     <Grid.ColumnDefinitions>
@@ -108,16 +273,16 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock x:Name="TxtInlineAuthTitle" Text="🔑 Enter Credentials for DeepSeek" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}" FontSize="11" />
+                        <TextBlock x:Name="TxtInlineAuthTitle" Text="🔑 Enter Credentials for DeepSeek" FontWeight="SemiBold" Foreground="{DynamicResource FgPrimary}" FontSize="11" />
                     </StackPanel>
                     <Button Grid.Column="1" Style="{StaticResource IconButtonStyle}" Padding="3,1" Click="OnCloseInlineAuthClick" ToolTip="Close Auth Banner">
-                        <TextBlock Text="✕" FontSize="11" Foreground="{StaticResource TextSecondary}" />
+                        <TextBlock Text="✕" FontSize="11" Foreground="{DynamicResource FgSecondary}" />
                     </Button>
                 </Grid>
 
                 <Grid Margin="0,0,0,6">
-                    <PasswordBox x:Name="TxtInlineApiKey" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="4,3" FontSize="11" KeyDown="OnInlineKeyKeyDown" />
-                    <TextBox x:Name="TxtInlineApiKeyVisible" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="4,3" FontSize="11" Visibility="Collapsed" KeyDown="OnInlineKeyKeyDown" />
+                    <PasswordBox x:Name="TxtInlineApiKey" Background="{DynamicResource BgSecondary}" Foreground="{DynamicResource FgPrimary}" BorderBrush="{DynamicResource BorderDark}" Padding="4,3" FontSize="11" KeyDown="OnInlineKeyKeyDown" />
+                    <TextBox x:Name="TxtInlineApiKeyVisible" Background="{DynamicResource BgSecondary}" Foreground="{DynamicResource FgPrimary}" BorderBrush="{DynamicResource BorderDark}" CaretBrush="{DynamicResource FgPrimary}" Padding="4,3" FontSize="11" Visibility="Collapsed" KeyDown="OnInlineKeyKeyDown" />
                 </Grid>
 
                 <Grid>
@@ -128,13 +293,13 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <CheckBox x:Name="ChkInlineShowKey" Content="Show" Foreground="{StaticResource TextSecondary}" FontSize="10" Checked="OnToggleInlineShowKey" Unchecked="OnToggleInlineShowKey" VerticalAlignment="Center" />
+                    <CheckBox x:Name="ChkInlineShowKey" Content="Show" Foreground="{DynamicResource FgSecondary}" FontSize="10" Checked="OnToggleInlineShowKey" Unchecked="OnToggleInlineShowKey" VerticalAlignment="Center" />
 
-                    <Button x:Name="BtnInlineAutoDetect" Grid.Column="2" Margin="4,0" Padding="8,3" Background="#3E3E42" Foreground="{StaticResource TextPrimary}" BorderThickness="0" FontSize="11" Cursor="Hand" Click="OnInlineAutoDetectClick" ToolTip="Detect credentials automatically from environment variables or CLI">
+                    <Button x:Name="BtnInlineAutoDetect" Grid.Column="2" Margin="4,0" Padding="8,3" Background="{DynamicResource BgHover}" Foreground="{DynamicResource FgPrimary}" BorderThickness="0" FontSize="11" Cursor="Hand" Click="OnInlineAutoDetectClick" ToolTip="Detect credentials automatically from environment variables or CLI">
                         <TextBlock Text="🔍 Auto-Detect" />
                     </Button>
 
-                    <Button Grid.Column="3" Padding="10,3" Background="{StaticResource AccentColor}" Foreground="White" BorderThickness="0" FontSize="11" FontWeight="SemiBold" Cursor="Hand" Click="OnSaveInlineAuthClick">
+                    <Button Grid.Column="3" Padding="10,3" Background="{DynamicResource AccentBlue}" Foreground="White" BorderThickness="0" FontSize="11" FontWeight="SemiBold" Cursor="Hand" Click="OnSaveInlineAuthClick">
                         <TextBlock Text="Save &amp; Use" />
                     </Button>
                 </Grid>
@@ -144,11 +309,11 @@
         </Border>
 
         <!-- 2. Advanced Settings Drawer (Collapsible) -->
-        <Border x:Name="SettingsDrawer" Grid.Row="2" Background="{StaticResource SectionBg}" BorderBrush="{StaticResource BorderBrushColor}" BorderThickness="0,0,0,1" Padding="10" Visibility="Collapsed">
+        <Border x:Name="SettingsDrawer" Grid.Row="2" Background="{DynamicResource BgTertiary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1" Padding="10" Visibility="Collapsed">
             <StackPanel>
                 <!-- Provider Selector -->
-                <TextBlock Text="AI Provider:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,3" />
-                <ComboBox x:Name="CmbProvider" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="4,3" FontSize="11" Margin="0,0,0,8" SelectionChanged="OnProviderSelectionChanged" />
+                <TextBlock Text="AI Provider:" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="0,0,0,3" />
+                <ComboBox x:Name="CmbProvider" Style="{StaticResource AiChatComboBoxStyle}" Margin="0,0,0,8" SelectionChanged="OnProviderSelectionChanged" />
 
                 <!-- Auth Mode & Discovery -->
                 <Grid Margin="0,0,0,8">
@@ -157,23 +322,23 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Authentication Mode:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,3" />
-                        <ComboBox x:Name="CmbAuthMode" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="4,3" FontSize="11" SelectionChanged="OnAuthModeSelectionChanged" />
+                        <TextBlock Text="Authentication Mode:" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="0,0,0,3" />
+                        <ComboBox x:Name="CmbAuthMode" Style="{StaticResource AiChatComboBoxStyle}" SelectionChanged="OnAuthModeSelectionChanged" />
                     </StackPanel>
-                    <Button x:Name="BtnDrawerAutoDetect" Grid.Column="1" VerticalAlignment="Bottom" Margin="8,0,0,0" Padding="8,4" Background="#3E3E42" Foreground="{StaticResource TextPrimary}" BorderThickness="0" FontSize="11" Cursor="Hand" Click="OnDrawerAutoDetectClick" ToolTip="Detect credentials from environment variables or gcloud CLI">
+                    <Button x:Name="BtnDrawerAutoDetect" Grid.Column="1" VerticalAlignment="Bottom" Margin="8,0,0,0" Padding="8,4" Background="{DynamicResource BgHover}" Foreground="{DynamicResource FgPrimary}" BorderThickness="0" FontSize="11" Cursor="Hand" Click="OnDrawerAutoDetectClick" ToolTip="Detect credentials from environment variables or gcloud CLI">
                         <TextBlock Text="🔍 Auto-Detect" />
                     </Button>
                 </Grid>
 
                 <!-- Endpoint URL -->
-                <TextBlock Text="API Endpoint URL:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,3" />
-                <TextBox x:Name="TxtApiEndpoint" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="4,3" FontSize="11" Margin="0,0,0,8" />
+                <TextBlock Text="API Endpoint URL:" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="0,0,0,3" />
+                <TextBox x:Name="TxtApiEndpoint" Background="{DynamicResource BgSecondary}" Foreground="{DynamicResource FgPrimary}" BorderBrush="{DynamicResource BorderDark}" CaretBrush="{DynamicResource FgPrimary}" Padding="4,3" FontSize="11" Margin="0,0,0,8" />
 
                 <!-- API Key / Token -->
-                <TextBlock x:Name="LblSecretKey" Text="API Key / Access Token:" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,3" />
+                <TextBlock x:Name="LblSecretKey" Text="API Key / Access Token:" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="0,0,0,3" />
                 <Grid Margin="0,0,0,8">
-                    <PasswordBox x:Name="TxtApiKey" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="4,3" FontSize="11" />
-                    <TextBox x:Name="TxtApiKeyVisible" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="4,3" FontSize="11" Visibility="Collapsed" />
+                    <PasswordBox x:Name="TxtApiKey" Background="{DynamicResource BgSecondary}" Foreground="{DynamicResource FgPrimary}" BorderBrush="{DynamicResource BorderDark}" Padding="4,3" FontSize="11" />
+                    <TextBox x:Name="TxtApiKeyVisible" Background="{DynamicResource BgSecondary}" Foreground="{DynamicResource FgPrimary}" BorderBrush="{DynamicResource BorderDark}" CaretBrush="{DynamicResource FgPrimary}" Padding="4,3" FontSize="11" Visibility="Collapsed" />
                 </Grid>
 
                 <Grid Margin="0,0,0,8">
@@ -181,15 +346,15 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <CheckBox x:Name="ChkShowKey" Content="Show Key" Foreground="{StaticResource TextSecondary}" FontSize="10" Checked="OnToggleShowKey" Unchecked="OnToggleShowKey" VerticalAlignment="Center" />
+                    <CheckBox x:Name="ChkShowKey" Content="Show Key" Foreground="{DynamicResource FgSecondary}" FontSize="10" Checked="OnToggleShowKey" Unchecked="OnToggleShowKey" VerticalAlignment="Center" />
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <TextBlock Text="Model: " Foreground="{StaticResource TextSecondary}" FontSize="11" VerticalAlignment="Center" />
-                        <ComboBox x:Name="CmbModel" Width="140" IsEditable="True" Background="#1E1E1E" Foreground="{StaticResource TextPrimary}" BorderBrush="{StaticResource BorderBrushColor}" Padding="3,2" FontSize="11" />
+                        <TextBlock Text="Model: " Foreground="{DynamicResource FgSecondary}" FontSize="11" VerticalAlignment="Center" />
+                        <ComboBox x:Name="CmbModel" Width="140" IsEditable="True" Style="{StaticResource AiChatComboBoxStyle}" />
                     </StackPanel>
                 </Grid>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
-                    <Button Content="Save &amp; Close" Background="{StaticResource AccentColor}" Foreground="White" BorderThickness="0" Padding="10,4" FontSize="11" FontWeight="SemiBold" Cursor="Hand" Click="OnSaveSettingsClick" />
+                    <Button Content="Save &amp; Close" Background="{DynamicResource AccentBlue}" Foreground="White" BorderThickness="0" Padding="10,4" FontSize="11" FontWeight="SemiBold" Cursor="Hand" Click="OnSaveSettingsClick" />
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -198,31 +363,31 @@
         <ScrollViewer x:Name="ChatScrollViewer" Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="8,8">
             <StackPanel x:Name="MessagePanel">
                 <!-- Welcome placeholder if empty -->
-                <Border x:Name="WelcomeBorder" Background="{StaticResource SectionBg}" CornerRadius="6" Padding="14" Margin="0,10,0,0">
+                <Border x:Name="WelcomeBorder" Background="{DynamicResource BgTertiary}" CornerRadius="6" Padding="14" Margin="0,10,0,0">
                     <StackPanel>
-                        <TextBlock Text="🤖 AI Chat Hub" FontWeight="Bold" Foreground="{StaticResource TextPrimary}" FontSize="13" Margin="0,0,0,6" />
-                        <TextBlock Text="Multi-model AI assistant supporting DeepSeek (default), OpenAI GPT-4o, Google Gemini &amp; Antigravity, Anthropic Claude, and Local Ollama." TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,6" />
-                        <TextBlock Text="• Switch models directly via the dropdown above" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="8,0,0,2" />
-                        <TextBlock Text="• Read &amp; write workspace files with full context" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="8,0,0,2" />
-                        <TextBlock Text="• Execute shell commands with user approval" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="8,0,0,2" />
-                        <TextBlock Text="• Press Ctrl+Shift+R for instant AI Code Review" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="8,0,0,2" />
-                        <TextBlock Text="• Press Ctrl+I for floating in-editor generation" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="8,0,0,8" />
-                        <TextBlock x:Name="TxtWelcomeAuthHint" Text="Active model: DeepSeek (deepseek-chat)." Foreground="{StaticResource AccentColor}" FontSize="11" />
+                        <TextBlock Text="🤖 AI Chat Hub" FontWeight="Bold" Foreground="{DynamicResource FgPrimary}" FontSize="13" Margin="0,0,0,6" />
+                        <TextBlock Text="Multi-model AI assistant supporting DeepSeek (default), OpenAI GPT-4o, Google Gemini &amp; Antigravity, Anthropic Claude, and Local Ollama." TextWrapping="Wrap" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="0,0,0,6" />
+                        <TextBlock Text="• Switch models directly via the dropdown above" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="8,0,0,2" />
+                        <TextBlock Text="• Read &amp; write workspace files with full context" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="8,0,0,2" />
+                        <TextBlock Text="• Execute shell commands with user approval" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="8,0,0,2" />
+                        <TextBlock Text="• Press Ctrl+Shift+R for instant AI Code Review" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="8,0,0,2" />
+                        <TextBlock Text="• Press Ctrl+I for floating in-editor generation" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="8,0,0,8" />
+                        <TextBlock x:Name="TxtWelcomeAuthHint" Text="Active model: DeepSeek (deepseek-chat)." Foreground="{DynamicResource AccentBlue}" FontSize="11" />
                     </StackPanel>
                 </Border>
             </StackPanel>
         </ScrollViewer>
 
         <!-- 4. Status Bar -->
-        <Border Grid.Row="4" Background="{StaticResource HeaderBg}" BorderBrush="{StaticResource BorderBrushColor}" BorderThickness="0,1,0,0" Padding="8,4">
+        <Border Grid.Row="4" Background="{DynamicResource BgSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,1,0,0" Padding="8,4">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock x:Name="TxtStatusIndicator" Text="Idle" Foreground="{StaticResource TextSecondary}" FontSize="10" VerticalAlignment="Center" Margin="0,0,6,0" />
-                    <TextBlock x:Name="TxtActiveFileBadge" Text="📄 No file" Foreground="{StaticResource TextSecondary}" FontSize="10" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TxtStatusIndicator" Text="Idle" Foreground="{DynamicResource FgSecondary}" FontSize="10" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBlock x:Name="TxtActiveFileBadge" Text="📄 No file" Foreground="{DynamicResource FgSecondary}" FontSize="10" VerticalAlignment="Center" />
                 </StackPanel>
                 <Button x:Name="BtnStopGeneration" Grid.Column="1" Style="{StaticResource IconButtonStyle}" Visibility="Collapsed" Click="OnStopGenerationClick" ToolTip="Stop Generation">
                     <TextBlock Text="⏹ Stop" Foreground="#F44336" FontWeight="SemiBold" FontSize="10" />
@@ -231,7 +396,7 @@
         </Border>
 
         <!-- 5. Prompt Input Area -->
-        <Border Grid.Row="5" Background="{StaticResource HeaderBg}" BorderBrush="{StaticResource BorderBrushColor}" BorderThickness="0,1,0,0" Padding="8">
+        <Border Grid.Row="5" Background="{DynamicResource BgSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,1,0,0" Padding="8">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -240,16 +405,17 @@
 
                 <TextBox x:Name="TxtPromptInput" 
                          Grid.Row="0"
-                         Background="#1E1E1E" 
-                         Foreground="{StaticResource TextPrimary}" 
-                         BorderBrush="{StaticResource BorderBrushColor}" 
+                         Background="{DynamicResource BgTertiary}" 
+                         Foreground="{DynamicResource FgPrimary}" 
+                         BorderBrush="{DynamicResource BorderDark}" 
+                         CaretBrush="{DynamicResource FgPrimary}"
                          Padding="6" 
                          FontSize="12" 
                          MinHeight="55" 
-                         MaxHeight="140"
+                         MaxHeight="140" 
                          TextWrapping="Wrap" 
                          AcceptsReturn="True" 
-                         VerticalScrollBarVisibility="Auto"
+                         VerticalScrollBarVisibility="Auto" 
                          PreviewKeyDown="OnPromptInputPreviewKeyDown" />
 
                 <Grid Grid.Row="1" Margin="0,6,0,0">
@@ -261,13 +427,13 @@
                     <CheckBox x:Name="ChkIncludeActiveFile" 
                               Content="Attach active file context" 
                               IsChecked="True" 
-                              Foreground="{StaticResource TextSecondary}" 
+                              Foreground="{DynamicResource FgSecondary}" 
                               FontSize="11" 
                               VerticalAlignment="Center" />
 
                     <Button x:Name="BtnSendPrompt" 
                             Grid.Column="1" 
-                            Background="{StaticResource AccentColor}" 
+                            Background="{DynamicResource AccentBlue}" 
                             Foreground="White" 
                             BorderThickness="0" 
                             Padding="12,5" 

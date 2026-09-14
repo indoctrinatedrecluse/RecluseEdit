@@ -46,12 +46,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Optimized `SdkPathResolver` with cached validated `%PATH%` directories (cutting 1,700 redundant `Directory.Exists` calls) and targeted Ruby directory checks.
   - Replaced synchronous UI thread dispatches with debounced `Dispatcher.BeginInvoke(DispatcherPriority.Background, ...)`.
 
+- **AI Chat Model Visibility & Theme-Aware Styling (`AiChatView`, `DarkTheme.xaml`)**:
+  - Fixed low-contrast rendering in the AI Chat model selector where models were displayed as gray text on a white background across light, dark, and custom themes.
+  - Implemented universal theme-aware WPF `ComboBox` and `ComboBoxItem` control templates in `DarkTheme.xaml` backed by `{DynamicResource BgSecondary}`, `{DynamicResource FgPrimary}`, and `{DynamicResource BorderDark}`, eliminating hardcoded white popup backgrounds.
+  - Added dedicated AI Chat ComboBox styling and item templates with robot emoji badges and bold text for crystal-clear readability across all color schemes.
+  - Migrated hardcoded status badges, message bubbles, and headers in `AiChatView` to dynamic theme resource brushes.
+
+- **Shortcut Decoupling: Open Folder & Go to Symbol (`MainWindow`, `KeyboardShortcutsWindow`)**:
+  - Resolved shortcut collision where `Ctrl+Shift+O` triggered both the Go to Symbol command palette navigation and Open Folder dialog.
+  - Decoupled Open Folder to the standard chord `Ctrl+K, Ctrl+O` across menu headers, toolbar tooltips, chord key handlers, and the keyboard shortcuts reference dialog.
+  - Retained `Ctrl+Shift+O` exclusively for Go to Symbol / Symbol Navigation (`@` symbol palette search).
+
 - **Dynamic Assembly Version in About Dialog**:
   - Dynamically resolves current assembly version (`Assembly.GetExecutingAssembly().GetName().Version`) in the **Help -> About RecluseEdit** dialog, ensuring the displayed version automatically matches the current release without hardcoded strings.
 
 - **Test Suite Expansion**:
   - Added `SdkPathResolverTests` and `ToolchainOptimizationTests` covering path resolution from PATH, workspace-local probing, venv detection, non-existent tool handling, `ToolchainExecutor` execution and version extraction, `SdkAutoDetector` discovery, persistent caching roundtrip, `ToolchainManager` integration, and dynamic version alignment.
-  - Test suite grew to 299 passing unit tests with 100% pass rate, 0 warnings, and 0 errors.
+  - Expanded unit test coverage with dedicated tests for distinct shortcut registrations (`TestOpenFolderAndGoToSymbol_HaveDistinctShortcuts`) and STA thread validation for AI Chat model selector templates and styling (`TestAiChatView_ModelComboBox_HasCustomItemTemplateAndVisibleStyling`).
+  - Test suite now features 301 passing unit tests with 100% pass rate, 0 warnings, and 0 errors.
 
 ## [5.3.0] - 2026-09-14
 

@@ -15,12 +15,13 @@ public partial class KeyboardShortcutsWindow : Window
         // 🚀 Command Palette & Navigation
         new("Command Palette", "Open Command Palette (Commands)", "Ctrl+Shift+P / F1"),
         new("Command Palette", "Quick Open Workspace Files & Tabs", "Ctrl+P"),
+        new("Command Palette", "Go to Symbol in File...", "Ctrl+Shift+O / Ctrl+T"),
         new("Command Palette", "Go to Line / Column", "Ctrl+G"),
 
         // 📄 File Operations
         new("File Operations", "New File", "Ctrl+N"),
         new("File Operations", "Open File...", "Ctrl+O"),
-        new("File Operations", "Open Folder / Workspace...", "Ctrl+Shift+O"),
+        new("File Operations", "Open Folder / Workspace...", "Ctrl+K, Ctrl+O"),
         new("File Operations", "Save Active File", "Ctrl+S"),
         new("File Operations", "Save As...", "Ctrl+Shift+S"),
         new("File Operations", "Close Active Tab", "Ctrl+W"),

@@ -90,4 +90,30 @@ public class CommandRegistryTests
         Assert.IsTrue(results.Any(r => r.Title.Contains("'>'")));
         Assert.IsTrue(results.Any(r => r.Title.Contains("':'")));
     }
+
+    [TestMethod]
+    public void TestOpenFolderAndGoToSymbol_HaveDistinctShortcuts()
+    {
+        var goToSymbol = new CommandItem
+        {
+            Id = "nav.goToSymbol",
+            Title = "Go to Symbol in File...",
+            Category = "Go",
+            InputGestureText = "Ctrl+Shift+O",
+            Action = () => { }
+        };
+
+        var openFolder = new CommandItem
+        {
+            Id = "file.openFolder",
+            Title = "Open Folder / Workspace...",
+            Category = "File",
+            InputGestureText = "Ctrl+K, Ctrl+O",
+            Action = () => { }
+        };
+
+        Assert.AreNotEqual(goToSymbol.InputGestureText, openFolder.InputGestureText);
+        Assert.AreEqual("Ctrl+Shift+O", goToSymbol.InputGestureText);
+        Assert.AreEqual("Ctrl+K, Ctrl+O", openFolder.InputGestureText);
+    }
 }

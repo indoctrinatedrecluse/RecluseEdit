@@ -397,5 +397,48 @@ public class AiChatExtensionTests
         Assert.HasCount(1, extensionManager.RegisteredSidePanels);
         Assert.AreSame(provider, extensionManager.RegisteredSidePanels[0]);
     }
+
+    [TestMethod]
+    public void TestAiChatView_ModelComboBox_HasCustomItemTemplateAndVisibleStyling()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"aichat_view_style_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        Exception? threadEx = null;
+        try
+        {
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    var context = new MockApprovalWorkspaceContext(tempDir);
+                    var provider = new AiChatSidePanelProvider();
+                    var view = provider.CreateView(context) as AiChatView;
+
+                    Assert.IsNotNull(view);
+                    var cmb = view.FindName("CmbHeaderModel") as System.Windows.Controls.ComboBox;
+                    Assert.IsNotNull(cmb, "CmbHeaderModel should exist in the view");
+                    Assert.IsNotNull(cmb.ItemTemplate, "CmbHeaderModel should have a dedicated ItemTemplate for visible model rendering");
+                    Assert.IsNotNull(cmb.Style, "CmbHeaderModel should have a theme-aware ComboBox style");
+                }
+                catch (Exception ex)
+                {
+                    threadEx = ex;
+                }
+            });
+
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+
+            if (threadEx != null)
+            {
+                throw threadEx;
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
+        }
+    }
 }
 

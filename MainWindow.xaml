@@ -86,7 +86,7 @@
                 <MenuItem Header="New _Project..." InputGestureText="Ctrl+Shift+N" Click="OnNewProjectClick" />
                 <MenuItem Header="_New File" InputGestureText="Ctrl+N" Click="OnNewFileClick" />
                 <MenuItem Header="_Open File..." InputGestureText="Ctrl+O" Click="OnOpenFileClick" />
-                <MenuItem Header="Open _Folder..." InputGestureText="Ctrl+Shift+O" Click="OnOpenFolderClick" />
+                <MenuItem Header="Open _Folder..." InputGestureText="Ctrl+K, Ctrl+O" Command="{x:Static local:MainWindow.OpenFolderCommand}" />
                 <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="_Save" InputGestureText="Ctrl+S" Click="OnSaveFileClick" />
                 <MenuItem Header="Save _As..." InputGestureText="Ctrl+Shift+S" Click="OnSaveAsFileClick" />
@@ -179,7 +179,7 @@
                 <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnOpenFileClick" ToolTip="Open File (Ctrl+O)">
                     <TextBlock Text="📄 Open File" />
                 </Button>
-                <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnOpenFolderClick" ToolTip="Open Project Folder (Ctrl+Shift+O)">
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnOpenFolderClick" ToolTip="Open Project Folder (Ctrl+K, Ctrl+O)">
                     <TextBlock Text="📁 Open Folder" />
                 </Button>
                 <Button Style="{StaticResource ToolbarButtonStyle}" Click="OnSaveFileClick" ToolTip="Save File (Ctrl+S)">
@@ -522,7 +522,7 @@
                                             Margin="4,0" 
                                             Click="OnOpenFileClick" />
                                     <Button Style="{StaticResource ToolbarButtonStyle}" 
-                                            Content="Open Folder (Ctrl+Shift+O)" 
+                                            Content="Open Folder (Ctrl+K, Ctrl+O)" 
                                             Padding="12,6" 
                                             Margin="4,0" 
                                             Click="OnOpenFolderClick" />

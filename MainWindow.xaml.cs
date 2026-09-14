@@ -1380,6 +1380,12 @@ public partial class MainWindow : Window
         if (_isChordCtrlK)
         {
             _isChordCtrlK = false;
+            if (e.Key == Key.O)
+            {
+                e.Handled = true;
+                OpenFolderDialog();
+                return;
+            }
             if (e.Key == Key.T)
             {
                 e.Handled = true;
@@ -1645,7 +1651,7 @@ public partial class MainWindow : Window
             new() { Id = "file.new", Title = "New File", Category = "File", InputGestureText = "Ctrl+N", Icon = "📄", Action = () => CreateNewFile() },
             new() { Id = "file.newProject", Title = "New Project from Template...", Category = "File", InputGestureText = "Ctrl+Shift+N", Icon = "🛠️", Action = () => OpenNewProjectDialog() },
             new() { Id = "file.open", Title = "Open File...", Category = "File", InputGestureText = "Ctrl+O", Icon = "📂", Action = () => OpenFileDialog() },
-            new() { Id = "file.openFolder", Title = "Open Folder / Workspace...", Category = "File", InputGestureText = "Ctrl+Shift+O", Icon = "📁", Action = () => OpenFolderDialog() },
+            new() { Id = "file.openFolder", Title = "Open Folder / Workspace...", Category = "File", InputGestureText = "Ctrl+K, Ctrl+O", Icon = "📁", Action = () => OpenFolderDialog() },
             new() { Id = "file.save", Title = "Save Active File", Category = "File", InputGestureText = "Ctrl+S", Icon = "💾", Action = () => SaveActiveFile() },
             new() { Id = "file.saveAs", Title = "Save As...", Category = "File", InputGestureText = "Ctrl+Shift+S", Icon = "💾", Action = () => SaveActiveFileAs() },
             new() { Id = "file.saveAll", Title = "Save All Files", Category = "File", Icon = "💾", Action = () => SaveAllFiles() },
