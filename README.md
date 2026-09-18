@@ -39,6 +39,7 @@
 - 📐 **Code Folding & Live Bracket Matching**: Expand/collapse blocks and sections for HTML/XML and live accent border highlighting for matching pairs of `()`, `[]`, and `{}` as the caret moves.
 - 🔢 **Visual Line Numbers & Formatting**: Customizable line-number gutter, word wrapping toggle, and font scaling with <kbd>Ctrl</kbd> + <kbd>MouseWheel</kbd>.
 - 🔌 **Pluggable Extension Architecture**: Dynamic plugin discovery from the `Extensions/` directory with separate project build targets, multi-side-panel UI dock integration, and a dedicated UI manager (`Extensions -> Manage Extensions...`).
+- 🔄 **Built-in Auto-Updater & Seamless In-Place Patching**: Automated update checking against GitHub Releases with non-intrusive background notifications and manual trigger (<kbd>Help -> Check for Updates...</kbd>). Supports zero-configuration download with progress tracking, release notes inspection, and detached in-place application patching for portable ZIP releases or direct execution for installer packages.
 - 🌙 **Modern Dark UI**: VS Code-inspired sleek dark theme (`#1E1E1E`), complete with Activity Bar sidebar, menu bar, quick-action toolbar, and informative status bar.
 
 ---
@@ -430,6 +431,7 @@ Remove-Item .git\index -Force; git reset
 
 ## 🗺️ Planned Roadmap & SDK Evolution (TODO)
 
+All initial planned architectural milestones and SDK evolutions have been completed:
 ### 📌 Upcoming for Next Releases
 - 🏪 **Microsoft Store Distribution & Automated Publishing**:
   - Publish RecluseEdit to the **Microsoft Store** as an independent developer under the publisher identity `"indoctrinatedrecluse"`.

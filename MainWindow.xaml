@@ -160,6 +160,8 @@
             <MenuItem Header="_Help">
                 <MenuItem Header="_Keyboard Shortcuts" InputGestureText="Ctrl+K, Ctrl+S" Click="OnKeyboardShortcutsClick" />
                 <Separator Background="{DynamicResource BorderDark}" />
+                <MenuItem Header="_Check for Updates..." Click="OnCheckForUpdatesClick" />
+                <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="_About RecluseEdit" Click="OnAboutClick" />
             </MenuItem>
         </Menu>
@@ -657,6 +659,10 @@
                     <TextBlock x:Name="StatusTheme" Text="Theme: Recluse Dark+" FontSize="11" Margin="8,0" Cursor="Hand" MouseLeftButtonDown="OnSelectThemeClick" ToolTip="Click to change color theme (Ctrl+K, Ctrl+T)" />
                     <TextBlock Text="|" Opacity="0.5" />
                     <TextBlock x:Name="StatusExtensions" Text="Extensions: 1" FontSize="11" Margin="8,0" Cursor="Hand" MouseLeftButtonDown="OnManageExtensionsClick" ToolTip="Click to manage extensions" />
+                    <StackPanel x:Name="StatusUpdateContainer" Orientation="Horizontal" Visibility="Collapsed">
+                        <TextBlock Text="|" Opacity="0.5" />
+                        <TextBlock x:Name="StatusUpdateAvailable" Text="🔄 Update Available" FontWeight="SemiBold" Foreground="{DynamicResource AccentBlue}" FontSize="11" Margin="8,0" Cursor="Hand" MouseLeftButtonDown="OnCheckForUpdatesClick" ToolTip="New version available. Click to review and install update." />
+                    </StackPanel>
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>

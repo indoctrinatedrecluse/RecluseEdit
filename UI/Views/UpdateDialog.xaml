@@ -1,0 +1,259 @@
+<Window x:Class="RecluseEdit.UI.Views.UpdateDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Check for Updates - RecluseEdit"
+        Icon="pack://application:,,,/Assets/app.ico"
+        Height="460" Width="540"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BgPrimary}"
+        Foreground="{DynamicResource FgPrimary}"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <!-- 0. Header -->
+            <RowDefinition Height="Auto" />
+            <!-- 1. Body Content -->
+            <RowDefinition Height="*" />
+            <!-- 2. Bottom Actions -->
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 0. Header Area -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="🔄" FontSize="20" Margin="0,0,10,0" VerticalAlignment="Center" />
+                <TextBlock Text="RecluseEdit Software Update" 
+                           FontSize="16" 
+                           FontWeight="SemiBold" 
+                           Foreground="{DynamicResource FgPrimary}" 
+                           VerticalAlignment="Center" />
+            </StackPanel>
+            <Separator Background="{DynamicResource BorderDark}" Margin="0,12,0,0" />
+        </StackPanel>
+
+        <!-- 1. Dynamic Content Panels -->
+        <Grid Grid.Row="1">
+
+            <!-- A. Checking Panel -->
+            <StackPanel x:Name="PanelChecking" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Visible">
+                <TextBlock Text="🔍" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,14" />
+                <TextBlock Text="Checking for latest releases..." 
+                           FontSize="14" 
+                           FontWeight="Medium" 
+                           HorizontalAlignment="Center" 
+                           Foreground="{DynamicResource FgPrimary}" 
+                           Margin="0,0,0,12" />
+                <ProgressBar IsIndeterminate="True" 
+                             Width="280" 
+                             Height="6" 
+                             BorderThickness="0" 
+                             Foreground="{DynamicResource AccentBlue}" 
+                             Background="{DynamicResource BgSecondary}" />
+            </StackPanel>
+
+            <!-- B. Up-To-Date Panel -->
+            <StackPanel x:Name="PanelUpToDate" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
+                <TextBlock Text="✅" FontSize="42" HorizontalAlignment="Center" Margin="0,0,0,12" />
+                <TextBlock Text="You're Up to Date!" 
+                           FontSize="16" 
+                           FontWeight="Bold" 
+                           HorizontalAlignment="Center" 
+                           Foreground="{DynamicResource FgPrimary}" 
+                           Margin="0,0,0,8" />
+                <TextBlock x:Name="TxtUpToDateVersion" 
+                           Text="RecluseEdit v5.5.0 is currently the newest version available." 
+                           FontSize="12" 
+                           Foreground="{DynamicResource FgSecondary}" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,0,0,16" />
+            </StackPanel>
+
+            <!-- C. Update Available Panel -->
+            <Grid x:Name="PanelAvailable" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Version Diff & Release Title -->
+                <Border Grid.Row="0" 
+                        Background="{DynamicResource BgSecondary}" 
+                        BorderBrush="{DynamicResource BorderDark}" 
+                        BorderThickness="1" 
+                        CornerRadius="6" 
+                        Padding="12,10" 
+                        Margin="0,0,0,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock x:Name="TxtReleaseTitle" 
+                                       Text="RecluseEdit v5.6.0" 
+                                       FontSize="14" 
+                                       FontWeight="SemiBold" 
+                                       Foreground="{DynamicResource FgPrimary}" 
+                                       TextTrimming="CharacterEllipsis" />
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <TextBlock Text="Current: " FontSize="11" Foreground="{DynamicResource FgSecondary}" />
+                                <TextBlock x:Name="TxtCurrentVersionBadge" Text="v5.5.0" FontSize="11" FontWeight="Medium" Foreground="{DynamicResource FgSecondary}" />
+                                <TextBlock Text="  ➔  Latest: " FontSize="11" Foreground="{DynamicResource FgSecondary}" />
+                                <TextBlock x:Name="TxtLatestVersionBadge" Text="v5.6.0" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBlue}" />
+                            </StackPanel>
+                        </StackPanel>
+                        <Border Grid.Column="1" 
+                                Background="{DynamicResource BgTertiary}" 
+                                CornerRadius="4" 
+                                Padding="8,4" 
+                                VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtAssetSize" Text="24.5 MB" FontSize="11" Foreground="{DynamicResource FgSecondary}" />
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <TextBlock Grid.Row="1" 
+                           Text="Release Notes:" 
+                           FontSize="12" 
+                           FontWeight="Medium" 
+                           Foreground="{DynamicResource FgSecondary}" 
+                           Margin="0,0,0,4" />
+
+                <!-- Release Notes TextBox -->
+                <TextBox x:Name="TxtReleaseNotes" 
+                         Grid.Row="2" 
+                         IsReadOnly="True" 
+                         TextWrapping="Wrap" 
+                         VerticalScrollBarVisibility="Auto" 
+                         Background="{DynamicResource BgSecondary}" 
+                         Foreground="{DynamicResource FgPrimary}" 
+                         BorderBrush="{DynamicResource BorderDark}" 
+                         BorderThickness="1" 
+                         FontFamily="Segoe UI, Segoe UI Variable" 
+                         FontSize="12" 
+                         Padding="8" />
+            </Grid>
+
+            <!-- D. Downloading Panel -->
+            <StackPanel x:Name="PanelDownloading" VerticalAlignment="Center" HorizontalAlignment="Center" Width="360" Visibility="Collapsed">
+                <TextBlock Text="📦" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,12" />
+                <TextBlock Text="Downloading update package..." 
+                           FontSize="14" 
+                           FontWeight="SemiBold" 
+                           HorizontalAlignment="Center" 
+                           Foreground="{DynamicResource FgPrimary}" 
+                           Margin="0,0,0,6" />
+                <TextBlock x:Name="TxtDownloadStatus" 
+                           Text="Preparing download..." 
+                           FontSize="12" 
+                           Foreground="{DynamicResource FgSecondary}" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,0,0,12" />
+                <ProgressBar x:Name="PbDownloadProgress" 
+                             Minimum="0" 
+                             Maximum="100" 
+                             Value="0" 
+                             Height="10" 
+                             BorderThickness="0" 
+                             Foreground="{DynamicResource AccentBlue}" 
+                             Background="{DynamicResource BgSecondary}" 
+                             Margin="0,0,0,8" />
+                <TextBlock x:Name="TxtDownloadPercentage" 
+                           Text="0%" 
+                           FontSize="11" 
+                           FontWeight="SemiBold" 
+                           HorizontalAlignment="Right" 
+                           Foreground="{DynamicResource AccentBlue}" />
+            </StackPanel>
+
+            <!-- E. Ready To Install Panel -->
+            <StackPanel x:Name="PanelReadyToInstall" VerticalAlignment="Center" HorizontalAlignment="Center" Width="380" Visibility="Collapsed">
+                <TextBlock Text="🚀" FontSize="42" HorizontalAlignment="Center" Margin="0,0,0,12" />
+                <TextBlock Text="Update Ready to Install!" 
+                           FontSize="16" 
+                           FontWeight="Bold" 
+                           HorizontalAlignment="Center" 
+                           Foreground="{DynamicResource FgPrimary}" 
+                           Margin="0,0,0,8" />
+                <TextBlock Text="The update package has been downloaded and verified." 
+                           FontSize="12" 
+                           Foreground="{DynamicResource FgSecondary}" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,0,0,4" />
+                <TextBlock Text="Click 'Restart &amp; Install' to exit RecluseEdit, apply the update in-place, and relaunch automatically." 
+                           FontSize="12" 
+                           TextWrapping="Wrap" 
+                           TextAlignment="Center" 
+                           Foreground="{DynamicResource FgSecondary}" 
+                           Margin="0,0,0,16" />
+            </StackPanel>
+
+            <!-- F. Error Panel -->
+            <StackPanel x:Name="PanelError" VerticalAlignment="Center" HorizontalAlignment="Center" Width="360" Visibility="Collapsed">
+                <TextBlock Text="⚠️" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,10" />
+                <TextBlock Text="Update Check Failed" 
+                           FontSize="15" 
+                           FontWeight="SemiBold" 
+                           HorizontalAlignment="Center" 
+                           Foreground="{DynamicResource FgPrimary}" 
+                           Margin="0,0,0,6" />
+                <TextBlock x:Name="TxtErrorMessage" 
+                           Text="An unexpected network error occurred." 
+                           FontSize="12" 
+                           Foreground="#E06C75" 
+                           TextWrapping="Wrap" 
+                           TextAlignment="Center" 
+                           Margin="0,0,0,16" />
+            </StackPanel>
+
+        </Grid>
+
+        <!-- 2. Bottom Action Buttons -->
+        <Border Grid.Row="2" Margin="0,16,0,0" Padding="0,8,0,0" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Left-aligned button (e.g. View on GitHub) -->
+                <Button x:Name="BtnViewOnGitHub" 
+                        Grid.Column="0" 
+                        Content="🌐 View on GitHub" 
+                        Style="{StaticResource ToolbarButtonStyle}" 
+                        HorizontalAlignment="Left" 
+                        Padding="10,6" 
+                        Visibility="Collapsed" 
+                        Click="OnViewOnGitHubClick" />
+
+                <!-- Right-aligned action buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="BtnSecondary" 
+                            Content="Close" 
+                            Style="{StaticResource ToolbarButtonStyle}" 
+                            Padding="14,6" 
+                            Margin="0,0,8,0" 
+                            Click="OnSecondaryButtonClick" />
+
+                    <Button x:Name="BtnPrimary" 
+                            Content="Download &amp; Install" 
+                            Background="{DynamicResource AccentBlue}" 
+                            Foreground="White" 
+                            FontWeight="SemiBold" 
+                            BorderThickness="0" 
+                            Padding="16,6" 
+                            Visibility="Collapsed" 
+                            Click="OnPrimaryButtonClick" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+    </Grid>
+</Window>
+

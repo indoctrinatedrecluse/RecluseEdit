@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🔄 Added: Built-In Auto-Updater & In-Place Application Patching
+
+- **Release Discovery Engine (`Core/Services/UpdateService.cs`)**:
+  - Implemented automatic and manual update checking against GitHub Releases (`https://api.github.com/repos/indoctrinatedrecluse/RecluseEdit/releases/latest`).
+  - Added robust semantic version comparison engine handling leading `v`, prerelease tags, and dotted SemVer schemas.
+  - Implemented asset matching for portable Windows ZIP distributions (`RecluseEdit-windows-*.zip`) and executable installers (`RecluseEdit-*.exe`).
+  - Added 12-hour background throttling cache in `%APPDATA%\RecluseEdit\update_cache.json` ensuring startup checks are fast and non-intrusive without hitting GitHub API rate limits.
+- **In-Place Patching & Windows Process Lifecycle Management**:
+  - Built detached PowerShell update applicator script generator that waits for the running RecluseEdit process ID to terminate, cleanly replaces application files and extensions from the extracted ZIP payload using robocopy/PowerShell fallback, and relaunches the upgraded executable.
+  - Added direct installer execution handling for `.exe` setup packages.
+- **Interactive Update Dialog (`UI/Views/UpdateDialog.xaml`)**:
+  - Modern dark-themed dialog matching RecluseEdit's UI palette with multi-state support: *Checking*, *UpToDate*, *Available*, *Downloading*, *ReadyToInstall*, and *Error*.
+  - Real-time download progress bar with byte counts and percentage streaming via `IProgress<UpdateProgressReport>`.
+  - Direct GitHub release link button and release notes preview.
+  - Cancellation token support for downloads in flight.
+- **UI Integration & Status Bar Notifications**:
+  - Added `Check for Updates...` to the `Help` menu and registered `help.checkUpdates` in the Command Palette.
+  - Added subtle status bar notification badge (`🔄 Update Available (vX.Y.Z)`) on background update discovery that opens the update dialog upon click.
+- **Unit Test Coverage (`tests/RecluseEdit.Tests/UpdateServiceTests.cs`)**:
+  - 7 comprehensive unit tests verifying SemVer normalization, version comparison, asset type classification, Windows ZIP asset filtering, GitHub release JSON parsing, in-place script generation, and cache validity checks.
+
 ## [5.5.0] - 2026-09-14
 
 ### 🔏 Added: Automated Self-Signed CA & Release Code-Signing Pipeline

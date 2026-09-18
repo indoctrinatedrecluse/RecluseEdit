@@ -44,6 +44,7 @@ public partial class MainWindow : Window
     public static readonly RoutedUICommand AiCodeReviewCommand = new("AI Code Review", "AiCodeReview", typeof(MainWindow));
     public static readonly RoutedUICommand AiInlinePromptCommand = new("AI Inline Generation", "AiInlinePrompt", typeof(MainWindow));
     public static readonly RoutedUICommand GoToSymbolCommand = new("Go to Symbol", "GoToSymbol", typeof(MainWindow));
+    public static readonly RoutedUICommand CheckForUpdatesCommand = new("Check for Updates", "CheckForUpdates", typeof(MainWindow));
 
     private readonly SyntaxManager _syntaxManager;
     private readonly AutocompleteManager _autocompleteManager;
@@ -56,6 +57,7 @@ public partial class MainWindow : Window
     private readonly DocumentFormattingService _formattingService = new();
     private readonly DiagnosticService _diagnosticService = new();
     private readonly ProjectScaffoldingService _scaffoldingService = new();
+    private readonly UpdateService _updateService = new();
     private readonly FileWatcherService _fileWatcherService;
     private (DocumentModel Doc, string DiskContent)? _pendingConflict;
     private bool _formatOnSave = false;
@@ -117,6 +119,7 @@ public partial class MainWindow : Window
         CommandBindings.Add(new CommandBinding(AiCodeReviewCommand, (_, _) => PerformAiCodeReview()));
         CommandBindings.Add(new CommandBinding(AiInlinePromptCommand, (_, _) => OpenAiInlinePrompt()));
         CommandBindings.Add(new CommandBinding(GoToSymbolCommand, (_, _) => OpenCommandPalette("@")));
+        CommandBindings.Add(new CommandBinding(CheckForUpdatesCommand, (_, _) => OnCheckForUpdatesClick(this, new RoutedEventArgs())));
 
         PreviewKeyDown += OnWindowPreviewKeyDown;
         _themeManager.ThemeChanged += OnThemeChanged;
@@ -201,6 +204,13 @@ public partial class MainWindow : Window
         {
             await Task.Delay(1500);
             await _toolchainManager.InitializeWithCacheAsync();
+        });
+
+        // Defer non-intrusive update check in background
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(3000);
+            await CheckForUpdatesInBackgroundAsync();
         });
     }
 
@@ -1252,6 +1262,36 @@ public partial class MainWindow : Window
             MessageBoxImage.Information);
     }
 
+    private async Task CheckForUpdatesInBackgroundAsync()
+    {
+        try
+        {
+            var result = await _updateService.CheckForUpdatesAsync(isManual: false);
+            if (result.IsUpdateAvailable)
+            {
+                _ = Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, () =>
+                {
+                    StatusUpdateContainer.Visibility = Visibility.Visible;
+                    StatusUpdateAvailable.Text = $"🔄 Update Available (v{result.LatestVersion})";
+                    StatusUpdateAvailable.ToolTip = $"RecluseEdit v{result.LatestVersion} is available. Click to review and install.";
+                });
+            }
+        }
+        catch
+        {
+            // Ignore background check exceptions
+        }
+    }
+
+    private void OnCheckForUpdatesClick(object sender, RoutedEventArgs e)
+    {
+        var dlg = new UpdateDialog(_updateService)
+        {
+            Owner = this
+        };
+        dlg.ShowDialog();
+    }
+
     public void OpenCommandPalette(string mode = ">")
     {
         CommandPalette.Show(mode);
@@ -1719,6 +1759,7 @@ public partial class MainWindow : Window
             new() { Id = "ext.manage", Title = "Manage Extensions & Toolchains...", Category = "Extensions", Icon = "🧩", Action = () => OnManageExtensionsClick(this, new RoutedEventArgs()) },
             new() { Id = "ext.openFolder", Title = "Open Extensions Folder", Category = "Extensions", Icon = "📁", Action = () => OnOpenExtensionsFolderClick(this, new RoutedEventArgs()) },
             new() { Id = "help.shortcuts", Title = "Keyboard Shortcuts Reference", Category = "Help", InputGestureText = "Ctrl+K, Ctrl+S", Icon = "⌨️", Action = ShowKeyboardShortcuts },
+            new() { Id = "help.checkUpdates", Title = "Check for Updates...", Category = "Help", Icon = "🔄", Action = () => OnCheckForUpdatesClick(this, new RoutedEventArgs()) },
             new() { Id = "help.about", Title = "About RecluseEdit", Category = "Help", Icon = "ℹ️", Action = () => OnAboutClick(this, new RoutedEventArgs()) }
         ]);
     }
