@@ -1,0 +1,87 @@
+<UserControl x:Class="RecluseEdit.Extensions.Frontend.UI.SvgStudioView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="380"
+             Background="#1E1E1E" Foreground="#D4D4D4">
+
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- 0. Header / Active Doc Toolbar -->
+            <RowDefinition Height="120" MinHeight="60" /> <!-- 1. Input SVG Textarea -->
+            <RowDefinition Height="Auto" /> <!-- 2. Optimization Options -->
+            <RowDefinition Height="160" MinHeight="80" /> <!-- 3. SVG Visual Preview -->
+            <RowDefinition Height="Auto" /> <!-- 4. Action Buttons -->
+            <RowDefinition Height="*" MinHeight="100" /> <!-- 5. Output Preview Textarea -->
+            <RowDefinition Height="Auto" /> <!-- 6. Metrics Footer -->
+        </Grid.RowDefinitions>
+
+        <!-- 0. Header Toolbar -->
+        <Border Grid.Row="0" Background="#252526" Padding="6,5" CornerRadius="4" Margin="0,0,0,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="📐 SVG Studio &amp; Optimizer" FontWeight="SemiBold" FontSize="12" Foreground="#9CDCFE" VerticalAlignment="Center" />
+                <Button x:Name="BtnLoadDoc" Grid.Column="1" Content="📄 Load from Editor" Background="#333333" Foreground="#D4D4D4" BorderThickness="0" Padding="8,3" FontSize="11" Cursor="Hand" Click="OnLoadDocClick" ToolTip="Load SVG markup from active editor tab" />
+            </Grid>
+        </Border>
+
+        <!-- 1. Input SVG Markup -->
+        <TextBox x:Name="TxtInputSvg" Grid.Row="1"
+                 Background="#252526" Foreground="#D4D4D4" CaretBrush="#D4D4D4"
+                 BorderBrush="#3F3F46" Padding="6" FontFamily="Consolas, Courier New" FontSize="11"
+                 AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                 TextChanged="OnInputSvgChanged"
+                 ToolTip="Paste raw SVG markup here" />
+
+        <!-- 2. Optimization Options Bar -->
+        <Border Grid.Row="2" Background="#252526" Padding="6,4" CornerRadius="3" Margin="0,6,0,6">
+            <WrapPanel>
+                <CheckBox x:Name="ChkMetadata" Content="Metadata" IsChecked="True" Foreground="#CCCCCC" FontSize="11" Margin="0,2,8,2" Click="OnOptionChanged" />
+                <CheckBox x:Name="ChkComments" Content="Comments" IsChecked="True" Foreground="#CCCCCC" FontSize="11" Margin="0,2,8,2" Click="OnOptionChanged" />
+                <CheckBox x:Name="ChkRound" Content="Round Decimals" IsChecked="True" Foreground="#CCCCCC" FontSize="11" Margin="0,2,8,2" Click="OnOptionChanged" />
+                <CheckBox x:Name="ChkMinify" Content="Minify Spaces" IsChecked="True" Foreground="#CCCCCC" FontSize="11" Margin="0,2,0,2" Click="OnOptionChanged" />
+            </WrapPanel>
+        </Border>
+
+        <!-- 3. SVG Visual Preview Pane -->
+        <Border Grid.Row="3" Background="#141414" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="4" Margin="0,0,0,6" ClipToBounds="True">
+            <WebBrowser x:Name="WebPreview" />
+        </Border>
+
+        <!-- 4. Action Buttons -->
+        <Grid Grid.Row="4" Margin="0,0,0,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button x:Name="BtnOptimize" Grid.Column="0" Content="⚡ Optimize" Background="#0E639C" Foreground="White" BorderThickness="0" Padding="6,4" FontWeight="SemiBold" FontSize="11" Margin="0,0,3,0" Cursor="Hand" Click="OnOptimizeClick" />
+            <Button x:Name="BtnJsx" Grid.Column="1" Content="⚛️ Copy JSX" Background="#264F78" Foreground="White" BorderThickness="0" Padding="6,4" FontWeight="SemiBold" FontSize="11" Margin="3,0,3,0" Cursor="Hand" Click="OnCopyJsxClick" />
+            <Button x:Name="BtnDataUri" Grid.Column="2" Content="🌐 Data URI" Background="#264F78" Foreground="White" BorderThickness="0" Padding="6,4" FontWeight="SemiBold" FontSize="11" Margin="3,0,0,0" Cursor="Hand" Click="OnCopyDataUriClick" />
+        </Grid>
+
+        <!-- 5. Output Preview Textarea -->
+        <TextBox x:Name="TxtOutputSvg" Grid.Row="5"
+                 Background="#1E1E1E" Foreground="#9CDCFE" CaretBrush="#D4D4D4"
+                 BorderBrush="#3F3F46" Padding="6" FontFamily="Consolas, Courier New" FontSize="11"
+                 AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="False" />
+
+        <!-- 6. Metrics Footer -->
+        <Border Grid.Row="6" Background="#252526" Padding="6,4" CornerRadius="3" Margin="0,6,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="TxtMetrics" Text="Ready (Paste SVG above)" FontSize="11" Foreground="#808080" VerticalAlignment="Center" />
+                <Button x:Name="BtnCopyOutput" Grid.Column="1" Content="📋 Copy Code" Background="Transparent" Foreground="#9CDCFE" BorderThickness="0" Padding="6,2" FontSize="11" Cursor="Hand" Click="OnCopyOutputClick" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
+

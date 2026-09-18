@@ -66,7 +66,7 @@
                            Foreground="{DynamicResource FgPrimary}" 
                            Margin="0,0,0,8" />
                 <TextBlock x:Name="TxtUpToDateVersion" 
-                           Text="RecluseEdit v5.5.0 is currently the newest version available." 
+                           Text="RecluseEdit v6.0.0 is currently the newest version available." 
                            FontSize="12" 
                            Foreground="{DynamicResource FgSecondary}" 
                            HorizontalAlignment="Center" 
@@ -96,16 +96,16 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
                             <TextBlock x:Name="TxtReleaseTitle" 
-                                       Text="RecluseEdit v5.6.0" 
+                                       Text="RecluseEdit v6.1.0" 
                                        FontSize="14" 
                                        FontWeight="SemiBold" 
                                        Foreground="{DynamicResource FgPrimary}" 
                                        TextTrimming="CharacterEllipsis" />
                             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                                 <TextBlock Text="Current: " FontSize="11" Foreground="{DynamicResource FgSecondary}" />
-                                <TextBlock x:Name="TxtCurrentVersionBadge" Text="v5.5.0" FontSize="11" FontWeight="Medium" Foreground="{DynamicResource FgSecondary}" />
+                                <TextBlock x:Name="TxtCurrentVersionBadge" Text="v6.0.0" FontSize="11" FontWeight="Medium" Foreground="{DynamicResource FgSecondary}" />
                                 <TextBlock Text="  ➔  Latest: " FontSize="11" Foreground="{DynamicResource FgSecondary}" />
-                                <TextBlock x:Name="TxtLatestVersionBadge" Text="v5.6.0" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBlue}" />
+                                <TextBlock x:Name="TxtLatestVersionBadge" Text="v6.1.0" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBlue}" />
                             </StackPanel>
                         </StackPanel>
                         <Border Grid.Column="1" 

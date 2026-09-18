@@ -1,0 +1,90 @@
+<UserControl x:Class="RecluseEdit.Extensions.Frontend.UI.JsonToCodeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="380"
+             Background="#1E1E1E" Foreground="#D4D4D4">
+
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- 0. Header Toolbar -->
+            <RowDefinition Height="130" MinHeight="60" /> <!-- 1. Input JSON Textarea -->
+            <RowDefinition Height="Auto" /> <!-- 2. Language Mode & Root Name -->
+            <RowDefinition Height="*" MinHeight="140" /> <!-- 3. Output Code Preview -->
+            <RowDefinition Height="Auto" /> <!-- 4. Actions & Status Footer -->
+        </Grid.RowDefinitions>
+
+        <!-- 0. Header Toolbar -->
+        <Border Grid.Row="0" Background="#252526" Padding="6,5" CornerRadius="4" Margin="0,0,0,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="🧩 JSON to Code Generator" FontWeight="SemiBold" FontSize="12" Foreground="#4EC9B0" VerticalAlignment="Center" />
+                <Button x:Name="BtnFormatJson" Grid.Column="1" Content="✨ Format" Background="#333333" Foreground="#D4D4D4" BorderThickness="0" Padding="6,2" FontSize="11" Margin="0,0,4,0" Cursor="Hand" Click="OnFormatJsonClick" />
+                <Button x:Name="BtnLoadDoc" Grid.Column="2" Content="📄 Load Doc" Background="#333333" Foreground="#D4D4D4" BorderThickness="0" Padding="6,2" FontSize="11" Cursor="Hand" Click="OnLoadDocClick" ToolTip="Load JSON from active editor" />
+            </Grid>
+        </Border>
+
+        <!-- 1. Input JSON Textbox -->
+        <TextBox x:Name="TxtInputJson" Grid.Row="1"
+                 Background="#252526" Foreground="#D4D4D4" CaretBrush="#D4D4D4"
+                 BorderBrush="#3F3F46" Padding="6" FontFamily="Consolas, Courier New" FontSize="11"
+                 AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                 TextChanged="OnInputJsonChanged"
+                 ToolTip="Paste JSON payload here" />
+
+        <!-- 2. Target Selector & Root Type Configuration -->
+        <Border Grid.Row="2" Background="#252526" Padding="6" CornerRadius="4" Margin="0,6,0,6">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Language Tabs -->
+                <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,6">
+                    <RadioButton x:Name="RadioTs" Content="TypeScript" IsChecked="True" Foreground="#D4D4D4" FontSize="11" Margin="0,0,10,0" Checked="OnTargetChanged" />
+                    <RadioButton x:Name="RadioZod" Content="Zod Schema" Foreground="#D4D4D4" FontSize="11" Margin="0,0,10,0" Checked="OnTargetChanged" />
+                    <RadioButton x:Name="RadioCSharp" Content="C# Record" Foreground="#D4D4D4" FontSize="11" Checked="OnTargetChanged" />
+                </StackPanel>
+
+                <!-- Root Identifier Name -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Root Name:" FontSize="11" Foreground="#808080" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <TextBox x:Name="TxtRootName" Grid.Row="1" Grid.Column="1" Text="RootModel"
+                         Background="#1E1E1E" Foreground="#9CDCFE" CaretBrush="#D4D4D4"
+                         BorderBrush="#3F3F46" Padding="4,2" FontFamily="Consolas, Courier New" FontSize="11"
+                         TextChanged="OnRootNameChanged" />
+            </Grid>
+        </Border>
+
+        <!-- 3. Generated Code Preview -->
+        <TextBox x:Name="TxtOutputCode" Grid.Row="3"
+                 Background="#1E1E1E" Foreground="#DCDCAA" CaretBrush="#D4D4D4"
+                 BorderBrush="#3F3F46" Padding="6" FontFamily="Consolas, Courier New" FontSize="11"
+                 AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True" />
+
+        <!-- 4. Footer & Copy Action -->
+        <Border Grid.Row="4" Background="#252526" Padding="6,4" CornerRadius="3" Margin="0,6,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="TxtStatus" Text="Ready (Types generated)" FontSize="11" Foreground="#808080" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <Button x:Name="BtnNewFile" Grid.Column="1" Content="📄 New File" Background="#333333" Foreground="#D4D4D4" BorderThickness="0" Padding="8,3" FontSize="11" Margin="0,0,4,0" Cursor="Hand" Click="OnNewFileClick" ToolTip="Open generated types in a new editor tab" />
+                <Button x:Name="BtnCopyCode" Grid.Column="2" Content="📋 Copy Code" Background="#0E639C" Foreground="White" BorderThickness="0" Padding="10,3" FontWeight="SemiBold" FontSize="11" Cursor="Hand" Click="OnCopyCodeClick" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
+

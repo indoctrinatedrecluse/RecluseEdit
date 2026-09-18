@@ -38,6 +38,11 @@
 - 🔍 **Built-In Find & Replace Overlay**: Floating top-right search panel with Next (<kbd>Enter</kbd>), Previous (<kbd>Shift+Enter</kbd>), Match Case, and Replace All (<kbd>Ctrl+F</kbd>, <kbd>Ctrl+H</kbd>).
 - 📐 **Code Folding & Live Bracket Matching**: Expand/collapse blocks and sections for HTML/XML and live accent border highlighting for matching pairs of `()`, `[]`, and `{}` as the caret moves.
 - 🔢 **Visual Line Numbers & Formatting**: Customizable line-number gutter, word wrapping toggle, and font scaling with <kbd>Ctrl</kbd> + <kbd>MouseWheel</kbd>.
+- 🧘 **Distraction-Free Zen Mode**: Focus entirely on your code by pressing <kbd>Ctrl+K, Z</kbd> or via Command Palette (`view.zenMode`). Hides menu bars, toolbars, docks, and sidebars, centering the active buffer with optimal reading margins. Hover at the top center to reveal the auto-hide exit pill, or press <kbd>Esc</kbd>.
+- 🎨 **SVG Studio & Asset Optimizer**: Interactive side panel with transparency checkerboard visual preview, multi-pass SVGO minification, configurable coordinate rounding, one-click React JSX component generation, and CSS Data URI encoding.
+- 📐 **JSON-to-Code & TypeScript Generator**: Real-time generation of TypeScript interfaces, Zod validation schemas (`z.object`), and C# positional records from raw JSON payloads with automatic formatting.
+- 🌐 **Embedded Local Web Mock API Server**: Zero-dependency embedded HTTP mock server on `http://localhost:5050` with customizable route presets, simulated network latency (ms), CORS headers, and real-time incoming traffic request logging.
+- 🧪 **Interactive Regex Workbench**: Comprehensive regular expression workbench featuring real-time evaluation, capture groups table, live replacement formatting preview, regex option flags (`i`, `m`, `s`, `x`), and curated presets (Email, URL, SemVer, IPv4, UUID, Hex Color, ISO Date).
 - 🔌 **Pluggable Extension Architecture**: Dynamic plugin discovery from the `Extensions/` directory with separate project build targets, multi-side-panel UI dock integration, and a dedicated UI manager (`Extensions -> Manage Extensions...`).
 - 🔄 **Built-in Auto-Updater & Seamless In-Place Patching**: Automated update checking against GitHub Releases with non-intrusive background notifications and manual trigger (<kbd>Help -> Check for Updates...</kbd>). Supports zero-configuration download with progress tracking, release notes inspection, and detached in-place application patching for portable ZIP releases or direct execution for installer packages.
 - 🌙 **Modern Dark UI**: VS Code-inspired sleek dark theme (`#1E1E1E`), complete with Activity Bar sidebar, menu bar, quick-action toolbar, and informative status bar.
@@ -48,6 +53,7 @@
 
 | Shortcut | Action |
 | :--- | :--- |
+| <kbd>Ctrl</kbd> + <kbd>K</kbd>, <kbd>Z</kbd> | Toggle Distraction-Free Zen Mode |
 | <kbd>Ctrl</kbd> + <kbd>K</kbd>, <kbd>Ctrl</kbd> + <kbd>T</kbd> | Color Theme Picker (Live Preview & Rollback) |
 | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd> | Quick Color Theme Selector |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> | Toggle Chromium Live Web & Markdown Preview |

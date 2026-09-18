@@ -7,7 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [6.0.0] - 2026-09-19
+
+### 🌐 Added: Web Dev Powerhouse & GUI Extensions Suite
+
+- **SVG Studio & Asset Optimizer (`RecluseEdit.Extensions.Frontend`)**:
+  - Interactive GUI side panel with real-time visual SVG preview over a high-contrast transparency checkerboard pattern.
+  - Multi-pass SVGO-inspired optimization engine stripping XML declarations, DOCTYPE headers, editor metadata (Inkscape/Illustrator), XML comments, and redundant namespaces.
+  - Configurable coordinate rounding with custom decimal precision (default 2 decimals).
+  - One-click React JSX component generator converting SVG attributes to React camelCase (`class` → `className`, `stroke-width` → `strokeWidth`, etc.) and exporting TypeScript typing (`React.SVGProps<SVGSVGElement>`).
+  - CSS Data URI encoder producing ready-to-use CSS `url("data:image/svg+xml,...")` declarations with proper URI escaping.
+  - Direct editor integration: "Load from Active Editor" and "Insert into Active Editor".
+
+- **JSON-to-Code & TypeScript Generator (`RecluseEdit.Extensions.Frontend`)**:
+  - Interactive GUI side panel converting arbitrary JSON payloads into strongly-typed code constructs in real time.
+  - **TypeScript Interfaces**: Generates clean, recursive TypeScript interfaces with optional and array typing.
+  - **Zod Schemas**: Generates `z.object({...})` schemas and corresponding infer types (`z.infer<typeof schema>`).
+  - **C# Records**: Generates modern C# positional records with `[property: JsonPropertyName("...")]` attributes.
+  - Quick JSON formatting tools: Prettify (2 spaces) and Minify.
+  - Direct editor integration: "Extract from Editor" and "Insert Generated Code".
+
+- **Embedded Local Web Mock API Server (`RecluseEdit.Extensions.RestClient`)**:
+  - Embedded HTTP mock server running on `http://localhost:5050` powered by `HttpListener`.
+  - Configurable routes supporting all HTTP methods (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`).
+  - Built-in route presets for `/api/users`, `/api/login`, and `/api/status`.
+  - Configurable simulated network latency (0 to 5000 ms) for realistic frontend loading state testing.
+  - Built-in CORS headers (`Access-Control-Allow-Origin: *`) allowing frontend web apps to seamlessly consume mock endpoints.
+  - Real-time incoming traffic request inspector logging timestamps, methods, paths, status codes, and user-agent information.
+
+- **Interactive Regex Workbench (`RecluseEdit.Extensions.Scripting`)**:
+  - Real-time regular expression lab with instant matching against arbitrary test strings.
+  - Regex options toggles: Case Insensitive (`i`), Multiline (`m`), Singleline (`s`), and Ignore Whitespace (`x`).
+  - Detailed Match & Capture Groups table displaying match index, length, value, and named/numbered capture groups.
+  - Live Substitution & Replacement preview using standard regex replacement tokens (`$1`, `$&`, etc.).
+  - Curated regex catalog with 7 quick-load presets: Email, URL, SemVer, IPv4, UUID, Hex Color, and ISO 8601 Date.
+
+- **Distraction-Free Zen Mode (`MainWindow`)**:
+  - Dedicated chord shortcut <kbd>Ctrl+K, Z</kbd> and Command Palette entry `view.zenMode`.
+  - Maximizes screen real estate by smoothly hiding the title bar controls, main menu bar, toolbars, sidebars, and bottom docks, centering the editor buffer with an optimal reading margin.
+  - Floating auto-hiding exit pill button that reveals on hover at the top center of the screen, or exits immediately with <kbd>Esc</kbd>.
 
 ### 🔄 Added: Built-In Auto-Updater & In-Place Application Patching
 
@@ -27,8 +65,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI Integration & Status Bar Notifications**:
   - Added `Check for Updates...` to the `Help` menu and registered `help.checkUpdates` in the Command Palette.
   - Added subtle status bar notification badge (`🔄 Update Available (vX.Y.Z)`) on background update discovery that opens the update dialog upon click.
-- **Unit Test Coverage (`tests/RecluseEdit.Tests/UpdateServiceTests.cs`)**:
-  - 7 comprehensive unit tests verifying SemVer normalization, version comparison, asset type classification, Windows ZIP asset filtering, GitHub release JSON parsing, in-place script generation, and cache validity checks.
+
+### 🧪 Test Suite & Quality Assurance
+- Expanded test suite to **332 passing tests** with 0 compiler warnings and 0 analyzer diagnostics across the solution.
+- Added dedicated unit test suites for `SvgOptimizerTests`, `JsonCodeGeneratorTests`, `MockServerTests`, `RegexWorkbenchTests`, and updated extension side panel registration tests.
 
 ## [5.5.0] - 2026-09-14
 

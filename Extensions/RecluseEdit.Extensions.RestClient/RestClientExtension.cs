@@ -53,8 +53,9 @@ public class RestClientExtension : IExtension
         // 4. Register Toolchain Check
         host.RegisterToolchainCheck(new CurlToolchainCheck());
 
-        // 5. Register Side Panel
+        // 5. Register Side Panels
         host.RegisterSidePanel(new RestClientSidePanelProvider());
+        host.RegisterSidePanel(new MockServerSidePanelProvider());
 
         return Task.CompletedTask;
     }

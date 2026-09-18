@@ -81,7 +81,7 @@
         </Grid.RowDefinitions>
 
         <!-- 0. Menu Bar -->
-        <Menu Grid.Row="0" Background="{DynamicResource BgTertiary}">
+        <Menu x:Name="MainMenu" Grid.Row="0" Background="{DynamicResource BgTertiary}">
             <MenuItem Header="_File">
                 <MenuItem Header="New _Project..." InputGestureText="Ctrl+Shift+N" Click="OnNewProjectClick" />
                 <MenuItem Header="_New File" InputGestureText="Ctrl+N" Click="OnNewFileClick" />
@@ -135,6 +135,7 @@
             <MenuItem Header="_View">
                 <MenuItem Header="_Command Palette..." InputGestureText="Ctrl+Shift+P" Click="OnCommandPaletteClick" />
                 <MenuItem Header="Color _Theme..." InputGestureText="Ctrl+K, Ctrl+T" Click="OnSelectThemeClick" />
+                <MenuItem Header="Toggle _Zen Mode" InputGestureText="Ctrl+K, Z" Click="OnToggleZenModeClick" />
                 <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem x:Name="MenuLivePreview" Header="Live _Preview" InputGestureText="Ctrl+Shift+V" IsCheckable="True" IsChecked="False" Click="OnToggleLivePreviewClick" />
                 <MenuItem Header="_Web Console" Click="OnMenuWebConsoleClick" />
@@ -167,7 +168,7 @@
         </Menu>
 
         <!-- 1. Quick Action Toolbar -->
-        <Border Grid.Row="1" Background="{DynamicResource BgSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1" Padding="6,4">
+        <Border x:Name="MainToolbar" Grid.Row="1" Background="{DynamicResource BgSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1" Padding="6,4">
             <StackPanel Orientation="Horizontal">
                 <Button x:Name="BtnToggleSidebar" Style="{StaticResource ToolbarButtonStyle}" Click="OnToggleSidebarClick" ToolTip="Toggle Sidebar (Ctrl+B)">
                     <TextBlock Text="☰ Explorer" />
@@ -329,7 +330,7 @@
         <!-- 3. Workspace / Editor Viewport -->
         <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="46" /> <!-- 0. Activity Bar -->
+                <ColumnDefinition x:Name="ColActivityBar" Width="46" /> <!-- 0. Activity Bar -->
                 <ColumnDefinition x:Name="ColSidebar" Width="240" MinWidth="140" /> <!-- 1. Sidebar -->
                 <ColumnDefinition x:Name="ColSplitter" Width="Auto" /> <!-- 2. Left Splitter -->
                 <ColumnDefinition Width="*" /> <!-- 3. Editor & Terminal -->
@@ -621,7 +622,7 @@
         </Grid>
 
         <!-- 4. Bottom Status Bar -->
-        <StatusBar Grid.Row="4" Background="{DynamicResource StatusBarBg}" Foreground="{DynamicResource StatusBarFg}" Padding="8,3">
+        <StatusBar x:Name="MainStatusBar" Grid.Row="4" Background="{DynamicResource StatusBarBg}" Foreground="{DynamicResource StatusBarFg}" Padding="8,3">
             <StatusBar.ItemsPanel>
                 <ItemsPanelTemplate>
                     <Grid>
@@ -666,6 +667,17 @@
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>
+
+        <!-- Floating Zen Mode Exit Banner -->
+        <Border x:Name="ZenModeExitBanner" Grid.Row="0" Grid.RowSpan="5" 
+                VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,8,0,0"
+                Background="#252526" BorderBrush="#007ACC" BorderThickness="1" CornerRadius="4" Padding="12,5"
+                Visibility="Collapsed" Panel.ZIndex="999" Cursor="Hand" MouseLeftButtonDown="OnExitZenModeClick">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="🧘 Zen Mode (Click or press Esc to exit)" Foreground="#9CDCFE" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <Button Content="✕" Margin="10,0,0,0" Padding="4,0" Background="Transparent" Foreground="#F48771" BorderThickness="0" Cursor="Hand" Click="OnExitZenModeClick" />
+            </StackPanel>
+        </Border>
 
         <!-- Universal Command Palette Overlay -->
         <controls:CommandPaletteControl x:Name="CommandPalette"

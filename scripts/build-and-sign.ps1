@@ -17,7 +17,7 @@
     If specified, stages files into package/RecluseEdit and creates a portable zip archive.
 
 .PARAMETER Version
-    Release version tag (e.g. v5.5.0) used when packaging the distribution archive.
+    Release version tag (e.g. v6.0.0) used when packaging the distribution archive.
 #>
 [CmdletBinding()]
 param (
@@ -27,7 +27,7 @@ param (
 
     [switch]$Package,
 
-    [string]$Version = "v5.5.0"
+    [string]$Version = "v6.0.0"
 )
 
 Set-StrictMode -Version Latest

@@ -18,6 +18,7 @@ public sealed class FrontendExtensionTests
         public List<IInlineCompletionProvider> InlineProviders { get; } = [];
         public List<IIntelliSenseProvider> IntelliSenseProviders { get; } = [];
         public List<IToolchainCheck> ToolchainChecks { get; } = [];
+        public List<ISidePanelProvider> SidePanels { get; } = [];
         public Dictionary<string, IHighlightingDefinition> Syntaxes { get; } = new(StringComparer.OrdinalIgnoreCase);
         public List<string> Logs { get; } = [];
 
@@ -26,6 +27,7 @@ public sealed class FrontendExtensionTests
         public void RegisterIntelliSense(IIntelliSenseProvider provider) => IntelliSenseProviders.Add(provider);
         public void RegisterToolchainCheck(IToolchainCheck toolchainCheck) => ToolchainChecks.Add(toolchainCheck);
         public void RegisterSyntaxHighlighting(string languageId, IHighlightingDefinition definition) => Syntaxes[languageId] = definition;
+        public void RegisterSidePanel(ISidePanelProvider panelProvider) => SidePanels.Add(panelProvider);
         public IReadOnlyList<LanguageDefinition> GetRegisteredLanguages() => Languages;
         public void Log(string message) => Logs.Add(message);
     }
@@ -90,6 +92,11 @@ public sealed class FrontendExtensionTests
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "pnpm"));
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "bun"));
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "tailwindcss"));
+
+        // Side panels
+        Assert.HasCount(2, host.SidePanels);
+        Assert.IsTrue(host.SidePanels.Any(p => p.Id == "recluse.svgstudio"));
+        Assert.IsTrue(host.SidePanels.Any(p => p.Id == "recluse.jsontocode"));
     }
 
     [TestMethod]

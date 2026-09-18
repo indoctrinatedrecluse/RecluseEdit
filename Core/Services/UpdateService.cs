@@ -36,7 +36,7 @@ public class UpdateService
         _repoName = repoName;
         _currentVersion = currentVersionOverride ??
                           Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ??
-                          "5.5.0";
+                          "6.0.0";
 
         _httpClient = httpClient ?? new HttpClient();
         if (!_httpClient.DefaultRequestHeaders.Contains("User-Agent"))

@@ -92,6 +92,10 @@ public class FrontendExtension : IExtension
         // 5. Register Extension Themes
         host.RegisterTheme(new Themes.VueEmeraldTheme());
 
+        // 6. Register GUI Side Panels
+        host.RegisterSidePanel(new SvgStudioSidePanelProvider());
+        host.RegisterSidePanel(new JsonToCodeSidePanelProvider());
+
         host.Log("Frontend Frameworks & Node Tooling Pack initialized.");
         return Task.CompletedTask;
     }

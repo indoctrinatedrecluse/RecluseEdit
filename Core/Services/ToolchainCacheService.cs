@@ -47,7 +47,7 @@ public class ToolchainCacheService
             _cacheFilePath = Path.Combine(dir, "toolchain_cache.json");
         }
 
-        _currentVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "5.5.0";
+        _currentVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "6.0.0";
     }
 
     /// <summary>

@@ -73,6 +73,7 @@ public sealed class RestClientExtensionTests
 
         // Side panel
         Assert.IsTrue(host.SidePanels.Any(p => p.Id == "recluse.restclient"));
+        Assert.IsTrue(host.SidePanels.Any(p => p.Id == "recluse.mockserver"));
     }
 
     [TestMethod]

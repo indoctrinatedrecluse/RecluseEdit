@@ -45,6 +45,7 @@ public partial class MainWindow : Window
     public static readonly RoutedUICommand AiInlinePromptCommand = new("AI Inline Generation", "AiInlinePrompt", typeof(MainWindow));
     public static readonly RoutedUICommand GoToSymbolCommand = new("Go to Symbol", "GoToSymbol", typeof(MainWindow));
     public static readonly RoutedUICommand CheckForUpdatesCommand = new("Check for Updates", "CheckForUpdates", typeof(MainWindow));
+    public static readonly RoutedUICommand ToggleZenModeCommand = new("Toggle Zen Mode", "ToggleZenMode", typeof(MainWindow));
 
     private readonly SyntaxManager _syntaxManager;
     private readonly AutocompleteManager _autocompleteManager;
@@ -120,6 +121,7 @@ public partial class MainWindow : Window
         CommandBindings.Add(new CommandBinding(AiInlinePromptCommand, (_, _) => OpenAiInlinePrompt()));
         CommandBindings.Add(new CommandBinding(GoToSymbolCommand, (_, _) => OpenCommandPalette("@")));
         CommandBindings.Add(new CommandBinding(CheckForUpdatesCommand, (_, _) => OnCheckForUpdatesClick(this, new RoutedEventArgs())));
+        CommandBindings.Add(new CommandBinding(ToggleZenModeCommand, (_, _) => ToggleZenMode()));
 
         PreviewKeyDown += OnWindowPreviewKeyDown;
         _themeManager.ThemeChanged += OnThemeChanged;
@@ -442,6 +444,111 @@ public partial class MainWindow : Window
 
     private void OnToggleTerminalClick(object sender, RoutedEventArgs e) => ToggleTerminal();
     private void OnToolbarTerminalClick(object sender, RoutedEventArgs e) => ToggleTerminal();
+
+    #region Zen Mode Handling
+
+    private bool _isZenMode = false;
+    private GridLength _zenSavedColActivityBar;
+    private GridLength _zenSavedColSidebar;
+    private GridLength _zenSavedColSplitter;
+    private GridLength _zenSavedColRightSplitter;
+    private GridLength _zenSavedColRightPane;
+    private GridLength _zenSavedRowTerminalPane;
+    private Visibility _zenSavedMenuVisibility;
+    private Visibility _zenSavedToolbarVisibility;
+    private Visibility _zenSavedStatusBarVisibility;
+
+    public void ToggleZenMode()
+    {
+        if (_isZenMode)
+        {
+            ExitZenMode();
+        }
+        else
+        {
+            EnterZenMode();
+        }
+    }
+
+    private void EnterZenMode()
+    {
+        _isZenMode = true;
+
+        // Save current layout states
+        _zenSavedColActivityBar = ColActivityBar.Width;
+        _zenSavedColSidebar = ColSidebar.Width;
+        _zenSavedColSplitter = ColSplitter.Width;
+        _zenSavedColRightSplitter = ColRightSplitter.Width;
+        _zenSavedColRightPane = ColRightPane.Width;
+        _zenSavedRowTerminalPane = RowTerminalPane.Height;
+        _zenSavedMenuVisibility = MainMenu.Visibility;
+        _zenSavedToolbarVisibility = MainToolbar.Visibility;
+        _zenSavedStatusBarVisibility = MainStatusBar.Visibility;
+
+        // Collapse all distractions
+        ColActivityBar.Width = new GridLength(0);
+        ColSidebar.Width = new GridLength(0);
+        ColSidebar.MinWidth = 0;
+        ColSplitter.Width = new GridLength(0);
+        Splitter.Visibility = Visibility.Collapsed;
+
+        ColRightPane.Width = new GridLength(0);
+        ColRightPane.MinWidth = 0;
+        ColRightSplitter.Width = new GridLength(0);
+        RightSplitter.Visibility = Visibility.Collapsed;
+        RightPaneBorder.Visibility = Visibility.Collapsed;
+
+        RowTerminalPane.Height = new GridLength(0);
+        RowTerminalPane.MinHeight = 0;
+        TerminalSplitter.Visibility = Visibility.Collapsed;
+        TerminalPane.Visibility = Visibility.Collapsed;
+
+        MainMenu.Visibility = Visibility.Collapsed;
+        MainToolbar.Visibility = Visibility.Collapsed;
+        MainStatusBar.Visibility = Visibility.Collapsed;
+
+        ZenModeExitBanner.Visibility = Visibility.Visible;
+        EditorHost.Margin = new Thickness(80, 0, 80, 0);
+
+        StatusMessage.Text = "Zen Mode activated (press Esc to exit)";
+    }
+
+    public void ExitZenMode()
+    {
+        if (!_isZenMode) return;
+        _isZenMode = false;
+
+        ColActivityBar.Width = _zenSavedColActivityBar;
+        ColSidebar.MinWidth = 140;
+        ColSidebar.Width = _zenSavedColSidebar;
+        ColSplitter.Width = _zenSavedColSplitter;
+        Splitter.Visibility = _zenSavedColSidebar.Value > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        ColRightPane.MinWidth = 260;
+        ColRightPane.Width = _zenSavedColRightPane;
+        ColRightSplitter.Width = _zenSavedColRightSplitter;
+        RightSplitter.Visibility = _zenSavedColRightPane.Value > 0 ? Visibility.Visible : Visibility.Collapsed;
+        RightPaneBorder.Visibility = _zenSavedColRightPane.Value > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        RowTerminalPane.MinHeight = _zenSavedRowTerminalPane.Value > 0 ? 100 : 0;
+        RowTerminalPane.Height = _zenSavedRowTerminalPane;
+        TerminalSplitter.Visibility = _zenSavedRowTerminalPane.Value > 0 ? Visibility.Visible : Visibility.Collapsed;
+        TerminalPane.Visibility = _zenSavedRowTerminalPane.Value > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        MainMenu.Visibility = _zenSavedMenuVisibility;
+        MainToolbar.Visibility = _zenSavedToolbarVisibility;
+        MainStatusBar.Visibility = _zenSavedStatusBarVisibility;
+
+        ZenModeExitBanner.Visibility = Visibility.Collapsed;
+        EditorHost.Margin = new Thickness(0);
+
+        StatusMessage.Text = "Exited Zen Mode";
+    }
+
+    private void OnToggleZenModeClick(object sender, RoutedEventArgs e) => ToggleZenMode();
+    private void OnExitZenModeClick(object sender, RoutedEventArgs e) => ExitZenMode();
+
+    #endregion
 
     private void OnSidePanelRegistered(ISidePanelProvider panel)
     {
@@ -1228,7 +1335,7 @@ public partial class MainWindow : Window
 
     private void OnAboutClick(object sender, RoutedEventArgs e)
     {
-        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "5.5.0";
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "6.0.0";
         MessageBox.Show(this,
             $"RecluseEdit v{version}\n\n" +
             "A fast, modern code editor optimized for web applications.\n\n" +
@@ -1410,6 +1517,13 @@ public partial class MainWindow : Window
 
     private void OnWindowPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (_isZenMode && e.Key == Key.Escape)
+        {
+            e.Handled = true;
+            ExitZenMode();
+            return;
+        }
+
         // Support VS Code style chord: Ctrl+K, then T for Theme Picker, or S for Shortcuts
         if (e.Key == Key.K && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
         {
@@ -1420,6 +1534,12 @@ public partial class MainWindow : Window
         if (_isChordCtrlK)
         {
             _isChordCtrlK = false;
+            if (e.Key == Key.Z)
+            {
+                e.Handled = true;
+                ToggleZenMode();
+                return;
+            }
             if (e.Key == Key.O)
             {
                 e.Handled = true;
@@ -1750,6 +1870,7 @@ public partial class MainWindow : Window
             new() { Id = "view.toggleTerminal", Title = "Toggle Integrated Terminal", Category = "View", InputGestureText = "Ctrl+`", Icon = "💻", Action = () => ToggleTerminal() },
             new() { Id = "view.toggleWrap", Title = "Toggle Word Wrap", Category = "View", Icon = "↩️", Action = () => { EditorHost.ToggleWordWrap(!EditorHost.UnderlyingEditor.WordWrap); BtnWordWrap.IsChecked = EditorHost.UnderlyingEditor.WordWrap; MenuWordWrap.IsChecked = EditorHost.UnderlyingEditor.WordWrap; } },
             new() { Id = "view.toggleLineNumbers", Title = "Toggle Line Numbers", Category = "View", Icon = "🔢", Action = () => { EditorHost.ToggleLineNumbers(!EditorHost.UnderlyingEditor.ShowLineNumbers); BtnLineNumbers.IsChecked = EditorHost.UnderlyingEditor.ShowLineNumbers; MenuLineNumbers.IsChecked = EditorHost.UnderlyingEditor.ShowLineNumbers; } },
+            new() { Id = "view.zenMode", Title = "Toggle Zen Mode", Category = "View", InputGestureText = "Ctrl+K, Z", Icon = "🧘", Action = ToggleZenMode },
 
             // Themes & Preferences
             new() { Id = "preferences.colorTheme", Title = "Preferences: Color Theme", Category = "Preferences", InputGestureText = "Ctrl+K, Ctrl+T", Icon = "🎨", Action = () => OpenThemePickerDialog() },

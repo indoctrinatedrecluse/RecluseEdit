@@ -93,7 +93,7 @@ public class ToolchainOptimizationTests
 
         var expiredCache = new ToolchainCacheData
         {
-            Version = "5.5.0",
+            Version = "6.0.0",
             LastScannedUtc = DateTime.UtcNow.AddHours(-25),
             Reports = [],
             DetectedSdks = []
@@ -102,7 +102,7 @@ public class ToolchainOptimizationTests
 
         var validCache = new ToolchainCacheData
         {
-            Version = "5.5.0",
+            Version = "6.0.0",
             LastScannedUtc = DateTime.UtcNow.AddMinutes(-5),
             Reports = [],
             DetectedSdks = []
@@ -168,6 +168,6 @@ public class ToolchainOptimizationTests
     public void MainWindow_AssemblyVersion_MatchesReleaseVersion()
     {
         var version = typeof(MainWindow).Assembly.GetName().Version?.ToString(3);
-        Assert.AreEqual("5.5.0", version);
+        Assert.AreEqual("6.0.0", version);
     }
 }

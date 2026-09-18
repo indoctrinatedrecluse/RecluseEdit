@@ -23,6 +23,7 @@ public sealed class ScriptingExtensionTests
         public List<IInlineCompletionProvider> InlineProviders { get; } = [];
         public List<IIntelliSenseProvider> IntelliSenseProviders { get; } = [];
         public List<IToolchainCheck> ToolchainChecks { get; } = [];
+        public List<ISidePanelProvider> SidePanels { get; } = [];
         public Dictionary<string, IHighlightingDefinition> Syntaxes { get; } = new(StringComparer.OrdinalIgnoreCase);
         public List<string> Logs { get; } = [];
 
@@ -31,6 +32,7 @@ public sealed class ScriptingExtensionTests
         public void RegisterIntelliSense(IIntelliSenseProvider provider) => IntelliSenseProviders.Add(provider);
         public void RegisterToolchainCheck(IToolchainCheck toolchainCheck) => ToolchainChecks.Add(toolchainCheck);
         public void RegisterSyntaxHighlighting(string languageId, IHighlightingDefinition definition) => Syntaxes[languageId] = definition;
+        public void RegisterSidePanel(ISidePanelProvider panelProvider) => SidePanels.Add(panelProvider);
         public IReadOnlyList<LanguageDefinition> GetRegisteredLanguages() => Languages;
         public void Log(string message) => Logs.Add(message);
     }
@@ -127,6 +129,9 @@ public sealed class ScriptingExtensionTests
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "lua"));
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "pwsh"));
         Assert.IsTrue(host.ToolchainChecks.Any(c => c.Command == "bash"));
+
+        // Side panel
+        Assert.IsTrue(host.SidePanels.Any(p => p.Id == "recluse.regex"));
     }
 
     [TestMethod]
