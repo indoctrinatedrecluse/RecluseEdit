@@ -88,6 +88,23 @@ public partial class MainWindow : Window
         _fileWatcherService.FileConflictDetected += OnFileConflictDetected;
         _fileWatcherService.FileDeletedOnDisk += OnFileDeletedOnDisk;
         var workspaceContext = new WorkspaceContext(_workspaceManager, _documentManager);
+        workspaceContext.OnOpenTerminal = (title, exe, args, workDir) =>
+        {
+            Dispatcher.Invoke(() =>
+            {
+                ToggleTerminal(true);
+                var shell = new RecluseEdit.Core.Models.ShellInfo
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    DisplayName = title ?? "Terminal",
+                    ExecutablePath = exe ?? "cmd.exe",
+                    Arguments = args ?? string.Empty,
+                    Icon = "🌐",
+                    IsAvailable = true
+                };
+                TerminalPane.CreateTerminal(shell);
+            });
+        };
         _extensionManager = new ExtensionManager(_syntaxManager, _autocompleteManager, _toolchainManager, workspaceContext, _themeManager);
         _commandRegistry = new CommandRegistry();
 
@@ -133,6 +150,9 @@ public partial class MainWindow : Window
         TerminalPane.ClosePaneRequested += () => ToggleTerminal(false);
         LivePreviewPane.ConsoleMessageReceived += (log) => Dispatcher.Invoke(() => WebConsolePane.AddLog(log));
         LivePreviewPane.CloseRequested += () => ToggleLivePreview(false);
+
+        EditorHost.MarkdownPreviewRequested += () => ToggleLivePreview(true);
+        EditorHost.FormatDocumentRequested += () => FormatActiveDocument();
 
         ProblemsPane.ProblemNavigated += (diag) => NavigateToProblem(diag);
         ProblemsPane.RefreshRequested += () => UpdateDiagnostics();
@@ -977,6 +997,7 @@ public partial class MainWindow : Window
             Title = $"{document.FileName} - RecluseEdit";
 
             if (_isLivePreviewOpen) UpdateLivePreview();
+            UpdateMarkdownPreviewButton();
             UpdateDiagnostics();
             _fileWatcherService.SyncWatchedFiles();
         }
@@ -987,6 +1008,7 @@ public partial class MainWindow : Window
             EmptyStateOverlay.Visibility = Visibility.Visible;
             LargeFileBanner.Visibility = Visibility.Collapsed;
             FileConflictBanner.Visibility = Visibility.Collapsed;
+            UpdateMarkdownPreviewButton();
 
             StatusCaret.Text = "--";
             StatusLength.Text = "No open files";
@@ -1007,6 +1029,10 @@ public partial class MainWindow : Window
         if (sender is DocumentModel doc && doc == _documentManager.ActiveDocument)
         {
             UpdateDocumentStatusUI(doc);
+            if (e.PropertyName == nameof(DocumentModel.Language) || e.PropertyName == nameof(DocumentModel.FilePath))
+            {
+                UpdateMarkdownPreviewButton();
+            }
         }
     }
 
@@ -1628,6 +1654,7 @@ public partial class MainWindow : Window
         _isLivePreviewOpen = explicitState ?? !_isLivePreviewOpen;
         MenuLivePreview.IsChecked = _isLivePreviewOpen;
         BtnLivePreview.IsChecked = _isLivePreviewOpen;
+        UpdateMarkdownPreviewButton();
 
         if (_isLivePreviewOpen)
         {
@@ -1647,6 +1674,30 @@ public partial class MainWindow : Window
     }
 
     private void OnToggleLivePreviewClick(object sender, RoutedEventArgs e) => ToggleLivePreview();
+
+    private void OnMarkdownPreviewButtonClick(object sender, RoutedEventArgs e) => ToggleLivePreview();
+
+    private void UpdateMarkdownPreviewButton()
+    {
+        var doc = _documentManager.ActiveDocument;
+        if (doc == null)
+        {
+            BtnMarkdownPreview.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        var ext = Path.GetExtension(doc.FilePath)?.ToLowerInvariant() ?? "";
+        bool isMarkdown = doc.Language.Id == "markdown" || ext is ".md" or ".markdown";
+
+        BtnMarkdownPreview.Visibility = isMarkdown ? Visibility.Visible : Visibility.Collapsed;
+        if (isMarkdown)
+        {
+            BtnMarkdownPreview.Content = _isLivePreviewOpen ? "📖 Close Preview" : "📖 Markdown Preview";
+            BtnMarkdownPreview.ToolTip = _isLivePreviewOpen 
+                ? "Close Live Markdown Preview Split Pane (Ctrl+Shift+V)" 
+                : "Open Live Markdown Preview in Split Pane (Ctrl+Shift+V)";
+        }
+    }
 
     private void UpdateLivePreview()
     {

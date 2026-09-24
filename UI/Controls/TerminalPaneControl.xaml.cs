@@ -5,11 +5,13 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Microsoft.Web.WebView2.Core;
 using RecluseEdit.Core.Models;
 using RecluseEdit.Core.Services;
 using RecluseEdit.UI.Views;
@@ -49,6 +51,11 @@ public partial class TerminalPaneControl : UserControl
     private string? _workingDirectory;
     private bool _isUpdatingSelection;
 
+    private bool _isWebViewInitialized;
+    private bool _isWebViewReady;
+    private short _terminalCols = 80;
+    private short _terminalRows = 25;
+
     public ObservableCollection<TerminalTabItem> Tabs { get; } = [];
     public TerminalTabItem? ActiveTab { get; private set; }
 
@@ -61,6 +68,7 @@ public partial class TerminalPaneControl : UserControl
         InitializeComponent();
         _detector = new ShellDetector(_settingsService);
         Loaded += OnControlLoaded;
+        SizeChanged += OnControlSizeChanged;
     }
 
     public void SetWorkingDirectory(string? path)
@@ -71,14 +79,125 @@ public partial class TerminalPaneControl : UserControl
         }
     }
 
-    private void OnControlLoaded(object sender, RoutedEventArgs e)
+    private async void OnControlLoaded(object sender, RoutedEventArgs e)
     {
         if (_detectedShells.Count == 0)
         {
             RefreshShellsList();
         }
 
+        await EnsureWebViewInitializedAsync();
         UpdateVisualState();
+    }
+
+    private void OnControlSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (_isWebViewReady)
+        {
+            SendToTerminal("fit", null);
+        }
+    }
+
+    private async Task EnsureWebViewInitializedAsync()
+    {
+        if (_isWebViewInitialized) return;
+
+        try
+        {
+            var userDataFolder = Path.Combine(Path.GetTempPath(), "RecluseEdit_Terminal_WebView2");
+            Directory.CreateDirectory(userDataFolder);
+
+            var env = await CoreWebView2Environment.CreateAsync(null, userDataFolder);
+            await TerminalWebView.EnsureCoreWebView2Async(env);
+
+            TerminalWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
+            TerminalWebView.CoreWebView2.Settings.AreDevToolsEnabled = true;
+
+            TerminalWebView.CoreWebView2.WebMessageReceived += OnTerminalWebMessageReceived;
+
+            var terminalHtmlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Terminal", "terminal.html");
+            if (File.Exists(terminalHtmlPath))
+            {
+                TerminalWebView.CoreWebView2.Navigate(terminalHtmlPath);
+                _isWebViewInitialized = true;
+                TerminalWebView.Visibility = Visibility.Visible;
+                TxtConsoleOutput.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                // Fallback to plain textbox if assets missing
+                TerminalWebView.Visibility = Visibility.Collapsed;
+                TxtConsoleOutput.Visibility = Visibility.Visible;
+            }
+        }
+        catch
+        {
+            // Fallback to plain textbox if WebView2 fails or runtime missing
+            TerminalWebView.Visibility = Visibility.Collapsed;
+            TxtConsoleOutput.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void OnTerminalWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(e.WebMessageAsJson);
+            var root = doc.RootElement;
+            if (!root.TryGetProperty("type", out var typeProp)) return;
+
+            var type = typeProp.GetString();
+            if (type == "input" && root.TryGetProperty("data", out var dataProp))
+            {
+                var data = dataProp.GetString();
+                if (!string.IsNullOrEmpty(data))
+                {
+                    ActiveTab?.Session.SendRawInput(data);
+                }
+            }
+            else if (type == "resize")
+            {
+                if (root.TryGetProperty("cols", out var colsProp) && root.TryGetProperty("rows", out var rowsProp))
+                {
+                    _terminalCols = (short)colsProp.GetInt32();
+                    _terminalRows = (short)rowsProp.GetInt32();
+                    ActiveTab?.Session.Resize(_terminalCols, _terminalRows);
+                }
+            }
+            else if (type == "ready")
+            {
+                _isWebViewReady = true;
+                if (root.TryGetProperty("cols", out var colsProp) && root.TryGetProperty("rows", out var rowsProp))
+                {
+                    _terminalCols = (short)colsProp.GetInt32();
+                    _terminalRows = (short)rowsProp.GetInt32();
+                }
+
+                if (ActiveTab != null && ActiveTab.Buffer.Length > 0)
+                {
+                    SendToTerminal("write", ActiveTab.Buffer.ToString());
+                }
+            }
+        }
+        catch
+        {
+            // Ignore malformed web messages
+        }
+    }
+
+    private void SendToTerminal(string type, object? data)
+    {
+        if (!_isWebViewReady || TerminalWebView.CoreWebView2 == null) return;
+
+        try
+        {
+            var json = JsonSerializer.Serialize(new { type, data });
+            TerminalWebView.CoreWebView2.PostWebMessageAsJson(json);
+        }
+        catch
+        {
+            // CoreWebView2 not ready
+        }
     }
 
     private void RefreshShellsList()
@@ -108,7 +227,14 @@ public partial class TerminalPaneControl : UserControl
 
     public void FocusInput()
     {
-        TxtCommandInput.Focus();
+        if (_isWebViewReady && TerminalWebView.Visibility == Visibility.Visible)
+        {
+            TerminalWebView.Focus();
+        }
+        else
+        {
+            TxtCommandInput.Focus();
+        }
     }
 
     /// <summary>
@@ -132,7 +258,11 @@ public partial class TerminalPaneControl : UserControl
         }
 
         var title = $"{chosenShell.Icon} {chosenShell.DisplayName} ({_terminalCounter++})";
-        var session = new TerminalSession(chosenShell, title, _workingDirectory);
+        var session = new TerminalSession(chosenShell, title, _workingDirectory)
+        {
+            UseConPty = _isWebViewReady,
+            StripAnsi = !_isWebViewReady
+        };
         var tabItem = new TerminalTabItem(session);
 
         session.OutputReceived += text =>
@@ -147,7 +277,7 @@ public partial class TerminalPaneControl : UserControl
 
         try
         {
-            session.Start();
+            session.Start(_terminalCols, _terminalRows);
         }
         catch (Exception ex)
         {
@@ -189,7 +319,6 @@ public partial class TerminalPaneControl : UserControl
         }
         else
         {
-            // Reset selection back to default or active shell
             _isUpdatingSelection = true;
             try
             {
@@ -208,8 +337,15 @@ public partial class TerminalPaneControl : UserControl
 
         if (tab == ActiveTab)
         {
-            TxtConsoleOutput.AppendText(text);
-            TxtConsoleOutput.ScrollToEnd();
+            if (_isWebViewReady && TerminalWebView.Visibility == Visibility.Visible)
+            {
+                SendToTerminal("write", text);
+            }
+            else
+            {
+                TxtConsoleOutput.AppendText(text);
+                TxtConsoleOutput.ScrollToEnd();
+            }
         }
     }
 
@@ -251,8 +387,20 @@ public partial class TerminalPaneControl : UserControl
 
         if (tab != null)
         {
-            TxtConsoleOutput.Text = tab.Buffer.ToString();
-            TxtConsoleOutput.ScrollToEnd();
+            if (_isWebViewReady && TerminalWebView.Visibility == Visibility.Visible)
+            {
+                SendToTerminal("clear", null);
+                if (tab.Buffer.Length > 0)
+                {
+                    SendToTerminal("write", tab.Buffer.ToString());
+                }
+                SendToTerminal("fit", null);
+            }
+            else
+            {
+                TxtConsoleOutput.Text = tab.Buffer.ToString();
+                TxtConsoleOutput.ScrollToEnd();
+            }
 
             // Update prompt prefix
             var id = tab.Session.Shell.Id.ToLowerInvariant();
@@ -264,10 +412,14 @@ public partial class TerminalPaneControl : UserControl
                         ? "> "
                         : $"{id} > ";
 
-            TxtCommandInput.Focus();
+            FocusInput();
         }
         else
         {
+            if (_isWebViewReady)
+            {
+                SendToTerminal("clear", null);
+            }
             TxtConsoleOutput.Text = "";
         }
 
@@ -330,7 +482,18 @@ public partial class TerminalPaneControl : UserControl
     {
         var hasTabs = Tabs.Count > 0;
         EmptyStateBorder.Visibility = hasTabs ? Visibility.Collapsed : Visibility.Visible;
-        TxtConsoleOutput.Visibility = hasTabs ? Visibility.Visible : Visibility.Collapsed;
+
+        if (_isWebViewInitialized)
+        {
+            TerminalWebView.Visibility = hasTabs ? Visibility.Visible : Visibility.Collapsed;
+            TxtConsoleOutput.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            TerminalWebView.Visibility = Visibility.Collapsed;
+            TxtConsoleOutput.Visibility = hasTabs ? Visibility.Visible : Visibility.Collapsed;
+        }
+
         InputBarBorder.Visibility = hasTabs ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -370,6 +533,10 @@ public partial class TerminalPaneControl : UserControl
         if (ActiveTab != null)
         {
             ActiveTab.Buffer.Clear();
+            if (_isWebViewReady)
+            {
+                SendToTerminal("clear", null);
+            }
             TxtConsoleOutput.Text = "";
         }
     }
@@ -399,10 +566,8 @@ public partial class TerminalPaneControl : UserControl
             if (trimmed.Equals("exit", StringComparison.OrdinalIgnoreCase) ||
                 trimmed.Equals("quit", StringComparison.OrdinalIgnoreCase))
             {
-                // Send exit to shell process
                 ActiveTab.Session.SendInput(input);
 
-                // Fallback safety timeout (1200ms) to ensure tab closes even if the process takes longer
                 var tabToClose = ActiveTab;
                 Task.Delay(1200).ContinueWith(_ =>
                 {

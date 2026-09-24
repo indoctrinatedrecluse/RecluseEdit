@@ -16,5 +16,6 @@
   <Project Path="extensions/RecluseEdit.Extensions.Frontend/RecluseEdit.Extensions.Frontend.csproj" />
   <Project Path="extensions/RecluseEdit.Extensions.NodeBackend/RecluseEdit.Extensions.NodeBackend.csproj" />
   <Project Path="extensions/RecluseEdit.Extensions.DotNet/RecluseEdit.Extensions.DotNet.csproj" />
+  <Project Path="extensions/RecluseEdit.Extensions.Remote/RecluseEdit.Extensions.Remote.csproj" />
   <Project Path="tests/RecluseEdit.Tests/RecluseEdit.Tests.csproj" />
 </Solution>

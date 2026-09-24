@@ -5,17 +5,20 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using RecluseEdit.Core.Models;
+using RecluseEdit.Core.Services.ConPty;
 
 namespace RecluseEdit.Core.Services;
 
 /// <summary>
-/// Manages a running interactive shell terminal process, handling standard I/O streams and process termination.
+/// Manages a running interactive shell terminal process, handling standard I/O streams,
+/// Windows PseudoConsole (ConPTY) when supported, and process termination.
 /// </summary>
 public class TerminalSession : IDisposable
 {
     private static readonly Regex AnsiEscapeRegex = new(@"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])", RegexOptions.Compiled);
 
     private Process? _process;
+    private ConPtySession? _conPtySession;
     private bool _isDisposed;
 
     public string Id { get; } = Guid.NewGuid().ToString("N");
@@ -23,8 +26,31 @@ public class TerminalSession : IDisposable
     public ShellInfo Shell { get; }
     public string WorkingDirectory { get; }
 
-    public bool IsRunning => _process != null && !_process.HasExited;
-    public int? ExitCode => _process is { HasExited: true } ? _process.ExitCode : null;
+    /// <summary>
+    /// Gets or sets whether to use Windows PseudoConsole (ConPTY) if available.
+    /// </summary>
+    public bool UseConPty { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets whether to strip ANSI escape codes before firing OutputReceived.
+    /// When using xterm.js or modern VT emulators, set this to false.
+    /// </summary>
+    public bool StripAnsi { get; set; } = true;
+
+    public bool IsConPtyActive => _conPtySession != null && _conPtySession.IsRunning;
+
+    public bool IsRunning => _conPtySession?.IsRunning ?? (_process != null && !_process.HasExited);
+    public int? ExitCode
+    {
+        get
+        {
+            if (_conPtySession != null)
+            {
+                return _conPtySession.IsRunning ? null : 0;
+            }
+            return _process is { HasExited: true } ? _process.ExitCode : null;
+        }
+    }
 
     public event Action<string>? OutputReceived;
     public event Action<int>? ProcessExited;
@@ -39,12 +65,49 @@ public class TerminalSession : IDisposable
     }
 
     /// <summary>
-    /// Launches the shell process and connects standard streams.
+    /// Launches the shell process using ConPTY if enabled, or standard stream redirection as fallback.
     /// </summary>
-    public void Start()
+    public void Start(short initialCols = 80, short initialRows = 25)
     {
-        if (_process != null) return;
+        if (_conPtySession != null || _process != null) return;
 
+        if (UseConPty && ConPtySession.IsSupported)
+        {
+            try
+            {
+                var commandLine = string.IsNullOrWhiteSpace(Shell.Arguments)
+                    ? $"\"{Shell.ExecutablePath}\""
+                    : $"\"{Shell.ExecutablePath}\" {Shell.Arguments}";
+
+                _conPtySession = ConPtySession.Start(commandLine, WorkingDirectory, initialCols, initialRows);
+
+                _conPtySession.OutputReceived += text =>
+                {
+                    if (_isDisposed) return;
+                    var content = StripAnsi ? CleanAnsi(text) : text;
+                    OutputReceived?.Invoke(content);
+                };
+
+                _conPtySession.ProcessExited += code =>
+                {
+                    if (_isDisposed) return;
+                    ProcessExited?.Invoke(code);
+                };
+
+                return;
+            }
+            catch
+            {
+                // Fallback to redirected pipes if ConPTY fails to initialize
+                _conPtySession = null;
+            }
+        }
+
+        StartRedirectedProcess();
+    }
+
+    private void StartRedirectedProcess()
+    {
         var psi = new ProcessStartInfo
         {
             FileName = Shell.ExecutablePath,
@@ -72,8 +135,8 @@ public class TerminalSession : IDisposable
         {
             if (e.Data != null && !_isDisposed)
             {
-                var clean = CleanAnsi(e.Data);
-                OutputReceived?.Invoke(clean + "\n");
+                var content = StripAnsi ? CleanAnsi(e.Data) : e.Data;
+                OutputReceived?.Invoke(content + "\n");
             }
         };
 
@@ -81,8 +144,8 @@ public class TerminalSession : IDisposable
         {
             if (e.Data != null && !_isDisposed)
             {
-                var clean = CleanAnsi(e.Data);
-                OutputReceived?.Invoke(clean + "\n");
+                var content = StripAnsi ? CleanAnsi(e.Data) : e.Data;
+                OutputReceived?.Invoke(content + "\n");
             }
         };
 
@@ -102,11 +165,19 @@ public class TerminalSession : IDisposable
     }
 
     /// <summary>
-    /// Sends a command or text line to the shell's standard input.
+    /// Sends a line of text terminated with a newline to standard input.
     /// </summary>
     public void SendInput(string input)
     {
-        if (_process == null || _process.HasExited || _isDisposed) return;
+        if (_isDisposed) return;
+
+        if (_conPtySession != null)
+        {
+            _conPtySession.SendRawInput(input + "\r\n");
+            return;
+        }
+
+        if (_process == null || _process.HasExited) return;
 
         try
         {
@@ -120,15 +191,23 @@ public class TerminalSession : IDisposable
     }
 
     /// <summary>
-    /// Sends a break signal / Ctrl+C character to standard input.
+    /// Sends raw keystrokes or escape sequences directly to standard input without appending a newline.
     /// </summary>
-    public void SendCtrlC()
+    public void SendRawInput(string data)
     {
-        if (_process == null || _process.HasExited || _isDisposed) return;
+        if (_isDisposed) return;
+
+        if (_conPtySession != null)
+        {
+            _conPtySession.SendRawInput(data);
+            return;
+        }
+
+        if (_process == null || _process.HasExited) return;
 
         try
         {
-            _process.StandardInput.Write("\x03");
+            _process.StandardInput.Write(data);
             _process.StandardInput.Flush();
         }
         catch
@@ -137,7 +216,23 @@ public class TerminalSession : IDisposable
         }
     }
 
-    private static string CleanAnsi(string text)
+    /// <summary>
+    /// Resizes the pseudo console dimensions if running under ConPTY.
+    /// </summary>
+    public void Resize(short cols, short rows)
+    {
+        _conPtySession?.Resize(cols, rows);
+    }
+
+    /// <summary>
+    /// Sends a break signal / Ctrl+C character to standard input.
+    /// </summary>
+    public void SendCtrlC()
+    {
+        SendRawInput("\x03");
+    }
+
+    public static string CleanAnsi(string text)
     {
         if (string.IsNullOrEmpty(text)) return string.Empty;
         return AnsiEscapeRegex.Replace(text, string.Empty);
@@ -153,34 +248,24 @@ public class TerminalSession : IDisposable
         if (_isDisposed) return;
         _isDisposed = true;
 
-        // Detach handlers immediately so no cross-thread events fire
         OutputReceived = null;
         ProcessExited = null;
+
+        if (_conPtySession != null)
+        {
+            _conPtySession.Dispose();
+            _conPtySession = null;
+        }
 
         var proc = _process;
         _process = null;
 
         if (proc != null)
         {
-            try
-            {
-                proc.CancelOutputRead();
-            }
-            catch { }
+            try { proc.CancelOutputRead(); } catch { }
+            try { proc.CancelErrorRead(); } catch { }
+            try { proc.StandardInput.Close(); } catch { }
 
-            try
-            {
-                proc.CancelErrorRead();
-            }
-            catch { }
-
-            try
-            {
-                proc.StandardInput.Close();
-            }
-            catch { }
-
-            // Terminate process tree asynchronously without blocking the caller/UI thread
             Task.Run(() =>
             {
                 try
@@ -191,17 +276,10 @@ public class TerminalSession : IDisposable
                         proc.WaitForExit(1000);
                     }
                 }
-                catch
-                {
-                    // Process already exited
-                }
+                catch { }
                 finally
                 {
-                    try
-                    {
-                        proc.Dispose();
-                    }
-                    catch { }
+                    try { proc.Dispose(); } catch { }
                 }
             });
         }

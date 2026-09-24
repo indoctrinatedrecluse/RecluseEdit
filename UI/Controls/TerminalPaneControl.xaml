@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
              mc:Ignorable="d" 
              d:DesignHeight="220" d:DesignWidth="800"
              Background="{StaticResource BgSecondary}">
@@ -141,7 +142,10 @@
                 </StackPanel>
             </Border>
 
-            <!-- Console Output Box -->
+            <!-- WebView2 Interactive xterm.js Terminal -->
+            <wv2:WebView2 x:Name="TerminalWebView" Visibility="Visible" Focusable="True" />
+
+            <!-- Fallback Plain Text Console Output Box (used if WebView2 is disabled/unavailable) -->
             <TextBox x:Name="TxtConsoleOutput" 
                      Background="#141414" 
                      Foreground="#CCCCCC" 
@@ -153,6 +157,7 @@
                      VerticalScrollBarVisibility="Auto" 
                      HorizontalScrollBarVisibility="Disabled"
                      Padding="8,6" 
+                     Visibility="Collapsed"
                      PreviewKeyDown="OnConsoleOutputPreviewKeyDown" />
         </Grid>
 

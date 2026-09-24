@@ -1003,4 +1003,35 @@ public partial class EditorControl : UserControl
             // Fallback gracefully if hex format is invalid
         }
     }
+
+    #region Context Menu Handlers
+
+    public event Action? MarkdownPreviewRequested;
+    public event Action? FormatDocumentRequested;
+
+    private void OnEditorContextMenuOpened(object sender, RoutedEventArgs e)
+    {
+        var ext = System.IO.Path.GetExtension(_documentModel?.FilePath)?.ToLowerInvariant() ?? "";
+        bool isMarkdown = _documentModel != null && (_documentModel.Language.Id == "markdown" || ext is ".md" or ".markdown");
+
+        MenuMarkdownPreview.Visibility = isMarkdown ? Visibility.Visible : Visibility.Collapsed;
+        SepMarkdownPreview.Visibility = isMarkdown ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void OnMarkdownPreviewClick(object sender, RoutedEventArgs e)
+    {
+        MarkdownPreviewRequested?.Invoke();
+    }
+
+    private void OnFormatDocumentClick(object sender, RoutedEventArgs e)
+    {
+        FormatDocumentRequested?.Invoke();
+    }
+
+    private void OnInlineAiClick(object sender, RoutedEventArgs e)
+    {
+        OpenInlineAi();
+    }
+
+    #endregion
 }

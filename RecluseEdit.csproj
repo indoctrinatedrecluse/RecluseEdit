@@ -7,10 +7,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
-    <Version>6.0.0</Version>
-    <AssemblyVersion>6.0.0.0</AssemblyVersion>
-    <FileVersion>6.0.0.0</FileVersion>
-    <DefaultItemExcludes>$(DefaultItemExcludes);RecluseEdit.Sdk\**;extensions\RecluseEdit.Extensions.*\**;tests\**</DefaultItemExcludes>
+    <Version>6.1.0</Version>
+    <AssemblyVersion>6.1.0.0</AssemblyVersion>
+    <FileVersion>6.1.0.0</FileVersion>
+    <DefaultItemExcludes>$(DefaultItemExcludes);RecluseEdit.Sdk\**;extensions\RecluseEdit.Extensions.*\**;tests\**;scratch\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +20,9 @@
   <ItemGroup>
     <Resource Include="Assets\app.ico" />
     <Resource Include="Assets\app.png" />
+    <Content Include="Assets\Terminal\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

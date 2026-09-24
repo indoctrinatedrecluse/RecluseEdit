@@ -264,67 +264,88 @@
 
         <!-- 2. Tab Strip -->
         <Border Grid.Row="2" Background="{DynamicResource BgSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                <StackPanel Orientation="Horizontal">
-                    <ItemsControl x:Name="TabItemsControl">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border x:Name="TabBorder"
-                                        Background="{DynamicResource BgTertiary}" 
-                                        BorderBrush="{DynamicResource BorderDark}" 
-                                        BorderThickness="0,0,1,0"
-                                        Padding="12,7"
-                                        Cursor="Hand"
-                                        MouseLeftButtonDown="OnTabClicked"
-                                        MouseDown="OnTabMouseDown">
-                                    <Border.ContextMenu>
-                                        <ContextMenu>
-                                            <MenuItem Header="Close" Click="OnMenuCloseTabClick" />
-                                            <MenuItem Header="Close Other Tabs" Click="OnMenuCloseOtherTabsClick" />
-                                            <MenuItem Header="Close Tabs to the Right" Click="OnMenuCloseRightTabsClick" />
-                                            <Separator Background="{DynamicResource BorderDark}" />
-                                            <MenuItem Header="Copy Full Path" Click="OnMenuCopyFullPathClick" />
-                                            <MenuItem Header="Reveal in File Explorer" Click="OnMenuRevealInExplorerClick" />
-                                        </ContextMenu>
-                                    </Border.ContextMenu>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Title}" 
-                                                   Foreground="{DynamicResource FgPrimary}" 
-                                                   FontSize="12"
-                                                   VerticalAlignment="Center" />
-                                        <Button Style="{DynamicResource TabCloseButtonStyle}" 
-                                                ToolTip="Close Tab (Ctrl+W)"
-                                                Click="OnCloseTabButtonClicked" />
-                                    </StackPanel>
-                                </Border>
-                                <DataTemplate.Triggers>
-                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                        <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource BgPrimary}" />
-                                        <Setter TargetName="TabBorder" Property="BorderThickness" Value="0,2,1,0" />
-                                        <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource AccentBlue}" />
-                                    </DataTrigger>
-                                </DataTemplate.Triggers>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <StackPanel Orientation="Horizontal">
+                        <ItemsControl x:Name="TabItemsControl">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border x:Name="TabBorder"
+                                            Background="{DynamicResource BgTertiary}" 
+                                            BorderBrush="{DynamicResource BorderDark}" 
+                                            BorderThickness="0,0,1,0"
+                                            Padding="12,7"
+                                            Cursor="Hand"
+                                            MouseLeftButtonDown="OnTabClicked"
+                                            MouseDown="OnTabMouseDown">
+                                        <Border.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Close" Click="OnMenuCloseTabClick" />
+                                                <MenuItem Header="Close Other Tabs" Click="OnMenuCloseOtherTabsClick" />
+                                                <MenuItem Header="Close Tabs to the Right" Click="OnMenuCloseRightTabsClick" />
+                                                <Separator Background="{DynamicResource BorderDark}" />
+                                                <MenuItem Header="Copy Full Path" Click="OnMenuCopyFullPathClick" />
+                                                <MenuItem Header="Reveal in File Explorer" Click="OnMenuRevealInExplorerClick" />
+                                            </ContextMenu>
+                                        </Border.ContextMenu>
 
-                    <!-- New Tab Button -->
-                    <Button Style="{DynamicResource ToolbarButtonStyle}" 
-                            Content="+" 
-                            FontSize="15" 
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" 
+                                                       Foreground="{DynamicResource FgPrimary}" 
+                                                       FontSize="12"
+                                                       VerticalAlignment="Center" />
+                                            <Button Style="{DynamicResource TabCloseButtonStyle}" 
+                                                    ToolTip="Close Tab (Ctrl+W)"
+                                                    Click="OnCloseTabButtonClicked" />
+                                        </StackPanel>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                            <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource BgPrimary}" />
+                                            <Setter TargetName="TabBorder" Property="BorderThickness" Value="0,2,1,0" />
+                                            <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource AccentBlue}" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- New Tab Button -->
+                        <Button Style="{DynamicResource ToolbarButtonStyle}" 
+                                Content="+" 
+                                FontSize="15" 
+                                FontWeight="SemiBold"
+                                Padding="8,2" 
+                                Margin="4,2"
+                                ToolTip="New Document (Ctrl+N)" 
+                                Click="OnNewFileClick" />
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Markdown-Only Split Preview Button in Tab Strip -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
+                    <Button x:Name="BtnMarkdownPreview" 
+                            Content="📖 Markdown Preview" 
+                            ToolTip="Open Live Markdown Preview in Split Pane (Ctrl+Shift+V)"
+                            Style="{DynamicResource ToolbarButtonStyle}"
+                            Background="#0E639C"
+                            Foreground="#FFFFFF"
                             FontWeight="SemiBold"
-                            Padding="8,2" 
-                            Margin="4,2"
-                            ToolTip="New Document (Ctrl+N)" 
-                            Click="OnNewFileClick" />
+                            Padding="8,3"
+                            Visibility="Collapsed"
+                            Click="OnMarkdownPreviewButtonClick" />
                 </StackPanel>
-            </ScrollViewer>
+            </Grid>
         </Border>
 
         <!-- 3. Workspace / Editor Viewport -->

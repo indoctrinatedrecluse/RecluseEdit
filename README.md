@@ -45,6 +45,9 @@
 - 🧪 **Interactive Regex Workbench**: Comprehensive regular expression workbench featuring real-time evaluation, capture groups table, live replacement formatting preview, regex option flags (`i`, `m`, `s`, `x`), and curated presets (Email, URL, SemVer, IPv4, UUID, Hex Color, ISO Date).
 - 🔌 **Pluggable Extension Architecture**: Dynamic plugin discovery from the `Extensions/` directory with separate project build targets, multi-side-panel UI dock integration, and a dedicated UI manager (`Extensions -> Manage Extensions...`).
 - 🔄 **Built-in Auto-Updater & Seamless In-Place Patching**: Automated update checking against GitHub Releases with non-intrusive background notifications and manual trigger (<kbd>Help -> Check for Updates...</kbd>). Supports zero-configuration download with progress tracking, release notes inspection, and detached in-place application patching for portable ZIP releases or direct execution for installer packages.
+- 💻 **Native ConPTY & Interactive TUI Terminal Powerhouse**: Integrated Windows PseudoConsole (ConPTY) with hardware-accelerated `xterm.js` in Microsoft Edge WebView2, supporting interactive TUIs (`ir pmon`, `ir sysmon`, `ir fm`, `ir dua`, `vim`, `htop`, etc.) with raw arrow keys, single keystroke commands (`q` to quit, `c`/`m` to sort), alternate screen buffers, and dynamic window resizing.
+- 📖 **Context-Aware Markdown Split Preview**: When editing Markdown documents (`.md`, `.markdown`), a dedicated `[📖 Markdown Preview]` button dynamically appears in the document tab strip, and a `📖 Open Live Markdown Preview (Split Pane)` option is added to the editor's right-click context menu (<kbd>Ctrl+Shift+V</kbd>). Instantly opens a synchronized side-by-side split pane running the WebView2 previewer with GitHub Dark styling.
+- 🌐 **Remote & SSH Explorer Suite (`RecluseEdit.Extensions.Remote`)**: Full MobaXterm-style SSH session manager with password/key authentication, one-click terminal connection, SFTP file browser with two-way auto-sync editing in RecluseEdit, background SSH local port forwarding tunnels, and network diagnostic tools (Ping, concurrent Port Scanner, DNS resolver, and RSA SSH Key Pair Generator).
 - 🌙 **Modern Dark UI**: VS Code-inspired sleek dark theme (`#1E1E1E`), complete with Activity Bar sidebar, menu bar, quick-action toolbar, and informative status bar.
 
 ---
@@ -367,18 +370,32 @@ RecluseEdit comes with fourteen modular extensions built as dedicated targets in
 - **Toolchain Diagnostics**: Actively detects the **.NET SDK & CLI** (`dotnet --version`).
 - **Custom Editor Theme**: Included **.NET Purple Dark** theme (`dotnet.purple-dark`) featuring Microsoft .NET `#512BD4` indigo accents.
 
+### 🌐 Remote & SSH Explorer Suite (`RecluseEdit.Extensions.Remote`)
+- **MobaXterm-Style SSH Session Manager**: Manage saved remote connection profiles with custom names, groups, hosts, ports, and usernames. Supports password and private key authentication (.pem, .id_rsa).
+- **Interactive SSH Terminal**: Single-click "Connect Terminal" initiates an interactive SSH session in the integrated terminal dock using Windows ConPTY + `ssh.exe`.
+- **SFTP Remote File Browser & Live Two-Way Sync**:
+  - Connect and browse remote server directory trees with permissions (`drwxr-xr-x`), modification times, and formatted file sizes.
+  - **Edit in RecluseEdit**: Open any remote file directly in editor tabs. Saving changes locally (<kbd>Ctrl+S</kbd>) automatically synchronizes and uploads the file back to the remote server via a background watcher.
+  - File management: Upload, Download As, Create Remote Directory, and Delete.
+- **SSH Port Forwarding & Tunnels**: Configure local port forwarding (`127.0.0.1:{LocalPort}` ➔ `{RemoteHost}:{RemotePort}` through SSH gateway) for seamless local access to remote database instances (MySQL, Postgres, Redis) and internal web services.
+- **Network Diagnostic Toolkit**:
+  - **📡 Ping Utility**: Sends ICMP requests and reports roundtrip latency and packet loss.
+  - **🔍 Concurrent Port Scanner**: Rapidly probes common server ports (21, 22, 80, 443, 3000, 3306, 5432, 8080).
+  - **🌐 DNS Resolver**: Resolves hostnames to IPv4, IPv6, and CNAME records.
+  - **🔑 RSA SSH Key Pair Generator**: Generates 2048-bit or 4096-bit RSA keys with OpenSSH public key formatting and PEM export.
+
 ---
 
 ## 🤖 Automated CI/CD & GitHub Releases
 
 RecluseEdit includes a fully automated GitHub Actions workflow (`.github/workflows/release.yml`) configured for continuous delivery:
 
-- 🏷️ **Triggered on Tag Push**: Pushing a new version tag (e.g. `git tag v5.3.0 && git push origin v5.3.0`) triggers an automated build pipeline on `windows-latest`.
+- 🏷️ **Triggered on Tag Push**: Pushing a new version tag (e.g. `git tag v6.1.0 && git push origin v6.1.0`) triggers an automated build pipeline on `windows-latest`.
 - 🧪 **Full Verification**: Executes the complete test suite (`dotnet test RecluseEdit.slnx -c Release`) across all projects before packaging.
 - 🔏 **Automated Code-Signing**: All executable binaries (`.exe`) and extension libraries (`.dll`) are signed with SHA256 Authenticode signatures issued by the `indoctrinatedrecluse` Root CA. The public Root CA certificate (`indoctrinatedrecluse-RootCA.cer`) is automatically bundled inside every release archive.
 - 📦 **Bundle & Package**:
   - Compiles the host editor and all extensions in `Release` configuration.
-  - Bundles the main application executable, dependencies, and all fifteen extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`, `Go`, `Scripting`, `AiChat`, `Database`, `RestClient`, `Frontend`, `NodeBackend`, and `DotNet`) under `Extensions/`.
+  - Bundles the main application executable, dependencies, and all sixteen extensions (`React`, `Angular`, `Flutter`, `Php`, `Ruby`, `Python`, `Laravel`, `Go`, `Scripting`, `AiChat`, `Database`, `RestClient`, `Frontend`, `NodeBackend`, `DotNet`, and `Remote`) under `Extensions/`.
   - Packages the entire distribution into a portable archive: `RecluseEdit-windows-<tag>.zip`.
 - 🚀 **GitHub Release**: Automatically creates a new GitHub Release with the bundled `.zip` asset attached and generates release notes.
 - 🕹️ **Manual Trigger**: Can also be executed manually via the **Actions** tab with custom version tags (`workflow_dispatch`).

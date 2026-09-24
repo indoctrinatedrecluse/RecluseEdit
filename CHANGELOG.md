@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [6.1.0] - 2026-09-24
+
+### 💻 Added: Native ConPTY & Interactive TUI Terminal Powerhouse
+
+- **Native Windows ConPTY (PseudoConsole) Core (`Core/Services/ConPty/`)**:
+  - Implemented full Win32 PseudoConsole architecture via `CreatePseudoConsole`, `ResizePseudoConsole`, `ClosePseudoConsole`, and `CreateProcess` with `PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE`.
+  - Bidirectional byte streaming through managed unbuffered asynchronous pipes without premature descriptor closure.
+  - Native VT/ANSI processing enabling interactive terminal applications and TUIs on Windows:
+    - Supports commands like `ir pmon`, `ir sysmon`, `ir fm`, `ir dua`, `vim`, `htop`, etc.
+    - Full support for raw arrow key navigation, single-keystroke inputs (`q` to quit, `c`/`m` to sort), alternate screen buffers, and cursor movement.
+  - Clean lifecycle management monitoring child process exit via `WaitForSingleObject`.
+
+- **Hardware-Accelerated xterm.js UI Engine (`Assets/Terminal/`, `UI/Controls/TerminalPaneControl.xaml`)**:
+  - Embedded modern `xterm.js` (v5.3.0) + `xterm-addon-fit` inside Microsoft Edge `WebView2`.
+  - Bidirectional IPC bridge via `window.chrome.webview.postMessage` and `WebMessageReceived`:
+    - Raw keystroke forwarding (`onData` -> `SendRawInput`) for instant interactive responsiveness.
+    - Dynamic window resizing (`onResize` -> `ResizePseudoConsole`) keeping terminal columns and rows perfectly synchronized with editor layout.
+  - Preserved plain-text fallback mode for non-WebView environments and headless automated testing.
+
+### 📖 Added: Context-Aware Live Markdown Split Preview
+
+- **Smart Markdown Tab Action Button (`MainWindow.xaml`, `MainWindow.xaml.cs`)**:
+  - Dynamically displays a dedicated `📖 Markdown Preview` button in the top-right of the document tab strip when (and only when) a Markdown file (`.md`, `.markdown`, or language `markdown`) is active.
+  - Automatically switches between `📖 Markdown Preview` and `📖 Close Preview` based on the split pane's open state.
+  - Smoothly hides whenever switching to non-Markdown files or when all tabs are closed.
+
+- **Editor Right-Click Context Menu Integration (`UI/Controls/EditorControl.xaml`, `EditorControl.xaml.cs`)**:
+  - Added rich editor context menu with Undo/Redo, Cut/Copy/Paste, Select All, Format Document, and AI Prompt.
+  - Contextually displays `📖 Open Live Markdown Preview (Split Pane)` (<kbd>Ctrl+Shift+V</kbd>) exclusively when right-clicking inside an active Markdown document buffer.
+  - Opens the side-by-side split pane running the hardware-accelerated Chromium WebView2 engine with GitHub Dark-themed styling, base URL relative asset resolution, and real-time debounced live updating.
+
+### 🌐 Added: Remote & SSH Explorer Suite (`RecluseEdit.Extensions.Remote`)
+
+- **MobaXterm-Style SSH Session Manager**:
+  - Saved session profile manager supporting custom names, groups/folders, hosts, ports, and usernames.
+  - Dual authentication modes: Password or RSA/PEM Private Key file with passphrases.
+  - One-click "Connect Terminal" spawning direct interactive SSH sessions in the integrated terminal dock using ConPTY + `ssh.exe`.
+  - Persistence in `%APPDATA%\RecluseEdit\remote_sessions.json`.
+
+- **SFTP Remote File Browser with Live Two-Way Sync**:
+  - Graphical file explorer for remote servers powered by `SSH.NET` (`2026.0.0`).
+  - Path navigation bar with directory history, Up-directory (`⬆️`), and Refresh (`🔄`).
+  - Detailed file list view showing item icons, formatted byte sizes, modification timestamps, and POSIX permissions (`drwxr-xr-x`).
+  - **Edit in RecluseEdit**: One-click opening of remote files in RecluseEdit editor tabs with background `FileSystemWatcher` that automatically uploads changes back to the remote server over SFTP whenever saved (<kbd>Ctrl+S</kbd>).
+  - Remote file operations: Upload, Download As, Create Remote Directory, and Delete.
+
+- **SSH Port Forwarding & Tunneling Manager**:
+  - MobaXterm-style SSH Local Port Forwarding (`127.0.0.1:{LocalPort}` ➔ `{RemoteHost}:{RemotePort}`).
+  - Allows easy local access to remote database instances (e.g. MySQL 3306, Postgres 5432, Redis 6379) and internal web services.
+  - Live start/stop toggling with status indicators (🟢 Active / ⚪ Inactive) and concurrency tracking.
+
+- **Network Diagnostic & Key Tools**:
+  - **📡 Ping Utility**: Sends ICMP echo requests, reports min/max/avg latency in milliseconds, packet loss percentage, and resolution status.
+  - **🔍 Concurrent Port Scanner**: Rapidly tests standard service ports (FTP 21, SSH 22, HTTP 80, HTTPS 443, Node 3000, MySQL 3306, Postgres 5432, Web 8080) with latency timing.
+  - **🌐 DNS Resolver**: Resolves hostnames to IPv4, IPv6 addresses, and CNAME aliases.
+  - **🔑 RSA SSH Key Pair Generator**: Generates 2048-bit or 4096-bit RSA key pairs; exports OpenSSH-formatted public keys for easy copy-paste into `~/.ssh/authorized_keys`, and exports private keys in standard `.pem` format.
+
+---
+
 ## [6.0.0] - 2026-09-19
 
 ### 🌐 Added: Web Dev Powerhouse & GUI Extensions Suite

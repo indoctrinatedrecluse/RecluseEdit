@@ -34,6 +34,7 @@
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Frontend\RecluseEdit.Extensions.Frontend.csproj" />
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.NodeBackend\RecluseEdit.Extensions.NodeBackend.csproj" />
     <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.DotNet\RecluseEdit.Extensions.DotNet.csproj" />
+    <ProjectReference Include="..\..\extensions\RecluseEdit.Extensions.Remote\RecluseEdit.Extensions.Remote.csproj" />
   </ItemGroup>
 
 </Project>

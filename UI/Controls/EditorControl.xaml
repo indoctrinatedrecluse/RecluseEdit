@@ -23,7 +23,25 @@
                                FontSize="14"
                                WordWrap="False"
                                HorizontalScrollBarVisibility="Auto"
-                               VerticalScrollBarVisibility="Auto" />
+                               VerticalScrollBarVisibility="Auto">
+            <avalonedit:TextEditor.ContextMenu>
+                <ContextMenu x:Name="EditorContextMenu" Opened="OnEditorContextMenuOpened">
+                    <MenuItem Header="Undo" Command="ApplicationCommands.Undo" InputGestureText="Ctrl+Z" />
+                    <MenuItem Header="Redo" Command="ApplicationCommands.Redo" InputGestureText="Ctrl+Y" />
+                    <Separator />
+                    <MenuItem Header="Cut" Command="ApplicationCommands.Cut" InputGestureText="Ctrl+X" />
+                    <MenuItem Header="Copy" Command="ApplicationCommands.Copy" InputGestureText="Ctrl+C" />
+                    <MenuItem Header="Paste" Command="ApplicationCommands.Paste" InputGestureText="Ctrl+V" />
+                    <Separator />
+                    <MenuItem Header="Select All" Command="ApplicationCommands.SelectAll" InputGestureText="Ctrl+A" />
+                    <Separator />
+                    <MenuItem x:Name="MenuMarkdownPreview" Header="📖 Open Live Markdown Preview (Split Pane)" InputGestureText="Ctrl+Shift+V" Click="OnMarkdownPreviewClick" Visibility="Collapsed" />
+                    <Separator x:Name="SepMarkdownPreview" Visibility="Collapsed" />
+                    <MenuItem Header="✨ Format Document" InputGestureText="Shift+Alt+F" Click="OnFormatDocumentClick" />
+                    <MenuItem Header="🤖 Edit with AI (Inline Prompt)" InputGestureText="Ctrl+I" Click="OnInlineAiClick" />
+                </ContextMenu>
+            </avalonedit:TextEditor.ContextMenu>
+        </avalonedit:TextEditor>
 
         <!-- Vertical Overview Ruler for Search, Git, and Diagnostics -->
         <controls:OverviewRulerControl x:Name="OverviewRuler"

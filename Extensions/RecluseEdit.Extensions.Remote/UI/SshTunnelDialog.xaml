@@ -1,0 +1,116 @@
+<Window x:Class="RecluseEdit.Extensions.Remote.UI.SshTunnelDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SSH Port Forwarding Tunnel" Height="480" Width="460"
+        WindowStartupLocation="CenterOwner"
+        Background="#1E1E1E" Foreground="#CCCCCC"
+        ResizeMode="NoResize" ShowInTaskbar="False">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="🔀 Configure SSH Port Forwarding Tunnel" FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,12" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,4,0">
+                <!-- Tunnel Name -->
+                <StackPanel Margin="0,0,0,8">
+                    <TextBlock Text="Tunnel Name:" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,3" />
+                    <TextBox x:Name="TxtTunnelName" Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#3E3E3E" Padding="6,4" Text="Web Dev Tunnel" />
+                </StackPanel>
+
+                <!-- Port Forwarding Settings -->
+                <GroupBox Header="Port Redirection" Foreground="#888888" BorderBrush="#333333" Margin="0,4,0,10" Padding="8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Local Port:" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,3" />
+                        <TextBox Grid.Row="1" Grid.Column="0" x:Name="TxtLocalPort" Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#3E3E3E" Padding="6,4" Text="8080" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="➔" FontSize="16" Foreground="#007ACC" HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="Remote Destination:" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,3" />
+                        <TextBox Grid.Row="1" Grid.Column="2" x:Name="TxtRemoteHost" Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#3E3E3E" Padding="6,4" Text="127.0.0.1" />
+
+                        <TextBlock Grid.Row="0" Grid.Column="4" Text="Port:" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,3" />
+                        <TextBox Grid.Row="1" Grid.Column="4" x:Name="TxtRemotePort" Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#3E3E3E" Padding="6,4" Text="80" />
+                    </Grid>
+                </GroupBox>
+
+                <!-- SSH Jump Host Settings -->
+                <GroupBox Header="SSH Gateway / Jump Host" Foreground="#888888" BorderBrush="#333333" Margin="0,0,0,8" Padding="8">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="3*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="SSH Server (Host / IP):" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,3" />
+                                <TextBox x:Name="TxtSshHost" Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#3E3E3E" Padding="6,4" Text="192.168.1.100" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="SSH Port:" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,3" />
+                                <TextBox x:Name="TxtSshPort" Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#3E3E3E" Padding="6,4" Text="22" />
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Margin="0,0,0,8">
+                            <TextBlock Text="Username:" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,3" />
+                            <TextBox x:Name="TxtSshUser" Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#3E3E3E" Padding="6,4" Text="ubuntu" />
+                        </StackPanel>
+
+                        <!-- Auth Mode -->
+                        <StackPanel Margin="0,0,0,8">
+                            <TextBlock Text="Authentication Mode:" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,4" />
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="RbTunnelPassword" Content="Password" Foreground="#CCCCCC" IsChecked="True" Margin="0,0,16,0" Checked="OnTunnelAuthTypeChanged" />
+                                <RadioButton x:Name="RbTunnelPrivateKey" Content="Private Key" Foreground="#CCCCCC" Checked="OnTunnelAuthTypeChanged" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel x:Name="PanelTunnelPassword" Margin="0,0,0,4">
+                            <TextBlock Text="Password:" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,3" />
+                            <PasswordBox x:Name="TxtTunnelPassword" Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#3E3E3E" Padding="6,4" />
+                        </StackPanel>
+
+                        <StackPanel x:Name="PanelTunnelPrivateKey" Visibility="Collapsed" Margin="0,0,0,4">
+                            <TextBlock Text="Private Key File:" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,3" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="6" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="TxtTunnelKeyPath" Grid.Column="0" Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#3E3E3E" Padding="6,4" />
+                                <Button Grid.Column="2" Content="Browse..." Background="#3E3E3E" Foreground="#FFFFFF" Padding="8,4" Click="OnBrowsePrivateKeyClick" />
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Dialog Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Save Tunnel" Background="#0E639C" Foreground="#FFFFFF" FontWeight="SemiBold" Padding="14,6" Margin="0,0,8,0" Click="OnSaveClick" />
+            <Button Content="Cancel" Background="#3E3E3E" Foreground="#CCCCCC" Padding="12,6" Click="OnCancelClick" />
+        </StackPanel>
+    </Grid>
+</Window>
+

@@ -195,6 +195,13 @@ public class WorkspaceContext : IWorkspaceContext
         }).Task;
     }
 
+    public Action<string?, string?, string?, string?>? OnOpenTerminal { get; set; }
+
+    public void OpenTerminal(string? title = null, string? executable = null, string? arguments = null, string? workingDirectory = null)
+    {
+        OnOpenTerminal?.Invoke(title, executable, arguments, workingDirectory);
+    }
+
     private string ResolvePath(string path)
     {
         if (Path.IsPathRooted(path))

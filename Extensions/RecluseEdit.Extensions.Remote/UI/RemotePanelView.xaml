@@ -1,0 +1,319 @@
+<UserControl x:Class="RecluseEdit.Extensions.Remote.UI.RemotePanelView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#1E1E1E" Foreground="#CCCCCC"
+             FontSize="12">
+
+    <Grid>
+        <TabControl Background="#1E1E1E" BorderThickness="0" Padding="0">
+            <!-- Custom Tab Header Style -->
+            <TabControl.Resources>
+                <Style TargetType="TabItem">
+                    <Setter Property="Background" Value="#252526" />
+                    <Setter Property="Foreground" Value="#AAAAAA" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="Padding" Value="10,6" />
+                    <Setter Property="Margin" Value="0,0,2,0" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="TabItem">
+                                <Border x:Name="TabBorder" Background="{TemplateBinding Background}" CornerRadius="4,4,0,0" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter ContentSource="Header" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="TabBorder" Property="Background" Value="#1E1E1E" />
+                                        <Setter Property="Foreground" Value="#FFFFFF" />
+                                        <Setter TargetName="TabBorder" Property="BorderBrush" Value="#007ACC" />
+                                        <Setter TargetName="TabBorder" Property="BorderThickness" Value="0,2,0,0" />
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="#EEEEEE" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </TabControl.Resources>
+
+            <!-- 1. SSH SESSIONS TAB -->
+            <TabItem Header="💻 Sessions">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Sessions Toolbar -->
+                    <ToolBarTray Grid.Row="0" Background="Transparent">
+                        <ToolBar Background="Transparent" ToolBarTray.IsLocked="True" Loaded="ToolBar_Loaded">
+                            <Button x:Name="BtnNewSession" Content="➕ New" ToolTip="Add New SSH Profile" Background="#2D2D2D" Foreground="#FFFFFF" Padding="6,3" Margin="0,0,4,0" Click="OnNewSessionClick" />
+                            <Button x:Name="BtnEditSession" Content="✏️ Edit" ToolTip="Edit Selected Profile" Background="#2D2D2D" Foreground="#FFFFFF" Padding="6,3" Margin="0,0,4,0" Click="OnEditSessionClick" />
+                            <Button x:Name="BtnDeleteSession" Content="🗑️ Delete" ToolTip="Delete Selected Profile" Background="#2D2D2D" Foreground="#FF6B6B" Padding="6,3" Margin="0,0,8,0" Click="OnDeleteSessionClick" />
+                            <Separator />
+                            <Button x:Name="BtnConnectTerminal" Content="💻 Terminal" ToolTip="Open SSH Session in Integrated Terminal" Background="#0E639C" Foreground="#FFFFFF" FontWeight="SemiBold" Padding="8,3" Margin="4,0,4,0" Click="OnConnectTerminalClick" />
+                            <Button x:Name="BtnBrowseSftp" Content="📁 Browse SFTP" ToolTip="Connect and browse remote files" Background="#2D2D2D" Foreground="#FFFFFF" Padding="8,3" Click="OnBrowseSftpClick" />
+                        </ToolBar>
+                    </ToolBarTray>
+
+                    <!-- Sessions List -->
+                    <ListBox x:Name="ListSessions" Grid.Row="1" Background="#252526" BorderBrush="#333333" Margin="0,6,0,0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             MouseDoubleClick="OnSessionDoubleClick">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="6,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="🌐" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#FFFFFF" />
+                                            <TextBlock Text="{Binding QuickUri}" FontSize="11" Foreground="#888888" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Text="{Binding Group}" FontSize="10" Foreground="#555555" VerticalAlignment="Center" Background="#1E1E1E" Padding="4,2" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Session Action Hint -->
+                    <TextBlock Grid.Row="2" Text="Tip: Double-click a session to connect terminal directly." FontSize="10" Foreground="#666666" Margin="0,4,0,0" />
+                </Grid>
+            </TabItem>
+
+            <!-- 2. SFTP FILE BROWSER TAB -->
+            <TabItem x:Name="TabSftp" Header="📁 SFTP Browser">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- SFTP Connection Header -->
+                    <Border Grid.Row="0" Background="#252526" CornerRadius="4" Padding="6" Margin="0,0,0,6">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Target:" VerticalAlignment="Center" Foreground="#888888" Margin="0,0,6,0" />
+                            <ComboBox x:Name="CmbSftpProfiles" Grid.Column="1" Background="#1E1E1E" Foreground="#FFFFFF" BorderBrush="#3E3E3E" DisplayMemberPath="DisplayTitle" Margin="0,0,6,0" />
+                            <Button x:Name="BtnSftpConnect" Grid.Column="2" Content="Connect" Background="#0E639C" Foreground="#FFFFFF" Padding="10,3" Click="OnSftpConnectToggleClick" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Path & Actions Bar -->
+                    <Grid Grid.Row="1" Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="BtnSftpUp" Grid.Column="0" Content="⬆️" ToolTip="Go to Parent Directory" Background="#2D2D2D" Foreground="#FFFFFF" Width="26" Height="24" Margin="0,0,4,0" Click="OnSftpUpClick" />
+                        <Button x:Name="BtnSftpRefresh" Grid.Column="1" Content="🔄" ToolTip="Refresh Directory" Background="#2D2D2D" Foreground="#FFFFFF" Width="26" Height="24" Margin="0,0,4,0" Click="OnSftpRefreshClick" />
+                        <TextBox x:Name="TxtSftpPath" Grid.Column="2" Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#3E3E3E" Padding="6,3" KeyDown="OnSftpPathKeyDown" />
+                        <Button x:Name="BtnSftpNewFolder" Grid.Column="3" Content="📁+" ToolTip="New Directory" Background="#2D2D2D" Foreground="#FFFFFF" Padding="6,3" Margin="4,0,2,0" Click="OnSftpNewFolderClick" />
+                        <Button x:Name="BtnSftpUpload" Grid.Column="4" Content="📤 Upload" ToolTip="Upload Local File" Background="#2D2D2D" Foreground="#FFFFFF" Padding="6,3" Margin="2,0,2,0" Click="OnSftpUploadClick" />
+                        <Button x:Name="BtnSftpEditFile" Grid.Column="5" Content="✏️ Edit in RecluseEdit" ToolTip="Open file in editor with live two-way sync" Background="#0E639C" Foreground="#FFFFFF" FontWeight="SemiBold" Padding="8,3" Margin="2,0,0,0" Click="OnSftpEditInEditorClick" />
+                    </Grid>
+
+                    <!-- SFTP File List View -->
+                    <ListView x:Name="ListSftpFiles" Grid.Row="2" Background="#252526" BorderBrush="#333333" Foreground="#CCCCCC"
+                              MouseDoubleClick="OnSftpFileDoubleClick">
+                        <ListView.ContextMenu>
+                            <ContextMenu Background="#252526" Foreground="#CCCCCC">
+                                <MenuItem Header="✏️ Edit in RecluseEdit" Click="OnSftpEditInEditorClick" />
+                                <MenuItem Header="📥 Download to..." Click="OnSftpDownloadClick" />
+                                <MenuItem Header="📤 Upload File Here..." Click="OnSftpUploadClick" />
+                                <Separator />
+                                <MenuItem Header="📁 Create Directory..." Click="OnSftpNewFolderClick" />
+                                <MenuItem Header="🗑️ Delete" Click="OnSftpDeleteClick" />
+                                <Separator />
+                                <MenuItem Header="🔄 Refresh" Click="OnSftpRefreshClick" />
+                            </ContextMenu>
+                        </ListView.ContextMenu>
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Name" Width="180">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Icon}" Margin="0,0,6,0" />
+                                                <TextBlock Text="{Binding Name}" Foreground="#FFFFFF" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Size" Width="70" DisplayMemberBinding="{Binding FormattedSize}" />
+                                <GridViewColumn Header="Modified" Width="120" DisplayMemberBinding="{Binding LastWriteTime, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" />
+                                <GridViewColumn Header="Permissions" Width="75" DisplayMemberBinding="{Binding Permissions}" />
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+
+                    <!-- Status Text -->
+                    <TextBlock x:Name="TxtSftpStatus" Grid.Row="3" Text="Disconnected" FontSize="11" Foreground="#888888" Margin="0,4,0,0" />
+                </Grid>
+            </TabItem>
+
+            <!-- 3. SSH TUNNELS / PORT FORWARDING TAB -->
+            <TabItem Header="🔀 Tunnels">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Tunnels Toolbar -->
+                    <ToolBarTray Grid.Row="0" Background="Transparent">
+                        <ToolBar Background="Transparent" ToolBarTray.IsLocked="True" Loaded="ToolBar_Loaded">
+                            <Button Content="➕ New Tunnel" ToolTip="Add Port Forwarding Configuration" Background="#2D2D2D" Foreground="#FFFFFF" Padding="6,3" Margin="0,0,4,0" Click="OnNewTunnelClick" />
+                            <Button Content="✏️ Edit" ToolTip="Edit Selected Tunnel" Background="#2D2D2D" Foreground="#FFFFFF" Padding="6,3" Margin="0,0,4,0" Click="OnEditTunnelClick" />
+                            <Button Content="🗑️ Delete" ToolTip="Delete Selected Tunnel" Background="#2D2D2D" Foreground="#FF6B6B" Padding="6,3" Margin="0,0,8,0" Click="OnDeleteTunnelClick" />
+                            <Separator />
+                            <Button x:Name="BtnToggleTunnel" Content="▶️ Start" ToolTip="Toggle Tunnel Running State" Background="#0E639C" Foreground="#FFFFFF" FontWeight="SemiBold" Padding="10,3" Margin="4,0,0,0" Click="OnToggleTunnelClick" />
+                        </ToolBar>
+                    </ToolBarTray>
+
+                    <!-- Tunnels List -->
+                    <ListBox x:Name="ListTunnels" Grid.Row="1" Background="#252526" BorderBrush="#333333" Margin="0,6,0,0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="6,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding IsActive, Converter={x:Null}}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="⚪" />
+                                                    <Setter Property="ToolTip" Value="Inactive" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                            <Setter Property="Text" Value="🟢" />
+                                                            <Setter Property="ToolTip" Value="Active &amp; Forwarding" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#FFFFFF" />
+                                            <TextBlock Text="{Binding Description}" FontSize="11" Foreground="#007ACC" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- Hint -->
+                    <TextBlock Grid.Row="2" Text="MobaXterm-style SSH Local Port Forwarding (e.g. forward remote MySQL 3306 or web services to localhost)." FontSize="10" Foreground="#666666" Margin="0,4,0,0" TextWrapping="Wrap" />
+                </Grid>
+            </TabItem>
+
+            <!-- 4. NETWORK & DIAGNOSTIC TOOLS TAB -->
+            <TabItem Header="🛠️ Tools">
+                <ScrollViewer Margin="8" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Ping Tool -->
+                        <GroupBox Header="📡 Ping Utility" Foreground="#AAAAAA" BorderBrush="#333333" Margin="0,0,0,10" Padding="8">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="6" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TxtPingHost" Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#3E3E3E" Padding="6,4" Text="127.0.0.1" />
+                                    <Button x:Name="BtnPing" Grid.Column="2" Content="Ping" Background="#0E639C" Foreground="#FFFFFF" Padding="12,4" Click="OnPingClick" />
+                                </Grid>
+                                <TextBox x:Name="TxtPingResult" Background="#1E1E1E" Foreground="#98C379" BorderBrush="#333333" Height="65" IsReadOnly="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="11" Padding="4" Text="Ready to ping." />
+                            </StackPanel>
+                        </GroupBox>
+
+                        <!-- Port Scanner -->
+                        <GroupBox Header="🔍 Port Scanner" Foreground="#AAAAAA" BorderBrush="#333333" Margin="0,0,0,10" Padding="8">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="6" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TxtScanHost" Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#3E3E3E" Padding="6,4" Text="127.0.0.1" />
+                                    <Button x:Name="BtnScanPorts" Grid.Column="2" Content="Scan Ports" Background="#0E639C" Foreground="#FFFFFF" Padding="12,4" Click="OnScanPortsClick" />
+                                </Grid>
+                                <TextBox x:Name="TxtScanResult" Background="#1E1E1E" Foreground="#61AFEF" BorderBrush="#333333" Height="80" IsReadOnly="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="11" Padding="4" Text="Checks: 21 (FTP), 22 (SSH), 80 (HTTP), 443 (HTTPS), 3000 (Node), 3306 (MySQL), 5432 (Postgres), 8080 (Web)" />
+                            </StackPanel>
+                        </GroupBox>
+
+                        <!-- DNS Lookup -->
+                        <GroupBox Header="🌐 DNS Lookup" Foreground="#AAAAAA" BorderBrush="#333333" Margin="0,0,0,10" Padding="8">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="6" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TxtDnsHost" Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#3E3E3E" Padding="6,4" Text="github.com" />
+                                    <Button x:Name="BtnDnsLookup" Grid.Column="2" Content="Lookup" Background="#0E639C" Foreground="#FFFFFF" Padding="12,4" Click="OnDnsLookupClick" />
+                                </Grid>
+                                <TextBox x:Name="TxtDnsResult" Background="#1E1E1E" Foreground="#E5C07B" BorderBrush="#333333" Height="50" IsReadOnly="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="11" Padding="4" Text="DNS resolution results..." />
+                            </StackPanel>
+                        </GroupBox>
+
+                        <!-- SSH Key Generator -->
+                        <GroupBox Header="🔑 SSH Key Pair Generator" Foreground="#AAAAAA" BorderBrush="#333333" Margin="0,0,0,6" Padding="8">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="6" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Bits:" VerticalAlignment="Center" Foreground="#888888" />
+                                    <ComboBox x:Name="CmbKeyBits" Grid.Column="2" Background="#2D2D2D" Foreground="#FFFFFF" BorderBrush="#3E3E3E" SelectedIndex="0" Padding="6,2">
+                                        <ComboBoxItem Content="2048 bits (RSA)" />
+                                        <ComboBoxItem Content="4096 bits (RSA)" />
+                                    </ComboBox>
+                                    <Button x:Name="BtnGenerateKey" Grid.Column="4" Content="Generate Key Pair" Background="#0E639C" Foreground="#FFFFFF" Padding="10,4" Click="OnGenerateKeyClick" />
+                                </Grid>
+
+                                <TextBlock Text="Public Key (OpenSSH format):" FontSize="10" Foreground="#888888" Margin="0,2,0,2" />
+                                <TextBox x:Name="TxtPublicKey" Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#333333" Height="55" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="10" Padding="4" />
+
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
+                                    <Button x:Name="BtnCopyPubKey" Content="📋 Copy Public Key" Background="#2D2D2D" Foreground="#FFFFFF" Padding="8,4" Margin="0,0,6,0" Click="OnCopyPublicKeyClick" />
+                                    <Button x:Name="BtnSavePrivateKey" Content="💾 Save Private Key (.pem)" Background="#2D2D2D" Foreground="#FFFFFF" Padding="8,4" Click="OnSavePrivateKeyClick" />
+                                </StackPanel>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>
+

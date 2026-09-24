@@ -59,4 +59,20 @@ public sealed class LivePreviewBridgeTests
         Assert.Contains("--text: #c9d1d9;", rendered);
         Assert.Contains("window.chrome.webview.postMessage", rendered);
     }
+
+    [TestMethod]
+    public void TestMarkdownWithCustomThemeColors()
+    {
+        var customTheme = new RecluseEdit.Sdk.Models.ThemeColors
+        {
+            MarkdownBg = "#123456",
+            MarkdownFg = "#abcdef"
+        };
+
+        string rendered = LivePreviewBridge.MarkdownToHtml("# Custom Colors", @"C:\Docs\spec.markdown", customTheme);
+
+        Assert.Contains("--bg: #123456;", rendered);
+        Assert.Contains("--text: #abcdef;", rendered);
+        Assert.Contains("<h1>Custom Colors</h1>", rendered);
+    }
 }

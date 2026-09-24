@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RecluseEdit Terminal</title>
+    <link rel="stylesheet" href="xterm.css" />
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #141414;
+            overflow: hidden;
+            font-family: Consolas, "Cascadia Code", "Courier New", monospace;
+        }
+
+        #terminal-container {
+            width: 100%;
+            height: 100%;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+
+        /* Customize xterm scrollbar for sleek modern dark theme */
+        .xterm .xterm-viewport::-webkit-scrollbar {
+            width: 8px;
+        }
+        .xterm .xterm-viewport::-webkit-scrollbar-track {
+            background: #181818;
+        }
+        .xterm .xterm-viewport::-webkit-scrollbar-thumb {
+            background: #333333;
+            border-radius: 4px;
+        }
+        .xterm .xterm-viewport::-webkit-scrollbar-thumb:hover {
+            background: #555555;
+        }
+    </style>
+</head>
+<body>
+    <div id="terminal-container"></div>
+
+    <script src="xterm.js"></script>
+    <script src="xterm-addon-fit.js"></script>
+    <script>
+        (function () {
+            const container = document.getElementById('terminal-container');
+
+            const term = new Terminal({
+                cursorBlink: true,
+                cursorStyle: 'block',
+                fontSize: 12,
+                fontFamily: 'Consolas, "Cascadia Code", "Courier New", monospace',
+                lineHeight: 1.2,
+                scrollback: 10000,
+                allowTransparency: true,
+                theme: {
+                    background: '#141414',
+                    foreground: '#D4D4D4',
+                    cursor: '#AEAFAD',
+                    cursorAccent: '#141414',
+                    selectionBackground: '#264F78',
+                    black: '#000000',
+                    red: '#CD3131',
+                    green: '#0DBC79',
+                    yellow: '#E5E510',
+                    blue: '#2472C8',
+                    magenta: '#BC3FBC',
+                    cyan: '#11A8CD',
+                    white: '#E5E5E5',
+                    brightBlack: '#666666',
+                    brightRed: '#F14C4C',
+                    brightGreen: '#23D18B',
+                    brightYellow: '#F5F543',
+                    brightBlue: '#3B8EEA',
+                    brightMagenta: '#D670D6',
+                    brightCyan: '#29B8DB',
+                    brightWhite: '#FFFFFF'
+                }
+            });
+
+            const fitAddon = new FitAddon.FitAddon();
+            term.loadAddon(fitAddon);
+            term.open(container);
+
+            function safeFit() {
+                try {
+                    fitAddon.fit();
+                } catch (e) { }
+            }
+
+            safeFit();
+
+            // Notify WPF of user keystroke input
+            term.onData(data => {
+                if (window.chrome && window.chrome.webview) {
+                    window.chrome.webview.postMessage({ type: 'input', data: data });
+                }
+            });
+
+            // Notify WPF of size changes
+            term.onResize(size => {
+                if (window.chrome && window.chrome.webview) {
+                    window.chrome.webview.postMessage({ type: 'resize', cols: size.cols, rows: size.rows });
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                safeFit();
+            });
+
+            // Listen for messages from C# host
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.addEventListener('message', event => {
+                    const msg = event.data;
+                    if (!msg) return;
+
+                    if (msg.type === 'write' && typeof msg.data === 'string') {
+                        term.write(msg.data);
+                    } else if (msg.type === 'clear') {
+                        term.clear();
+                    } else if (msg.type === 'fit') {
+                        safeFit();
+                    } else if (msg.type === 'theme' && msg.theme) {
+                        term.options.theme = Object.assign({}, term.options.theme, msg.theme);
+                    } else if (msg.type === 'fontSize' && msg.fontSize) {
+                        term.options.fontSize = msg.fontSize;
+                        safeFit();
+                    }
+                });
+
+                // Inform C# that xterm is ready with its initial dimensions
+                window.chrome.webview.postMessage({
+                    type: 'ready',
+                    cols: term.cols,
+                    rows: term.rows
+                });
+            }
+
+            // Focus terminal immediately
+            term.focus();
+        })();
+    </script>
+</body>
+</html>
+

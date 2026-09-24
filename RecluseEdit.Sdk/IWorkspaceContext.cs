@@ -54,6 +54,11 @@ public interface IWorkspaceContext
     /// Displays a confirmation dialog to the user requesting approval for an action.
     /// </summary>
     Task<bool> RequestUserConfirmationAsync(string title, string prompt);
+
+    /// <summary>
+    /// Opens an interactive terminal session with the specified command, arguments, or shell info.
+    /// </summary>
+    void OpenTerminal(string? title = null, string? executable = null, string? arguments = null, string? workingDirectory = null) {}
 }
 
 /// <summary>
