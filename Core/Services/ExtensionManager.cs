@@ -48,8 +48,8 @@ public class ExtensionManager : IExtensionHost
     public IReadOnlyList<string> Logs => _logs.AsReadOnly();
     public ToolchainManager ToolchainManager => _toolchainManager;
 
-    private readonly bool _isPaidLicense;
-    public bool IsPaidLicense => _isPaidLicense;
+    private readonly Func<bool> _isPaidLicense;
+    public bool IsPaidLicense => _isPaidLicense();
 
     public event Action? ExtensionsChanged;
     public event Action<ISidePanelProvider>? SidePanelRegistered;
@@ -73,7 +73,7 @@ public class ExtensionManager : IExtensionHost
         _workspaceContext = workspaceContext ?? new WorkspaceContext(new WorkspaceManager(), new DocumentManager(syntaxManager));
         _themeManager = themeManager;
         _allExtensionsUnlocked = allExtensionsUnlocked ?? (() => true);
-        _isPaidLicense = isPaidLicense?.Invoke() ?? true;
+        _isPaidLicense = isPaidLicense ?? (() => true);
     }
 
     public async Task InitializeAsync()

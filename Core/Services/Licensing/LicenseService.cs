@@ -128,10 +128,10 @@ public sealed class LicenseService : IDisposable
 
         var hwid = HwidService.GetHwid();
 
-        // ADM keys don't need username/password
+        // ADM keys don't need username/password — send empty strings
         if (tier == LicenseTier.Admin)
         {
-            username = !string.IsNullOrEmpty(username) ? username : "admin";
+            username = string.Empty;
             password = string.Empty;
         }
         else

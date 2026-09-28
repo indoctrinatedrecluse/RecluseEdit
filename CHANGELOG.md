@@ -11,17 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 Hotfix: License Activation, UI Overlap, and Trial Mode Gating
 
-- **Admin License Activation Fix (`LicenseService.cs`)**:
-  - Fixed `NullReferenceException` / "invalid username/password" error when activating ADM license keys.
-  - For Admin tier licenses, `password` is now set to `string.Empty` instead of `null`, ensuring proper JSON serialization and server compatibility.
-  - Added null-safe username fallback (`!string.IsNullOrEmpty(username)` instead of `.Length > 0`).
+- **Admin License Activation Fix (`LicenseService.cs:131-135`)**:
+  - Fixed "invalid username" error when activating ADM license keys with empty credentials.
+  - For Admin tier licenses, `username` is now set to `string.Empty` (not `"admin"`) and `password` to `string.Empty` (not `null`), matching server expectations for credential-free ADM key activation.
 
-- **AI Chat Layout Fix (`AiChatView.xaml`)**:
-  - Fixed the "Attach active file context" checkbox overlapping the prompt input typing area.
-  - The checkbox/button grid was placed at `Grid.Row="1"` (same as the prompt TextBox); moved to `Grid.Row="2"`.
-
-- **Trial Mode Side Panel Gating**:
+- **Trial Mode Side Panel Gating (`ExtensionManager.cs`, `MainWindow.xaml.cs`)**:
   - Added `IsPaidLicense` property to `IExtensionHost` interface with default `true` for backward compatibility.
+  - Changed `ExtensionManager` to store `Func<bool>` and evaluate `IsPaidLicense` dynamically instead of caching a `bool` at construction time (was returning `true` before license initialization completed).
   - Frontend extension now conditionally registers `SvgStudioSidePanelProvider` and `JsonToCodeSidePanelProvider` only when `host.IsPaidLicense` is true.
   - Scripting extension now conditionally registers `RegexWorkbenchSidePanelProvider` only when `host.IsPaidLicense` is true.
   - Eliminates `Object reference not set to an instance of an object` errors when clicking SVG Studio, JSON-to-Code, or Regex side panels in Trial mode.

@@ -19,6 +19,8 @@ public sealed class ScriptingExtensionTests
 {
     private class MockExtensionHost : IExtensionHost
     {
+        public bool IsPaidLicenseEnabled { get; set; } = true;
+        public bool IsPaidLicense => IsPaidLicenseEnabled;
         public List<LanguageDefinition> Languages { get; } = [];
         public List<IInlineCompletionProvider> InlineProviders { get; } = [];
         public List<IIntelliSenseProvider> IntelliSenseProviders { get; } = [];
@@ -132,6 +134,21 @@ public sealed class ScriptingExtensionTests
 
         // Side panel
         Assert.IsTrue(host.SidePanels.Any(p => p.Id == "recluse.regex"));
+    }
+
+    [TestMethod]
+    public async Task TestScriptingRegistration_TrialMode()
+    {
+        var ext = new ScriptingExtension();
+        var host = new MockExtensionHost { IsPaidLicenseEnabled = false };
+
+        await ext.InitializeAsync(host);
+
+        // Regex side panel should NOT be registered in Trial mode
+        Assert.IsFalse(host.SidePanels.Any(p => p.Id == "recluse.regex"));
+
+        // Languages should still be registered
+        Assert.IsTrue(host.Languages.Any(l => l.Id == "rust"));
     }
 
     [TestMethod]
