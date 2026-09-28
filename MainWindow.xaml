@@ -80,23 +80,29 @@
             <RowDefinition Height="Auto" /> <!-- 4. Status Bar -->
         </Grid.RowDefinitions>
 
-        <!-- 0. Menu Bar -->
-        <Menu x:Name="MainMenu" Grid.Row="0" Background="{DynamicResource BgTertiary}">
-            <MenuItem Header="_File">
-                <MenuItem Header="New _Project..." InputGestureText="Ctrl+Shift+N" Click="OnNewProjectClick" />
-                <MenuItem Header="_New File" InputGestureText="Ctrl+N" Click="OnNewFileClick" />
-                <MenuItem Header="_Open File..." InputGestureText="Ctrl+O" Click="OnOpenFileClick" />
-                <MenuItem Header="Open _Folder..." InputGestureText="Ctrl+K, Ctrl+O" Command="{x:Static local:MainWindow.OpenFolderCommand}" />
-                <Separator Background="{DynamicResource BorderDark}" />
-                <MenuItem Header="_Save" InputGestureText="Ctrl+S" Click="OnSaveFileClick" />
-                <MenuItem Header="Save _As..." InputGestureText="Ctrl+Shift+S" Click="OnSaveAsFileClick" />
-                <MenuItem Header="Save A_ll" Click="OnSaveAllClick" />
-                <Separator Background="{DynamicResource BorderDark}" />
-                <MenuItem Header="_Close Tab" InputGestureText="Ctrl+W" Click="OnCloseTabClick" />
-                <MenuItem Header="Close _All Tabs" Click="OnCloseAllTabsClick" />
-                <Separator Background="{DynamicResource BorderDark}" />
-                <MenuItem Header="E_xit" Click="OnExitClick" />
-            </MenuItem>
+        <!-- 0. Menu Bar + License Badge -->
+        <Grid Grid.Row="0" Background="{DynamicResource BgTertiary}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Menu x:Name="MainMenu" Grid.Column="0" Background="Transparent">
+                <MenuItem Header="_File">
+                    <MenuItem Header="New _Project..." InputGestureText="Ctrl+Shift+N" Click="OnNewProjectClick" />
+                    <MenuItem Header="_New File" InputGestureText="Ctrl+N" Click="OnNewFileClick" />
+                    <MenuItem Header="_Open File..." InputGestureText="Ctrl+O" Click="OnOpenFileClick" />
+                    <MenuItem Header="Open _Folder..." InputGestureText="Ctrl+K, Ctrl+O" Command="{x:Static local:MainWindow.OpenFolderCommand}" />
+                    <Separator Background="{DynamicResource BorderDark}" />
+                    <MenuItem Header="_Save" InputGestureText="Ctrl+S" Click="OnSaveFileClick" />
+                    <MenuItem Header="Save _As..." InputGestureText="Ctrl+Shift+S" Click="OnSaveAsFileClick" />
+                    <MenuItem Header="Save A_ll" Click="OnSaveAllClick" />
+                    <Separator Background="{DynamicResource BorderDark}" />
+                    <MenuItem Header="_Close Tab" InputGestureText="Ctrl+W" Click="OnCloseTabClick" />
+                    <MenuItem Header="Close _All Tabs" Click="OnCloseAllTabsClick" />
+                    <Separator Background="{DynamicResource BorderDark}" />
+                    <MenuItem Header="E_xit" Click="OnExitClick" />
+                </MenuItem>
             <MenuItem Header="_Edit">
                 <MenuItem Header="_Undo" InputGestureText="Ctrl+Z" Click="OnUndoClick" />
                 <MenuItem Header="_Redo" InputGestureText="Ctrl+Y" Click="OnRedoClick" />
@@ -163,9 +169,23 @@
                 <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="_Check for Updates..." Click="OnCheckForUpdatesClick" />
                 <Separator Background="{DynamicResource BorderDark}" />
+                <MenuItem x:Name="MenuLicense" Header="🔑 License (Trial)…" Click="OnMenuLicenseClick" />
+                <Separator Background="{DynamicResource BorderDark}" />
                 <MenuItem Header="_About RecluseEdit" Click="OnAboutClick" />
             </MenuItem>
         </Menu>
+
+        <!-- License tier badge — right side of menu row -->
+        <Border x:Name="BadgeLicenseTitleBar" Grid.Column="1"
+                Background="#7F6000" CornerRadius="4"
+                Padding="8,3" Margin="4,3" VerticalAlignment="Center"
+                Cursor="Hand" ToolTip="License status — click to manage"
+                MouseLeftButtonUp="OnBadgeLicenseClicked">
+            <TextBlock Foreground="White" FontSize="11" FontWeight="SemiBold"
+                       Text="⏳ TRIAL"/>
+        </Border>
+
+        </Grid>
 
         <!-- 1. Quick Action Toolbar -->
         <Border x:Name="MainToolbar" Grid.Row="1" Background="{DynamicResource BgSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,0,0,1" Padding="6,4">

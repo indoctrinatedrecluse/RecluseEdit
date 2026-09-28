@@ -8,6 +8,7 @@ using System.Windows.Media;
 using Microsoft.Win32;
 using RecluseEdit.Core.Models;
 using RecluseEdit.Core.Services;
+using RecluseEdit.Core.Services.Licensing;
 using RecluseEdit.Sdk;
 using RecluseEdit.Sdk.Models;
 using RecluseEdit.Sdk.Providers;
@@ -59,6 +60,7 @@ public partial class MainWindow : Window
     private readonly DiagnosticService _diagnosticService = new();
     private readonly ProjectScaffoldingService _scaffoldingService = new();
     private readonly UpdateService _updateService = new();
+    private readonly LicenseService _licenseService = new();
     private readonly FileWatcherService _fileWatcherService;
     private (DocumentModel Doc, string DiskContent)? _pendingConflict;
     private bool _formatOnSave = false;
@@ -105,7 +107,9 @@ public partial class MainWindow : Window
                 TerminalPane.CreateTerminal(shell);
             });
         };
-        _extensionManager = new ExtensionManager(_syntaxManager, _autocompleteManager, _toolchainManager, workspaceContext, _themeManager);
+        _extensionManager = new ExtensionManager(
+            _syntaxManager, _autocompleteManager, _toolchainManager, workspaceContext, _themeManager,
+            allExtensionsUnlocked: () => _licenseService.CurrentLicense.AllExtensionsUnlocked);
         _commandRegistry = new CommandRegistry();
 
         EditorHost.SyntaxManager = _syntaxManager;
@@ -197,6 +201,11 @@ public partial class MainWindow : Window
                 }
             });
         };
+
+        // ── License initialization ─────────────────────────────────────────
+        // Must run BEFORE InitializeAsync so the extension gate delegate is ready.
+        _licenseService.LicenseChanged += OnLicenseChanged;
+        _ = _licenseService.InitializeAsync();
 
         _ = _extensionManager.InitializeAsync();
         _extensionManager.ExtensionsChanged += UpdateExtensionsStatus;
@@ -1932,9 +1941,59 @@ public partial class MainWindow : Window
             new() { Id = "ext.openFolder", Title = "Open Extensions Folder", Category = "Extensions", Icon = "📁", Action = () => OnOpenExtensionsFolderClick(this, new RoutedEventArgs()) },
             new() { Id = "help.shortcuts", Title = "Keyboard Shortcuts Reference", Category = "Help", InputGestureText = "Ctrl+K, Ctrl+S", Icon = "⌨️", Action = ShowKeyboardShortcuts },
             new() { Id = "help.checkUpdates", Title = "Check for Updates...", Category = "Help", Icon = "🔄", Action = () => OnCheckForUpdatesClick(this, new RoutedEventArgs()) },
+            new() { Id = "help.license", Title = "License Management...", Category = "Help", Icon = "🔑", Action = OpenLicenseDialog },
             new() { Id = "help.about", Title = "About RecluseEdit", Category = "Help", Icon = "ℹ️", Action = () => OnAboutClick(this, new RoutedEventArgs()) }
         ]);
     }
+
+    // ─── Licensing ────────────────────────────────────────────────────────────
+
+    private void OnLicenseChanged(LicenseInfo info)
+    {
+        Dispatcher.Invoke(() => UpdateLicenseUI(info));
+    }
+
+    private void UpdateLicenseUI(LicenseInfo info)
+    {
+        // Update title bar
+        var suffix = info.Tier switch
+        {
+            LicenseTier.Admin     => " [ADM]",
+            LicenseTier.Developer => " [DEV]",
+            LicenseTier.User      => " [USER]",
+            LicenseTier.Trial     => " [Trial]",
+            _                     => string.Empty
+        };
+        Title = $"RecluseEdit - Web Application Editor{suffix}";
+
+        // Update badge element if it exists in the XAML (by name)
+        if (FindName("BadgeLicenseTitleBar") is System.Windows.Controls.Border badge)
+        {
+            badge.Background = new SolidColorBrush(
+                (Color)ColorConverter.ConvertFromString(info.BadgeColor));
+            badge.Visibility = Visibility.Visible;
+            if (badge.Child is TextBlock lbl)
+                lbl.Text = $"{info.BadgeIcon} {info.BadgeLabel}";
+        }
+
+        // Update Help > License menu header
+        if (FindName("MenuLicense") is MenuItem menuItem)
+        {
+            menuItem.Header = $"🔑 License ({info.DisplayTierName})…";
+        }
+    }
+
+    private void OpenLicenseDialog()
+    {
+        var dlg = new LicenseDialog(_licenseService) { Owner = this };
+        dlg.ShowDialog();
+    }
+
+    private void OnMenuLicenseClick(object sender, RoutedEventArgs e) => OpenLicenseDialog();
+
+    private void OnBadgeLicenseClicked(object sender, System.Windows.Input.MouseButtonEventArgs e) => OpenLicenseDialog();
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     protected override void OnClosing(CancelEventArgs e)
     {
@@ -1961,6 +2020,7 @@ public partial class MainWindow : Window
 
         TerminalPane.CloseAllTerminals();
         _fileWatcherService?.Dispose();
+        _licenseService?.Dispose();
         base.OnClosing(e);
     }
 

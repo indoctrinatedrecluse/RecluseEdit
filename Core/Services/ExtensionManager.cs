@@ -27,6 +27,12 @@ public class ExtensionManager : IExtensionHost
     private readonly List<IAiProvider> _aiProviders = [];
     private readonly List<string> _logs = [];
 
+    /// <summary>
+    /// Returns <c>true</c> when all extensions (including non-language ones) are unlocked.
+    /// Defaults to <c>() => true</c> so tests and design-time hosts are unaffected.
+    /// </summary>
+    private readonly Func<bool> _allExtensionsUnlocked;
+
     public IReadOnlyList<IExtension> LoadedExtensions => _loadedExtensions.AsReadOnly();
     public IReadOnlyList<ISidePanelProvider> RegisteredSidePanels => _sidePanels.AsReadOnly();
     public IReadOnlyList<IDocumentFormatter> RegisteredFormatters => _formatters.AsReadOnly();
@@ -50,13 +56,15 @@ public class ExtensionManager : IExtensionHost
         AutocompleteManager autocompleteManager,
         ToolchainManager toolchainManager,
         IWorkspaceContext? workspaceContext = null,
-        ThemeManager? themeManager = null)
+        ThemeManager? themeManager = null,
+        Func<bool>? allExtensionsUnlocked = null)
     {
         _syntaxManager = syntaxManager;
         _autocompleteManager = autocompleteManager;
         _toolchainManager = toolchainManager;
         _workspaceContext = workspaceContext ?? new WorkspaceContext(new WorkspaceManager(), new DocumentManager(syntaxManager));
         _themeManager = themeManager;
+        _allExtensionsUnlocked = allExtensionsUnlocked ?? (() => true);
     }
 
     public async Task InitializeAsync()
@@ -77,6 +85,15 @@ public class ExtensionManager : IExtensionHost
             if (_loadedExtensions.Any(e => e.Id == extension.Id))
             {
                 Log($"Extension '{extension.Id}' is already loaded.");
+                return;
+            }
+
+            // ── License gating ──────────────────────────────────────────────
+            // Non-language extensions require a paid license. On trial, they are
+            // skipped silently so the app still starts cleanly.
+            if (!extension.IsLanguageSupport && !_allExtensionsUnlocked())
+            {
+                Log($"Extension '{extension.Name}' requires a paid license and will not load during trial.");
                 return;
             }
 

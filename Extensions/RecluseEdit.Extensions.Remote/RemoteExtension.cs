@@ -13,6 +13,7 @@ public class RemoteExtension : IExtension
     public string Version => "1.0.0";
     public string Description => "Provides MobaXterm-style SSH session management, SFTP browser with two-way sync, port forwarding tunnels, and network diagnostic tools.";
     public string Author => "indoctrinatedrecluse";
+    public bool IsLanguageSupport => false;
 
     public Task InitializeAsync(IExtensionHost host, CancellationToken ct = default)
     {

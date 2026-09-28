@@ -1,0 +1,153 @@
+<Window x:Class="RecluseEdit.UI.Dialogs.LicenseDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="License Management — RecluseEdit"
+        Width="520" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{DynamicResource BgPrimary}"
+        Foreground="{DynamicResource FgPrimary}">
+
+    <Window.Resources>
+        <Style x:Key="SectionLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource FgSecondary}"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="InputBox" TargetType="TextBox">
+            <Setter Property="Background" Value="{DynamicResource BgSecondary}"/>
+            <Setter Property="Foreground" Value="{DynamicResource FgPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="InputPassBox" TargetType="PasswordBox">
+            <Setter Property="Background" Value="{DynamicResource BgSecondary}"/>
+            <Setter Property="Foreground" Value="{DynamicResource FgPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderDark}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Height" Value="32"/>
+        </Style>
+        <Style x:Key="ActionBtn" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource AccentColor}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,7"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="DangerBtn" TargetType="Button" BasedOn="{StaticResource ActionBtn}">
+            <Setter Property="Background" Value="#C0392B"/>
+        </Style>
+        <Style x:Key="SecondaryBtn" TargetType="Button" BasedOn="{StaticResource ActionBtn}">
+            <Setter Property="Background" Value="{DynamicResource BgTertiary}"/>
+            <Setter Property="Foreground" Value="{DynamicResource FgPrimary}"/>
+        </Style>
+    </Window.Resources>
+
+    <StackPanel Margin="24">
+
+        <!-- Header -->
+        <TextBlock Text="🔑 License Management" FontSize="18" FontWeight="Bold"
+                   Foreground="{DynamicResource FgPrimary}" Margin="0,0,0,4"/>
+        <TextBlock x:Name="TxtSubheading" FontSize="12" Foreground="{DynamicResource FgSecondary}"
+                   Margin="0,0,0,20" TextWrapping="Wrap"/>
+
+        <!-- ── Status Banner ───────────────────────────────────────────── -->
+        <Border x:Name="BannerBorder" CornerRadius="6" Padding="12,10" Margin="0,0,0,20">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <TextBlock x:Name="TxtBannerIcon" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TxtBannerTitle" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock x:Name="TxtBannerDetail" FontSize="12" TextWrapping="Wrap" Opacity="0.9"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Activate New License ────────────────────────────────────── -->
+        <Border x:Name="PanelActivate" CornerRadius="6" Padding="16"
+                Background="{DynamicResource BgSecondary}" BorderBrush="{DynamicResource BorderDark}"
+                BorderThickness="1" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="ACTIVATE LICENSE" Style="{StaticResource SectionLabel}"/>
+                <TextBlock Text="License Key" FontSize="12" Foreground="{DynamicResource FgSecondary}" Margin="0,8,0,3"/>
+                <TextBox x:Name="TxtLicenseKey" Style="{StaticResource InputBox}"
+                         TextChanged="OnLicenseKeyChanged"/>
+
+                <!-- Credentials panel — hidden for ADM keys -->
+                <StackPanel x:Name="PanelCredentials">
+                    <TextBlock Text="Username" FontSize="12" Foreground="{DynamicResource FgSecondary}" Margin="0,10,0,3"/>
+                    <TextBox x:Name="TxtUsername" Style="{StaticResource InputBox}"/>
+                    <TextBlock Text="Password" FontSize="12" Foreground="{DynamicResource FgSecondary}" Margin="0,10,0,3"/>
+                    <PasswordBox x:Name="TxtPassword" Style="{StaticResource InputPassBox}"/>
+                </StackPanel>
+
+                <TextBlock x:Name="TxtHwid" FontSize="11" Foreground="{DynamicResource FgMuted}"
+                           Margin="0,10,0,0" TextWrapping="Wrap"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+                    <Button x:Name="BtnCopyHwid" Content="📋 Copy HWID" Style="{StaticResource SecondaryBtn}"
+                            Margin="0,0,8,0" Click="OnCopyHwidClick"/>
+                    <Button x:Name="BtnActivate" Content="⚡ Activate" Style="{StaticResource ActionBtn}"
+                            Click="OnActivateClick"/>
+                </StackPanel>
+
+                <TextBlock x:Name="TxtActivateError" FontSize="12" Foreground="#E74C3C"
+                           Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Current License Actions (deactivate / remove) ──────────── -->
+        <Border x:Name="PanelCurrentLicense" CornerRadius="6" Padding="16"
+                Background="{DynamicResource BgSecondary}" BorderBrush="{DynamicResource BorderDark}"
+                BorderThickness="1" Margin="0,0,0,16" Visibility="Collapsed">
+            <StackPanel>
+                <TextBlock Text="CURRENT LICENSE ACTIONS" Style="{StaticResource SectionLabel}"/>
+                <!-- Deactivation password (for USER/DEV that need it) -->
+                <StackPanel x:Name="PanelDeactivatePassword">
+                    <TextBlock Text="Password (required to free the machine seat)"
+                               FontSize="12" Foreground="{DynamicResource FgSecondary}" Margin="0,8,0,3"/>
+                    <PasswordBox x:Name="TxtDeactivatePassword" Style="{StaticResource InputPassBox}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                    <Button x:Name="BtnDeactivate" Content="🔓 Deactivate Machine Seat"
+                            Style="{StaticResource DangerBtn}" Margin="0,0,8,0"
+                            Click="OnDeactivateClick" ToolTip="Removes this machine from the server — frees a seat for another computer."/>
+                    <Button x:Name="BtnRemoveLicense" Content="🗑 Remove License"
+                            Style="{StaticResource DangerBtn}"
+                            Click="OnRemoveLicenseClick" ToolTip="Removes the paid license locally and reverts to Trial mode. Does not free a server seat."/>
+                </StackPanel>
+                <TextBlock x:Name="TxtDeactivateError" FontSize="12" Foreground="#E74C3C"
+                           Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Close -->
+        <Button Content="Close" Style="{StaticResource SecondaryBtn}" HorizontalAlignment="Right"
+                Click="OnCloseClick"/>
+
+    </StackPanel>
+</Window>

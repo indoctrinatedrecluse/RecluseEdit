@@ -13,6 +13,7 @@ public class RestClientExtension : IExtension
     public string Version => "1.0.0";
     public string Description => "Provides .http/.rest & .graphql syntax highlighting, REST request runner, GraphQL & OpenAPI tooling, and API workbench.";
     public string Author => "indoctrinatedrecluse";
+    public bool IsLanguageSupport => false;
 
     public Task InitializeAsync(IExtensionHost host, CancellationToken ct = default)
     {

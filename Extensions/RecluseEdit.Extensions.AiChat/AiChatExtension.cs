@@ -14,6 +14,7 @@ public class AiChatExtension : IExtension
     public string Version => "5.1.0";
     public string Description => "Universal AI chat assistant with multi-model switching, workspace file operations, and secure shell execution.";
     public string Author => "indoctrinatedrecluse";
+    public bool IsLanguageSupport => false;
 
     public Task InitializeAsync(IExtensionHost host, CancellationToken cancellationToken = default)
     {

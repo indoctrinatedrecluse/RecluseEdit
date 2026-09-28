@@ -14,6 +14,7 @@ public class DatabaseExtension : IExtension
     public string Version => "1.0.0";
     public string Description => "Provides SQL syntax highlighting, completions, SQLite/database query runner, and schema explorer.";
     public string Author => "indoctrinatedrecluse";
+    public bool IsLanguageSupport => false;
 
     public Task InitializeAsync(IExtensionHost host, CancellationToken ct = default)
     {
