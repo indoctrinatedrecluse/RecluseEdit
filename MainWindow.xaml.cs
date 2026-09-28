@@ -66,6 +66,7 @@ public partial class MainWindow : Window
     private bool _formatOnSave = false;
     private bool _isLivePreviewOpen = false;
     private bool _isChordCtrlK = false;
+    private bool _extensionsInitialized = false;
     private GridLength _lastPreviewWidth = new(1, GridUnitType.Star);
 
     private readonly List<ISidePanelProvider> _registeredSidePanels = [];
@@ -202,15 +203,23 @@ public partial class MainWindow : Window
             });
         };
 
-        // ── License initialization ─────────────────────────────────────────
-        // Must run BEFORE InitializeAsync so the extension gate delegate is ready.
+        // ── License & Extension initialization ────────────────────────────────
+        // License must be fully initialized before extensions load, so the
+        // extension gate delegate (allExtensionsUnlocked) reads the correct
+        // license state instead of the default Unlicensed placeholder.
         _licenseService.LicenseChanged += OnLicenseChanged;
-        _ = _licenseService.InitializeAsync();
 
-        _ = _extensionManager.InitializeAsync();
-        _extensionManager.ExtensionsChanged += UpdateExtensionsStatus;
-        _toolchainManager.ToolchainStatusChanged += UpdateExtensionsStatus;
-        UpdateExtensionsStatus();
+        async Task InitializeLicenseAndExtensionsAsync()
+        {
+            await _licenseService.InitializeAsync();
+            _extensionManager.ExtensionsChanged += UpdateExtensionsStatus;
+            await _extensionManager.InitializeAsync();
+            _toolchainManager.ToolchainStatusChanged += UpdateExtensionsStatus;
+            UpdateExtensionsStatus();
+            _extensionsInitialized = true;
+        }
+
+        _ = InitializeLicenseAndExtensionsAsync();
 
         // Immediately populate toolchain state from persistent cache if available (<2ms)
         var cachedToolchains = _toolchainManager.CacheService.LoadCache();
@@ -1950,7 +1959,18 @@ public partial class MainWindow : Window
 
     private void OnLicenseChanged(LicenseInfo info)
     {
-        Dispatcher.Invoke(() => UpdateLicenseUI(info));
+        Dispatcher?.Invoke(() => UpdateLicenseUI(info));
+
+        // Reload extensions to apply new license gating. When a license is
+        // activated (trial → paid), premium extensions load immediately.
+        // When reverted (paid → trial), they unload immediately.
+        if (_extensionsInitialized)
+        {
+            _ = Dispatcher!.InvokeAsync(async () =>
+            {
+                await _extensionManager.ReloadExtensionsAsync();
+            });
+        }
     }
 
     private void UpdateLicenseUI(LicenseInfo info)

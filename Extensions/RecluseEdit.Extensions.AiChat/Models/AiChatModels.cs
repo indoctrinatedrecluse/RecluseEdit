@@ -61,6 +61,20 @@ public class AiChatSettings
     [JsonPropertyName("max_tokens")]
     public int MaxTokens { get; set; } = 4096;
 
+    // ─── Auto-Approve Settings ─────────────────────────────────────────
+
+    [JsonPropertyName("auto_approve_reads")]
+    public bool AutoApproveReads { get; set; } = false;
+
+    [JsonPropertyName("auto_approve_writes")]
+    public bool AutoApproveWrites { get; set; } = false;
+
+    [JsonPropertyName("auto_approve_tool_calls")]
+    public bool AutoApproveToolCalls { get; set; } = false;
+
+    [JsonPropertyName("auto_approve_commands")]
+    public bool AutoApproveCommands { get; set; } = false;
+
     /// <summary>
     /// Returns the active authentication token (API key or account session/bearer token).
     /// </summary>
@@ -77,6 +91,24 @@ public class AiChatSettings
     public bool IsLocalNoAuth =>
         string.Equals(Provider, "ollama", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(AuthMode, "local_no_auth", StringComparison.OrdinalIgnoreCase);
+
+    // ─── Multi-Provider API Keys ─────────────────────────────────────────
+
+    [JsonPropertyName("api_key_entries")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<ApiKeyEntry>? ApiKeyEntries { get; set; }
+}
+
+/// <summary>
+/// Represents a stored API key for a specific provider in multi-provider setups.
+/// </summary>
+public class ApiKeyEntry
+{
+    [JsonPropertyName("provider_id")]
+    public string ProviderId { get; set; } = "";
+
+    [JsonPropertyName("api_key")]
+    public string ApiKey { get; set; } = "";
 }
 
 /// <summary>

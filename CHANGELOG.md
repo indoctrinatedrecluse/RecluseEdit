@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [6.2.0] - 2026-09-28
+
+### 🌐 Added: AI Chat Smart Routing & Multi-Provider Management
+
+- **Smart Provider Routing (`AiProviderRegistry.SmartResolveEndpoint`)**:
+  - Key-type detection: `AIza…` Google API keys automatically use query-parameter authentication (`?key=`) on Google's OpenAI-compatible endpoint; `sk-…` keys use standard Bearer header auth.
+  - Custom endpoint override takes precedence — when a custom endpoint URL is provided in settings, it is used directly without key-type routing.
+  - Dynamic model listing via `ListModelsAsync()` for Google, DeepSeek, OpenAI, and Anthropic providers, querying each provider's `/v1/models` or equivalent endpoint.
+
+- **New AI Models**:
+  - **Google Antigravity**: Added Gemini 3.6 Flash, 3.7 Flash, 3.8 Flash, and 3.1 Pro alongside existing 2.0/2.5 models.
+  - **DeepSeek**: Added V4 Pro (`deepseek-v4-pro`) and V4 Flash (`deepseek-v4-flash`) alongside existing Chat and Reasoner models.
+
+- **Auto-Approve Settings**:
+  - Added granular per-action auto-approval: `AutoApproveReads` (read_file, list_files), `AutoApproveWrites` (write_file), `AutoApproveCommands` (shell commands), and `AutoApproveToolCalls` (master switch that bypasses all individual confirmations).
+  - Settings persisted to `aichat_settings.json` and bound in the Chat Settings UI drawer.
+
+- **Multi-Provider API Key Management**:
+  - `ApiKeyEntry` / `ApiKeyEntries` collection on `AiChatSettings` supporting per-provider credential storage.
+  - Chat Settings drawer includes a provider API key list with reveal/hide toggle, remove entry, and "Add Provider Key" button.
+
+- **@ File Tagging in Prompt Input**:
+  - Typing `@filename` in the prompt input triggers a file explorer popup showing workspace files matching the typed query.
+  - Keyboard navigation: <kbd>↑</kbd>/<kbd>↓</kbd> arrows to select, <kbd>Enter</kbd> to insert, <kbd>Esc</kbd> to dismiss.
+  - Popup hides automatically when multiple spaces follow `@` or when the prompt is sent.
+
+### 🐛 Fixed
+
+- **License Change Extension Reload**: `MainWindow.OnLicenseChanged` now calls `ReloadExtensionsAsync()` ensuring premium extensions load/unload immediately when the license tier changes.
+- **Async Initialization Race**: Fixed race condition in `MainWindow` async initialization by enforcing sequential `await` order — `LicenseService.InitializeAsync()` must complete before `ExtensionManager.InitializeAsync()`.
+- **Google API Key Auth**: Google API keys starting with `AIza…` are now sent as query parameters instead of Bearer tokens, matching Google's OpenAI-compatible endpoint requirements.
+
+### 🔧 Changed
+
+- `ExecuteToolAsync` signature updated to accept `AiChatSettings` for auto-approve enforcement (updated all call sites and tests).
+- Test suite expanded with 3 new unit tests for smart routing, model registration, and DeepSeek endpoint resolution. Total: **373 passing tests**.
+
+---
+
 ## [6.1.0] - 2026-09-24
 
 ### 💻 Added: Native ConPTY & Interactive TUI Terminal Powerhouse

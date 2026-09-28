@@ -2,6 +2,7 @@ using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using RecluseEdit.Extensions.AiChat.Models;
@@ -39,6 +40,11 @@ public partial class AiChatView : UserControl, IAiChatView
     private CancellationTokenSource? _currentCts;
     private bool _isPopulatingHeaderModels;
 
+    // @ File tagging state
+    private int _fileTagCaretIndex;
+    private List<string> _fileTagMatches = [];
+    private int _fileTagSelectedIndex = -1;
+
     public AiChatView(
         IWorkspaceContext workspaceContext,
         AiChatSettingsService? settingsService = null,
@@ -52,6 +58,7 @@ public partial class AiChatView : UserControl, IAiChatView
 
         PopulateHeaderModelPicker();
         LoadSettingsToDrawerUI();
+        SettingsDrawer.DataContext = _settingsService.CurrentSettings;
         UpdateHeaderAuthBadge();
         UpdateActiveFileBadge();
     }
@@ -336,6 +343,7 @@ public partial class AiChatView : UserControl, IAiChatView
         CmbAuthMode.SelectedValuePath = "Id";
 
         SyncDrawerWithCurrentSettings();
+        PopulateApiKeyEntries();
     }
 
     private void SyncDrawerWithCurrentSettings()
@@ -453,6 +461,17 @@ public partial class AiChatView : UserControl, IAiChatView
         }
     }
 
+    private void OnApiKeyRevealClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.DataContext is ApiKeyEntryViewModel vm)
+        {
+            vm.IsRevealed = !vm.IsRevealed;
+            // Force refresh of the list item
+            var item = ApiKeyEntriesList.ItemContainerGenerator.ContainerFromItem(vm) as ListViewItem;
+            // Note: Actual reveal toggle is handled in the ItemTemplate via Visibility binding
+        }
+    }
+
     private void OnSaveSettingsClick(object sender, RoutedEventArgs e)
     {
         var settings = _settingsService.CurrentSettings;
@@ -479,11 +498,104 @@ public partial class AiChatView : UserControl, IAiChatView
         _settingsService.SaveSettings(settings);
         PopulateHeaderModelPicker();
         UpdateHeaderAuthBadge();
+        PopulateApiKeyEntries();
 
         SettingsDrawer.Visibility = Visibility.Collapsed;
     }
 
+    private void PopulateApiKeyEntries()
+    {
+        var settings = _settingsService.CurrentSettings;
+        var entries = new List<ApiKeyEntryViewModel>();
+
+        if (settings.ApiKeyEntries?.Count > 0)
+        {
+            foreach (var entry in settings.ApiKeyEntries)
+            {
+                entries.Add(new ApiKeyEntryViewModel
+                {
+                    ProviderId = entry.ProviderId,
+                    ApiKey = entry.ApiKey,
+                    IsRevealed = false
+                });
+            }
+        }
+        else
+        {
+            foreach (var provider in AiProviderRegistry.Providers)
+            {
+                if (!provider.RequiresAuthentication)
+                {
+                    entries.Add(new ApiKeyEntryViewModel
+                    {
+                        ProviderId = provider.Id,
+                        ApiKey = settings.ApiKey ?? "",
+                        IsRevealed = false
+                    });
+                }
+            }
+        }
+
+        ApiKeyEntriesList.ItemsSource = entries;
+    }
+
+    private void OnAddApiKeyEntryClick(object sender, RoutedEventArgs e)
+    {
+        var settings = _settingsService.CurrentSettings;
+        settings.ApiKeyEntries ??= new List<ApiKeyEntry>();
+
+        // Add entries for providers that don't have one yet
+        foreach (var provider in AiProviderRegistry.Providers)
+        {
+            if (provider.RequiresAuthentication && (provider.Type == AiProviderType.DeepSeek ||
+                                      provider.Type == AiProviderType.OpenAi ||
+                                      provider.Type == AiProviderType.GoogleAntigravity ||
+                                      provider.Type == AiProviderType.Anthropic))
+            {
+                var exists = settings.ApiKeyEntries.Any(x =>
+                    string.Equals(x.ProviderId, provider.Id, StringComparison.OrdinalIgnoreCase));
+                if (!exists)
+                {
+                    settings.ApiKeyEntries.Add(new ApiKeyEntry
+                    {
+                        ProviderId = provider.Id,
+                        ApiKey = ""
+                    });
+                }
+            }
+        }
+
+        _settingsService.SaveSettings(settings);
+        PopulateApiKeyEntries();
+    }
+
+    private void OnRemoveApiKeyEntryClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.DataContext is ApiKeyEntryViewModel vm)
+        {
+            var settings = _settingsService.CurrentSettings;
+            if (settings.ApiKeyEntries != null)
+            {
+                var entry = settings.ApiKeyEntries.FirstOrDefault(x =>
+                    string.Equals(x.ProviderId, vm.ProviderId, StringComparison.OrdinalIgnoreCase));
+                if (entry != null)
+                {
+                    settings.ApiKeyEntries.Remove(entry);
+                    _settingsService.SaveSettings(settings);
+                    PopulateApiKeyEntries();
+                }
+            }
+        }
+    }
+
     #endregion
+
+    public class ApiKeyEntryViewModel
+    {
+        public string ProviderId { get; set; } = "";
+        public string ApiKey { get; set; } = "";
+        public bool IsRevealed { get; set; }
+    }
 
     #region Workspace Context & Active File Badge
 
@@ -558,12 +670,243 @@ public partial class AiChatView : UserControl, IAiChatView
 
     private void OnPromptInputPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        // If file tag popup is open, handle arrow keys and Enter
+        if (FileTagPopup.IsOpen)
+        {
+            if (e.Key == Key.Down)
+            {
+                e.Handled = true;
+                MoveFileTagSelection(1);
+                return;
+            }
+            if (e.Key == Key.Up)
+            {
+                e.Handled = true;
+                MoveFileTagSelection(-1);
+                return;
+            }
+            if (e.Key == Key.Enter || e.Key == Key.Return)
+            {
+                e.Handled = true;
+                AcceptFileTagSelection();
+                return;
+            }
+            if (e.Key == Key.Escape)
+            {
+                e.Handled = true;
+                CloseFileTagPopup();
+                return;
+            }
+        }
+
         if (e.Key == Key.Enter && (Keyboard.Modifiers & ModifierKeys.Shift) == 0)
         {
             e.Handled = true;
             OnSendPromptClick(sender, e);
         }
     }
+
+    private void OnPromptInputTextChanged(object sender, TextChangedEventArgs e)
+    {
+        HandleAtTaggingDetection();
+    }
+
+    #endregion
+
+    #region @ File Tagging
+
+    private void HandleAtTaggingDetection()
+    {
+        var text = TxtPromptInput.Text ?? "";
+        var caret = TxtPromptInput.CaretIndex;
+
+        if (caret > 0)
+        {
+            // Check if cursor is right after an @ tag (possibly with partial text)
+            var before = text.Substring(0, caret);
+            var lastSpace = before.LastIndexOf(' ');
+            var afterLastSpace = lastSpace == -1 ? before : before[(lastSpace + 1)..];
+
+            if (afterLastSpace.StartsWith("@"))
+            {
+                // If there's more than one space after '@', hide popup
+                var afterAt = afterLastSpace.Substring(1);
+                if (afterAt.Contains(' '))
+                {
+                    CloseFileTagPopup();
+                    return;
+                }
+
+                var query = afterAt;
+                if (query.Length >= 0 && !afterAt.Contains(Environment.NewLine))
+                {
+                    ShowFileTagPopup(query, caret);
+                    return;
+                }
+            }
+        }
+
+        // Check for '@' followed by multiple spaces
+        if (text.Contains("@  "))
+        {
+            CloseFileTagPopup();
+            return;
+        }
+    }
+
+    private void ShowFileTagPopup(string query, int caretIndex)
+    {
+        try
+        {
+            // Get files from workspace context
+            var workspacePath = _workspaceContext.WorkspaceRoot;
+            if (string.IsNullOrEmpty(workspacePath) || !Directory.Exists(workspacePath))
+            {
+                CloseFileTagPopup();
+                return;
+            }
+
+            // Gather candidate files (simple approach: search files recursively)
+            var files = new List<string>();
+            try
+            {
+                var allFiles = Directory.GetFiles(workspacePath, "*", SearchOption.TopDirectoryOnly);
+                foreach (var f in allFiles)
+                {
+                    var rel = GetRelativePath(workspacePath, f);
+                    files.Add(rel);
+                }
+
+                // Also search one level of subdirectories
+                var dirs = Directory.GetDirectories(workspacePath, "*", SearchOption.TopDirectoryOnly);
+                foreach (var dir in dirs)
+                {
+                    var dirName = Path.GetFileName(dir);
+                    if (dirName.StartsWith(".") || dirName == "bin" || dirName == "obj" || dirName == "node_modules")
+                        continue;
+
+                    var subFiles = Directory.GetFiles(dir, "*", SearchOption.TopDirectoryOnly);
+                    foreach (var f in subFiles)
+                    {
+                        var rel = GetRelativePath(workspacePath, f);
+                        files.Add(rel);
+                    }
+                }
+            }
+            catch
+            {
+                // Silently fail - user may not have permissions
+            }
+
+            // Filter by query
+            var matches = files
+                .Where(f => string.IsNullOrEmpty(query) || f.Contains(query, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(f => f.StartsWith(query, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .ThenBy(f => f)
+                .Take(50)
+                .ToList();
+
+            if (matches.Count == 0)
+            {
+                CloseFileTagPopup();
+                return;
+            }
+
+            LstFileTags.ItemsSource = matches;
+            _fileTagMatches = matches;
+            _fileTagSelectedIndex = matches.Count > 0 ? 0 : -1;
+            LstFileTags.SelectedIndex = _fileTagSelectedIndex;
+
+            FileTagPopup.PlacementTarget = TxtPromptInput;
+            _fileTagCaretIndex = caretIndex;
+
+            FileTagPopup.IsOpen = true;
+        }
+        catch
+        {
+            CloseFileTagPopup();
+        }
+    }
+
+    private void MoveFileTagSelection(int direction)
+    {
+        if (_fileTagMatches.Count == 0) return;
+
+        _fileTagSelectedIndex = Math.Max(0, Math.Min(_fileTagMatches.Count - 1, _fileTagSelectedIndex + direction));
+        LstFileTags.SelectedItem = _fileTagSelectedIndex >= 0 && _fileTagSelectedIndex < _fileTagMatches.Count
+            ? _fileTagMatches[_fileTagSelectedIndex]
+            : null;
+        LstFileTags.ScrollIntoView(LstFileTags.SelectedItem);
+    }
+
+    private void AcceptFileTagSelection()
+    {
+        if (_fileTagSelectedIndex < 0 || _fileTagSelectedIndex >= _fileTagMatches.Count) return;
+
+        InsertFileTag(_fileTagMatches[_fileTagSelectedIndex]);
+        CloseFileTagPopup();
+    }
+
+    private void OnFileTagDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (LstFileTags.SelectedItem is string selected)
+        {
+            InsertFileTag(selected);
+            CloseFileTagPopup();
+        }
+    }
+
+    private void CloseFileTagPopup()
+    {
+        FileTagPopup.IsOpen = false;
+        _fileTagMatches.Clear();
+        _fileTagSelectedIndex = -1;
+    }
+
+    private void InsertFileTag(string filePath)
+    {
+        var text = TxtPromptInput.Text ?? "";
+        var caret = TxtPromptInput.CaretIndex;
+
+        if (caret > 0 && text[caret - 1] == '@')
+        {
+            // Replace '@...' on the current word
+            var before = text.Substring(0, caret);
+            var lastSpace = before.LastIndexOf(' ');
+            var afterAt = lastSpace == -1 ? before : before[(lastSpace + 1)..];
+
+            if (afterAt.StartsWith("@"))
+            {
+                // Replace the @tag with the file path
+                var newText = text.Substring(0, lastSpace + 1) + $"@{filePath}" + text.Substring(caret);
+                TxtPromptInput.Text = newText;
+                // Set caret after the inserted tag
+                TxtPromptInput.CaretIndex = lastSpace + 1 + 1 + filePath.Length;
+                return;
+            }
+        }
+
+        // Fallback: just insert @filePath at cursor position
+        TxtPromptInput.Text = text.Insert(caret, $"@{filePath} ");
+        TxtPromptInput.CaretIndex = caret + filePath.Length + 2;
+    }
+
+    private static string GetRelativePath(string basePath, string fullPath)
+    {
+        if (basePath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            basePath = basePath[..^1];
+
+        var baseUri = new Uri(basePath + Path.DirectorySeparatorChar);
+        var fullUri = new Uri(fullPath);
+        var relativeUri = baseUri.MakeRelativeUri(fullUri);
+        var relativePath = Uri.UnescapeDataString(relativeUri.ToString()).Replace('/', Path.DirectorySeparatorChar);
+
+        return relativePath;
+    }
+
+    #endregion
+
+    #region Chat Settings: API Key Entries
 
     private async void OnSendPromptClick(object sender, RoutedEventArgs e)
     {

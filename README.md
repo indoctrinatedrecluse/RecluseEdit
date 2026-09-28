@@ -390,7 +390,7 @@ RecluseEdit comes with fourteen modular extensions built as dedicated targets in
 
 RecluseEdit includes a fully automated GitHub Actions workflow (`.github/workflows/release.yml`) configured for continuous delivery:
 
-- 🏷️ **Triggered on Tag Push**: Pushing a new version tag (e.g. `git tag v6.1.0 && git push origin v6.1.0`) triggers an automated build pipeline on `windows-latest`.
+- 🏷️ **Triggered on Tag Push**: Pushing a new version tag (e.g. `git tag v6.2.0 && git push origin v6.2.0`) triggers an automated build pipeline on `windows-latest`.
 - 🧪 **Full Verification**: Executes the complete test suite (`dotnet test RecluseEdit.slnx -c Release`) across all projects before packaging.
 - 🔏 **Automated Code-Signing**: All executable binaries (`.exe`) and extension libraries (`.dll`) are signed with SHA256 Authenticode signatures issued by the `indoctrinatedrecluse` Root CA. The public Root CA certificate (`indoctrinatedrecluse-RootCA.cer`) is automatically bundled inside every release archive.
 - 📦 **Bundle & Package**:

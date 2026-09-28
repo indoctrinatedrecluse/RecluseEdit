@@ -149,7 +149,7 @@ public sealed class LicensorActivateRequest
     [JsonPropertyName("hwid")]         public string Hwid        { get; set; } = string.Empty;
     [JsonPropertyName("machine_name")] public string MachineName { get; set; } = string.Empty;
     [JsonPropertyName("platform")]     public string Platform    { get; set; } = "windows-amd64";
-    [JsonPropertyName("app_version")]  public string AppVersion  { get; set; } = "6.1.0";
+    [JsonPropertyName("app_version")]  public string AppVersion  { get; set; } = "6.2.0";
 }
 
 public sealed class LicensorActivateResponse

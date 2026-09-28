@@ -438,6 +438,15 @@ public class ThemeManager
         _themes.Add(theme);
     }
 
+    public void UnregisterTheme(string themeId)
+    {
+        var existing = _themes.FirstOrDefault(t => t.Id == themeId);
+        if (existing is not null)
+        {
+            _themes.Remove(existing);
+        }
+    }
+
     public void ApplyTheme(IThemeDefinition theme, bool persist = true)
     {
         _activeTheme = theme;

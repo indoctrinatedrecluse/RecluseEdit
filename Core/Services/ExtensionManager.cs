@@ -27,6 +27,10 @@ public class ExtensionManager : IExtensionHost
     private readonly List<IAiProvider> _aiProviders = [];
     private readonly List<string> _logs = [];
 
+    // Track which extension owns each registration, for cleanup on unload
+    private IExtension? _activeExtension;
+    private readonly Dictionary<string, List<object>> _registrationsByExtension = new();
+
     /// <summary>
     /// Returns <c>true</c> when all extensions (including non-language ones) are unlocked.
     /// Defaults to <c>() => true</c> so tests and design-time hosts are unaffected.
@@ -97,7 +101,15 @@ public class ExtensionManager : IExtensionHost
                 return;
             }
 
-            await extension.InitializeAsync(this);
+            _activeExtension = extension;
+            try
+            {
+                await extension.InitializeAsync(this);
+            }
+            finally
+            {
+                _activeExtension = null;
+            }
             _loadedExtensions.Add(extension);
             Log($"Loaded extension: {extension.Name} v{extension.Version} by {extension.Author}");
             ExtensionsChanged?.Invoke();
@@ -197,6 +209,7 @@ public class ExtensionManager : IExtensionHost
         if (!_sidePanels.Any(p => p.Id == panelProvider.Id))
         {
             _sidePanels.Add(panelProvider);
+            TrackRegistration(_activeExtension, panelProvider);
             Log($"Registered side panel '{panelProvider.Title}' ({panelProvider.Id})");
             SidePanelRegistered?.Invoke(panelProvider);
         }
@@ -213,6 +226,7 @@ public class ExtensionManager : IExtensionHost
         if (!_formatters.Any(f => f.FormatterId == formatter.FormatterId))
         {
             _formatters.Add(formatter);
+            TrackRegistration(_activeExtension, formatter);
             Log($"Registered document formatter '{formatter.DisplayName}' ({formatter.FormatterId})");
         }
     }
@@ -222,6 +236,7 @@ public class ExtensionManager : IExtensionHost
         if (!_extensionThemes.Any(t => t.Id == theme.Id))
         {
             _extensionThemes.Add(theme);
+            TrackRegistration(_activeExtension, theme);
             _themeManager?.RegisterTheme(theme);
             Log($"Registered theme '{theme.DisplayName}' ({theme.Id})");
         }
@@ -232,6 +247,7 @@ public class ExtensionManager : IExtensionHost
         if (!_statusBarItems.Any(i => i.Id == item.Id))
         {
             _statusBarItems.Add(item);
+            TrackRegistration(_activeExtension, item);
             Log($"Registered status bar item '{item.Text}' ({item.Id})");
             StatusBarItemRegistered?.Invoke(item);
         }
@@ -242,6 +258,7 @@ public class ExtensionManager : IExtensionHost
         if (!_statusBarProviders.Any(p => p.Id == provider.Id))
         {
             _statusBarProviders.Add(provider);
+            TrackRegistration(_activeExtension, provider);
             Log($"Registered status bar provider ({provider.Id})");
             StatusBarProviderRegistered?.Invoke(provider);
 
@@ -265,6 +282,7 @@ public class ExtensionManager : IExtensionHost
         if (!_aiProviders.Any(p => p.Id == provider.Id))
         {
             _aiProviders.Add(provider);
+            TrackRegistration(_activeExtension, provider);
             Log($"Registered AI provider '{provider.DisplayName}' ({provider.Id})");
             AiProviderRegistered?.Invoke(provider);
         }
@@ -278,6 +296,75 @@ public class ExtensionManager : IExtensionHost
     public void Log(string message)
     {
         _logs.Add($"[{DateTime.Now:HH:mm:ss}] {message}");
+    }
+
+    /// <summary>
+    /// Unloads all currently-loaded premium (non-language-support) extensions,
+    /// calling DeinitializeAsync and removing their registered contributions.
+    /// </summary>
+    public async Task UnloadPremiumExtensionsAsync()
+    {
+        var premium = _loadedExtensions.Where(e => !e.IsLanguageSupport).ToList();
+        if (premium.Count == 0) return;
+
+        foreach (var ext in premium)
+        {
+            try
+            {
+                await ext.DeinitializeAsync();
+                Log($"Unloaded premium extension: {ext.Name}");
+            }
+            catch (Exception ex)
+            {
+                Log($"Error unloading extension '{ext.Name}': {ex.Message}");
+            }
+
+            _loadedExtensions.Remove(ext);
+
+            // Remove all registrations owned by this extension
+            if (_registrationsByExtension.TryGetValue(ext.Id, out var regs))
+            {
+                foreach (var reg in regs)
+                {
+                    if (reg is ISidePanelProvider sp) _sidePanels.RemoveAll(p => ReferenceEquals(p, sp));
+                    else if (reg is IAiProvider ap) _aiProviders.RemoveAll(p => ReferenceEquals(p, ap));
+                    else if (reg is IStatusBarItem si) _statusBarItems.RemoveAll(i => ReferenceEquals(i, si));
+                    else if (reg is IStatusBarProvider ssp) _statusBarProviders.RemoveAll(p => ReferenceEquals(p, ssp));
+                    else if (reg is IDocumentFormatter df) _formatters.RemoveAll(f => ReferenceEquals(f, df));
+                    else if (reg is IThemeDefinition td)
+                    {
+                        _extensionThemes.RemoveAll(t => ReferenceEquals(t, td));
+                        _themeManager?.UnregisterTheme(td.Id);
+                    }
+                }
+                _registrationsByExtension.Remove(ext.Id);
+            }
+        }
+
+        ExtensionsChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Reloads all external extensions. Unloads premium extensions first (if any),
+    /// then re-discovers from disk. This allows premium extensions to be loaded
+    /// immediately when a license is activated, or unloaded when reverted to trial.
+    /// </summary>
+    public async Task ReloadExtensionsAsync()
+    {
+        await UnloadPremiumExtensionsAsync();
+        await LoadExternalExtensionsAsync();
+        ExtensionsChanged?.Invoke();
+    }
+
+    private void TrackRegistration(IExtension? extension, object registration)
+    {
+        if (extension is null) return;
+        if (!_registrationsByExtension.TryGetValue(extension.Id, out var list))
+        {
+            list = new List<object>();
+            _registrationsByExtension[extension.Id] = list;
+        }
+        list.Add(registration);
     }
 
     #endregion

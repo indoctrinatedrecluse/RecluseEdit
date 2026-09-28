@@ -279,16 +279,16 @@ public class AiChatExtensionTests
             var client = new AiChatApiClient();
 
             // 1. Write file
-            var writeResult = await client.ExecuteToolAsync("write_file", "{\"path\":\"hello.txt\",\"content\":\"Hello AI Chat!\"}", context, CancellationToken.None);
+            var writeResult = await client.ExecuteToolAsync("write_file", "{\"path\":\"hello.txt\",\"content\":\"Hello AI Chat!\"}", context, new AiChatSettings(), CancellationToken.None);
             StringAssert.Contains(writeResult, "written successfully");
             Assert.IsTrue(File.Exists(Path.Combine(tempDir, "hello.txt")));
 
             // 2. Read file
-            var readResult = await client.ExecuteToolAsync("read_file", "{\"path\":\"hello.txt\"}", context, CancellationToken.None);
+            var readResult = await client.ExecuteToolAsync("read_file", "{\"path\":\"hello.txt\"}", context, new AiChatSettings(), CancellationToken.None);
             Assert.AreEqual("Hello AI Chat!", readResult);
 
             // 3. List files
-            var listResult = await client.ExecuteToolAsync("list_files", "{}", context, CancellationToken.None);
+            var listResult = await client.ExecuteToolAsync("list_files", "{}", context, new AiChatSettings(), CancellationToken.None);
             StringAssert.Contains(listResult, "hello.txt");
         }
         finally
@@ -307,7 +307,7 @@ public class AiChatExtensionTests
             var context = new MockApprovalWorkspaceContext(tempDir) { ConfirmationResult = true };
             var client = new AiChatApiClient();
 
-            var result = await client.ExecuteToolAsync("execute_command", "{\"command\":\"echo test\"}", context, CancellationToken.None);
+            var result = await client.ExecuteToolAsync("execute_command", "{\"command\":\"echo test\"}", context, new AiChatSettings(), CancellationToken.None);
             StringAssert.Contains(result, "Exit Code: 0");
             StringAssert.Contains(result, "Command executed successfully");
         }
@@ -327,7 +327,7 @@ public class AiChatExtensionTests
             var context = new MockApprovalWorkspaceContext(tempDir) { ConfirmationResult = false };
             var client = new AiChatApiClient();
 
-            var result = await client.ExecuteToolAsync("execute_command", "{\"command\":\"rm -rf /\"}", context, CancellationToken.None);
+            var result = await client.ExecuteToolAsync("execute_command", "{\"command\":\"rm -rf /\"}", context, new AiChatSettings(), CancellationToken.None);
             StringAssert.Contains(result, "User confirmation denied");
         }
         finally

@@ -151,7 +151,7 @@ public sealed class LicenseService : IDisposable
                 Hwid        = hwid,
                 MachineName = Environment.MachineName,
                 Platform    = "windows-amd64",
-                AppVersion  = "6.1.0"
+                AppVersion  = "6.2.0"
             };
 
             var response = await _http.PostAsJsonAsync($"{BaseUrl}/api/v1/license/activate", req);

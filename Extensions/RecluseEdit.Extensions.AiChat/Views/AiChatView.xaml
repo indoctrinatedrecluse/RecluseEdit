@@ -197,6 +197,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <DropShadowEffect x:Key="DropShadow" BlurRadius="8" ShadowDepth="3" Direction="270" Color="#000000" Opacity="0.5" />
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource BgPrimary}">
@@ -315,47 +316,112 @@
                 <TextBlock Text="AI Provider:" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="0,0,0,3" />
                 <ComboBox x:Name="CmbProvider" Style="{StaticResource AiChatComboBoxStyle}" Margin="0,0,0,8" SelectionChanged="OnProviderSelectionChanged" />
 
-                <!-- Auth Mode & Discovery -->
-                <Grid Margin="0,0,0,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="Authentication Mode:" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="0,0,0,3" />
-                        <ComboBox x:Name="CmbAuthMode" Style="{StaticResource AiChatComboBoxStyle}" SelectionChanged="OnAuthModeSelectionChanged" />
-                    </StackPanel>
-                    <Button x:Name="BtnDrawerAutoDetect" Grid.Column="1" VerticalAlignment="Bottom" Margin="8,0,0,0" Padding="8,4" Background="{DynamicResource BgHover}" Foreground="{DynamicResource FgPrimary}" BorderThickness="0" FontSize="11" Cursor="Hand" Click="OnDrawerAutoDetectClick" ToolTip="Detect credentials from environment variables or gcloud CLI">
-                        <TextBlock Text="🔍 Auto-Detect" />
-                    </Button>
-                </Grid>
+                 <!-- Auth Mode & Discovery -->
+                 <Grid Margin="0,0,0,8">
+                     <Grid.ColumnDefinitions>
+                         <ColumnDefinition Width="*" />
+                         <ColumnDefinition Width="Auto" />
+                     </Grid.ColumnDefinitions>
+                     <StackPanel>
+                         <TextBlock Text="Authentication Mode:" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="0,0,0,3" />
+                         <ComboBox x:Name="CmbAuthMode" Style="{StaticResource AiChatComboBoxStyle}" SelectionChanged="OnAuthModeSelectionChanged" />
+                     </StackPanel>
+                     <Button x:Name="BtnDrawerAutoDetect" Grid.Column="1" VerticalAlignment="Bottom" Margin="8,0,0,0" Padding="8,4" Background="{DynamicResource BgHover}" Foreground="{DynamicResource FgPrimary}" BorderThickness="0" FontSize="11" Cursor="Hand" Click="OnDrawerAutoDetectClick" ToolTip="Detect credentials from environment variables or gcloud CLI">
+                         <TextBlock Text="🔍 Auto-Detect" />
+                     </Button>
+                 </Grid>
 
-                <!-- Endpoint URL -->
-                <TextBlock Text="API Endpoint URL:" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="0,0,0,3" />
-                <TextBox x:Name="TxtApiEndpoint" Background="{DynamicResource BgSecondary}" Foreground="{DynamicResource FgPrimary}" BorderBrush="{DynamicResource BorderDark}" CaretBrush="{DynamicResource FgPrimary}" Padding="4,3" FontSize="11" Margin="0,0,0,8" />
+                 <!-- Endpoint URL -->
+                 <TextBlock Text="API Endpoint URL:" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="0,0,0,3" />
+                 <TextBox x:Name="TxtApiEndpoint" Background="{DynamicResource BgSecondary}" Foreground="{DynamicResource FgPrimary}" BorderBrush="{DynamicResource BorderDark}" CaretBrush="{DynamicResource FgPrimary}" Padding="4,3" FontSize="11" Margin="0,0,0,8" />
 
-                <!-- API Key / Token -->
-                <TextBlock x:Name="LblSecretKey" Text="API Key / Access Token:" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="0,0,0,3" />
-                <Grid Margin="0,0,0,8">
-                    <PasswordBox x:Name="TxtApiKey" Background="{DynamicResource BgSecondary}" Foreground="{DynamicResource FgPrimary}" BorderBrush="{DynamicResource BorderDark}" Padding="4,3" FontSize="11" />
-                    <TextBox x:Name="TxtApiKeyVisible" Background="{DynamicResource BgSecondary}" Foreground="{DynamicResource FgPrimary}" BorderBrush="{DynamicResource BorderDark}" CaretBrush="{DynamicResource FgPrimary}" Padding="4,3" FontSize="11" Visibility="Collapsed" />
-                </Grid>
+                 <!-- API Key / Token -->
+                 <TextBlock x:Name="LblSecretKey" Text="API Key / Access Token:" Foreground="{DynamicResource FgSecondary}" FontSize="11" Margin="0,0,0,3" />
+                 <Grid Margin="0,0,0,8">
+                     <PasswordBox x:Name="TxtApiKey" Background="{DynamicResource BgSecondary}" Foreground="{DynamicResource FgPrimary}" BorderBrush="{DynamicResource BorderDark}" Padding="4,3" FontSize="11" />
+                     <TextBox x:Name="TxtApiKeyVisible" Background="{DynamicResource BgSecondary}" Foreground="{DynamicResource FgPrimary}" BorderBrush="{DynamicResource BorderDark}" CaretBrush="{DynamicResource FgPrimary}" Padding="4,3" FontSize="11" Visibility="Collapsed" />
+                 </Grid>
 
-                <Grid Margin="0,0,0,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <CheckBox x:Name="ChkShowKey" Content="Show Key" Foreground="{DynamicResource FgSecondary}" FontSize="10" Checked="OnToggleShowKey" Unchecked="OnToggleShowKey" VerticalAlignment="Center" />
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <TextBlock Text="Model: " Foreground="{DynamicResource FgSecondary}" FontSize="11" VerticalAlignment="Center" />
-                        <ComboBox x:Name="CmbModel" Width="140" IsEditable="True" Style="{StaticResource AiChatComboBoxStyle}" />
-                    </StackPanel>
-                </Grid>
+                 <Grid Margin="0,0,0,8">
+                     <Grid.ColumnDefinitions>
+                         <ColumnDefinition Width="*" />
+                         <ColumnDefinition Width="Auto" />
+                     </Grid.ColumnDefinitions>
+                     <CheckBox x:Name="ChkShowKey" Content="Show Key" Foreground="{DynamicResource FgSecondary}" FontSize="10" Checked="OnToggleShowKey" Unchecked="OnToggleShowKey" VerticalAlignment="Center" />
+                     <StackPanel Grid.Column="1" Orientation="Horizontal">
+                         <TextBlock Text="Model: " Foreground="{DynamicResource FgSecondary}" FontSize="11" VerticalAlignment="Center" />
+                         <ComboBox x:Name="CmbModel" Width="140" IsEditable="True" Style="{StaticResource AiChatComboBoxStyle}" />
+                     </StackPanel>
+                 </Grid>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
-                    <Button Content="Save &amp; Close" Background="{DynamicResource AccentBlue}" Foreground="White" BorderThickness="0" Padding="10,4" FontSize="11" FontWeight="SemiBold" Cursor="Hand" Click="OnSaveSettingsClick" />
-                </StackPanel>
+                 <!-- Chat Settings: Auto-Approve Options -->
+                 <Border Background="{DynamicResource BgSecondary}" BorderBrush="{DynamicResource BorderDark}" BorderThickness="0,1,0,0" Margin="0,0,0,10" />
+
+                 <TextBlock Text="Chat Settings:" Foreground="{DynamicResource FgSecondary}" FontSize="10" Margin="0,0,0,6" />
+
+                 <StackPanel Orientation="Vertical" Margin="0,0,0,8">
+                     <CheckBox x:Name="ChkAutoApproveReads"
+                               Content="Auto-approve file reads (read_file, list_files)"
+                               IsChecked="{Binding AutoApproveReads, Mode=TwoWay}"
+                               Foreground="{DynamicResource FgPrimary}"
+                               FontSize="11"
+                               Margin="0,0,0,3"
+                               ToolTip="Automatically allow AI to read files without prompting each time" />
+                     <CheckBox x:Name="ChkAutoApproveWrites"
+                               Content="Auto-approve file writes (write_file)"
+                               IsChecked="{Binding AutoApproveWrites, Mode=TwoWay}"
+                               Foreground="{DynamicResource FgPrimary}"
+                               FontSize="11"
+                               Margin="0,0,0,3"
+                               ToolTip="Automatically allow AI to write/modify files without prompting each time" />
+                     <CheckBox x:Name="ChkAutoApproveCommands"
+                               Content="Auto-approve command execution (shell commands)"
+                               IsChecked="{Binding AutoApproveCommands, Mode=TwoWay}"
+                               Foreground="{DynamicResource FgPrimary}"
+                               FontSize="11"
+                               Margin="0,0,0,3"
+                               ToolTip="Automatically allow AI to execute shell commands without prompting each time" />
+                     <CheckBox x:Name="ChkAutoApproveToolCalls"
+                               Content="Auto-approve all tool calls (master switch)"
+                               IsChecked="{Binding AutoApproveToolCalls, Mode=TwoWay}"
+                               Foreground="{DynamicResource FgPrimary}"
+                               FontSize="11"
+                               Margin="0,0,0,3"
+                               ToolTip="When enabled, skips all individual tool confirmations" />
+                 </StackPanel>
+
+                 <!-- Chat Settings: Multi-Provider API Keys -->
+                 <TextBlock Text="Provider API Keys:" Foreground="{DynamicResource FgSecondary}" FontSize="10" Margin="0,0,0,4" />
+                 <ItemsControl x:Name="ApiKeyEntriesList" Margin="0,0,0,8">
+                     <ItemsControl.ItemsPanel>
+                         <ItemsPanelTemplate>
+                             <StackPanel Orientation="Vertical" />
+                         </ItemsPanelTemplate>
+                     </ItemsControl.ItemsPanel>
+                     <ItemsControl.ItemTemplate>
+                         <DataTemplate>
+                             <Grid Margin="0,0,0,4">
+                                 <Grid.ColumnDefinitions>
+                                     <ColumnDefinition Width="Auto" />
+                                     <ColumnDefinition Width="Auto" />
+                                     <ColumnDefinition Width="*" />
+                                     <ColumnDefinition Width="Auto" />
+                                 </Grid.ColumnDefinitions>
+                                 <TextBlock Grid.Column="0" Text="{Binding ProviderId}" Foreground="{DynamicResource FgPrimary}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" Width="80" />
+                                 <PasswordBox Grid.Column="1" x:Name="PwdBox" Password="{Binding ApiKey, Mode=TwoWay}" Width="120" Height="18" FontSize="10" Margin="4,0" />
+                                 <TextBox Grid.Column="2" x:Name="TxtKeyVisible" Text="{Binding ApiKey, Mode=TwoWay}" Visibility="Collapsed" Width="120" Height="18" FontSize="10" Margin="4,0" />
+                                 <Button Grid.Column="3" Content="👁" Width="20" Height="20" ToolTip="Toggle reveal key" Click="OnApiKeyRevealClick" Tag="{RelativeSource AncestorType=UserControl}" />
+                                 <Button Grid.Column="3" Content="✕" Width="20" Height="20" ToolTip="Remove key entry" Margin="22,0,0,0" Click="OnRemoveApiKeyEntryClick" />
+                             </Grid>
+                         </DataTemplate>
+                     </ItemsControl.ItemTemplate>
+                 </ItemsControl>
+
+                 <Button x:Name="BtnAddApiKey" Content="➕ Add Provider Key" Height="22" FontSize="10" HorizontalAlignment="Left" Click="OnAddApiKeyEntryClick" Margin="0,0,0,6" />
+
+                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
+                     <Button Content="Save &amp; Close" Background="{DynamicResource AccentBlue}" Foreground="White" BorderThickness="0" Padding="10,4" FontSize="11" FontWeight="SemiBold" Cursor="Hand" Click="OnSaveSettingsClick" />
+                 </StackPanel>
             </StackPanel>
         </Border>
 
@@ -401,22 +467,67 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBox x:Name="TxtPromptInput" 
-                         Grid.Row="0"
-                         Background="{DynamicResource BgTertiary}" 
-                         Foreground="{DynamicResource FgPrimary}" 
-                         BorderBrush="{DynamicResource BorderDark}" 
+                <!-- @ File Tagging: Popup file explorer appears when typing '@' -->
+                <Popup x:Name="FileTagPopup"
+                       Grid.Row="0"
+                       StaysOpen="False"
+                       AllowsTransparency="True"
+                        Placement="Bottom"
+                        PopupAnimation="Fade">
+                    <Border Background="{DynamicResource BgSecondary}"
+                            BorderBrush="{DynamicResource BorderDark}"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            SnapsToDevicePixels="True"
+                            MaxHeight="200"
+                            Effect="{StaticResource DropShadow}"
+                            Panel.ZIndex="999">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <ListBox x:Name="LstFileTags"
+                                     FontSize="11"
+                                     Foreground="{DynamicResource FgPrimary}"
+                                     Background="{DynamicResource BgSecondary}"
+                                     BorderThickness="0"
+                                     SelectionMode="Single"
+                                     MouseDoubleClick="OnFileTagDoubleClick">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="6,4" />
+                                        <Setter Property="Cursor" Value="Hand" />
+                                        <Style.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource AccentBlue}" />
+                                                <Setter Property="Foreground" Value="White" />
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource BgHover}" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+                        </ScrollViewer>
+                    </Border>
+                </Popup>
+
+                <TextBox x:Name="TxtPromptInput"
+                         Grid.Row="1"
+                         Background="{DynamicResource BgTertiary}"
+                         Foreground="{DynamicResource FgPrimary}"
+                         BorderBrush="{DynamicResource BorderDark}"
                          CaretBrush="{DynamicResource FgPrimary}"
-                         Padding="6" 
-                         FontSize="12" 
-                         MinHeight="55" 
-                         MaxHeight="140" 
-                         TextWrapping="Wrap" 
-                         AcceptsReturn="True" 
-                         VerticalScrollBarVisibility="Auto" 
-                         PreviewKeyDown="OnPromptInputPreviewKeyDown" />
+                         Padding="6"
+                         FontSize="12"
+                         MinHeight="55"
+                         MaxHeight="140"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         VerticalScrollBarVisibility="Auto"
+                         PreviewKeyDown="OnPromptInputPreviewKeyDown"
+                         TextChanged="OnPromptInputTextChanged" />
 
                 <Grid Grid.Row="1" Margin="0,6,0,0">
                     <Grid.ColumnDefinitions>

@@ -161,8 +161,9 @@ public class AiChatApiClient
             throw new InvalidOperationException($"API key / access token is missing for provider '{provider.DisplayName}'. Please configure your credentials in the AI Chat panel.");
         }
 
-        var endpoint = provider.NormalizeEndpoint(settings.ApiEndpoint);
-        bool isAnthropicNative = provider.Type == RecluseEdit.Sdk.Models.AiProviderType.Anthropic && 
+        var endpoint = provider.SmartResolveEndpoint(effectiveToken, settings.ApiEndpoint);
+        bool useQueryParamAuth = endpoint.Contains("?key=");
+        bool isAnthropicNative = provider.Type == RecluseEdit.Sdk.Models.AiProviderType.Anthropic &&
             (endpoint.Contains("api.anthropic.com") || endpoint.EndsWith("/messages", StringComparison.OrdinalIgnoreCase));
 
         using var requestMessage = new HttpRequestMessage(HttpMethod.Post, endpoint);
@@ -194,7 +195,8 @@ public class AiChatApiClient
         }
         else
         {
-            if (!settings.IsLocalNoAuth && !string.IsNullOrWhiteSpace(effectiveToken))
+            // For query-param auth (e.g. Google AIza key), key is already in the URL
+            if (!settings.IsLocalNoAuth && !string.IsNullOrWhiteSpace(effectiveToken) && !useQueryParamAuth)
             {
                 requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", effectiveToken);
             }
@@ -335,7 +337,7 @@ public class AiChatApiClient
             {
                 ct.ThrowIfCancellationRequested();
                 onStatusUpdate?.Invoke($"Running tool '{toolCall.Function.Name}'...");
-                var toolOutput = await ExecuteToolAsync(toolCall.Function.Name, toolCall.Function.Arguments, workspaceContext, ct);
+                var toolOutput = await ExecuteToolAsync(toolCall.Function.Name, toolCall.Function.Arguments, workspaceContext, settings, ct);
 
                 conversationHistory.Add(new ChatMessage
                 {
@@ -357,9 +359,13 @@ public class AiChatApiClient
 
     /// <summary>
     /// Dispatches a tool execution to the provided workspace context.
+    /// Honors auto-approve settings for reads, writes, tool calls, and commands.
     /// </summary>
-    public async Task<string> ExecuteToolAsync(string toolName, string argumentsJson, IWorkspaceContext context, CancellationToken ct)
+    public async Task<string> ExecuteToolAsync(string toolName, string argumentsJson, IWorkspaceContext context, AiChatSettings settings, CancellationToken ct)
     {
+        // AutoApproveToolCalls is a master switch: when true, skips all individual confirmations
+        var autoApproveAll = settings.AutoApproveToolCalls;
+
         try
         {
             using var doc = JsonDocument.Parse(string.IsNullOrWhiteSpace(argumentsJson) ? "{}" : argumentsJson);
@@ -371,6 +377,14 @@ public class AiChatApiClient
                 {
                     var path = root.TryGetProperty("path", out var p) ? p.GetString() : "";
                     if (string.IsNullOrWhiteSpace(path)) return "Error: 'path' parameter is required.";
+
+                    if (!autoApproveAll && !settings.AutoApproveReads)
+                    {
+                        var approved = await context.RequestUserConfirmationAsync(
+                            "Read File Approval", $"AI Chat wants to read: {path}\n\nAllow this read operation?");
+                        if (!approved) return "User denied read_file permission.";
+                    }
+
                     var content = await context.ReadFileAsync(path, ct);
                     return content;
                 }
@@ -380,6 +394,14 @@ public class AiChatApiClient
                     var path = root.TryGetProperty("path", out var p) ? p.GetString() : "";
                     var content = root.TryGetProperty("content", out var c) ? c.GetString() : "";
                     if (string.IsNullOrWhiteSpace(path)) return "Error: 'path' parameter is required.";
+
+                    if (!autoApproveAll && !settings.AutoApproveWrites)
+                    {
+                        var approved = await context.RequestUserConfirmationAsync(
+                            "Write File Approval", $"AI Chat wants to write to: {path}\nContent length: {content?.Length ?? 0} chars\n\nAllow this write operation?");
+                        if (!approved) return "User denied write_file permission.";
+                    }
+
                     await context.WriteFileAsync(path, content ?? "", ct);
                     return $"File '{path}' written successfully ({content?.Length ?? 0} characters).";
                 }
@@ -387,7 +409,13 @@ public class AiChatApiClient
                 case "list_files":
                 {
                     var path = root.TryGetProperty("path", out var p) ? p.GetString() ?? "" : "";
-                    var files = await context.ListFilesAsync(path, ct);
+                    if (!settings.AutoApproveReads)
+                    {
+                        var approved = await context.RequestUserConfirmationAsync(
+                            "List Files Approval", $"AI Chat wants to list files in: {path ?? "/"}\n\nAllow this operation?");
+                        if (!approved) return "User denied list_files permission.";
+                    }
+                    var files = await context.ListFilesAsync(path ?? "", ct);
                     if (files.Count == 0) return "(Directory is empty)";
                     return string.Join("\n", files);
                 }
@@ -398,23 +426,29 @@ public class AiChatApiClient
                     var cwd = root.TryGetProperty("working_directory", out var w) ? w.GetString() : null;
                     if (string.IsNullOrWhiteSpace(command)) return "Error: 'command' parameter is required.";
 
-                    var result = await context.ExecuteCommandAsync(command, cwd, ct);
-                    if (!result.UserApproved)
+                    if (settings.AutoApproveCommands)
                     {
-                        return $"User confirmation denied: The user declined permission to execute command '{command}'.";
+                        var result = await context.ExecuteCommandAsync(command, cwd, ct);
+                        var sb = new StringBuilder();
+                        sb.AppendLine($"Exit Code: {result.ExitCode}");
+                        if (!string.IsNullOrEmpty(result.StandardOutput))
+                            sb.AppendLine("Output:\n" + result.StandardOutput);
+                        if (!string.IsNullOrEmpty(result.StandardError))
+                            sb.AppendLine("Error Output:\n" + result.StandardError);
+                        return sb.ToString();
                     }
 
-                    var sb = new StringBuilder();
-                    sb.AppendLine($"Exit Code: {result.ExitCode}");
-                    if (!string.IsNullOrEmpty(result.StandardOutput))
-                    {
-                        sb.AppendLine("Output:\n" + result.StandardOutput);
-                    }
-                    if (!string.IsNullOrEmpty(result.StandardError))
-                    {
-                        sb.AppendLine("Error Output:\n" + result.StandardError);
-                    }
-                    return sb.ToString();
+                    var approvalResult = await context.ExecuteCommandAsync(command, cwd, ct);
+                    if (!approvalResult.UserApproved)
+                        return $"User confirmation denied: The user declined permission to execute command '{command}'.";
+
+                    var sb2 = new StringBuilder();
+                    sb2.AppendLine($"Exit Code: {approvalResult.ExitCode}");
+                    if (!string.IsNullOrEmpty(approvalResult.StandardOutput))
+                        sb2.AppendLine("Output:\n" + approvalResult.StandardOutput);
+                    if (!string.IsNullOrEmpty(approvalResult.StandardError))
+                        sb2.AppendLine("Error Output:\n" + approvalResult.StandardError);
+                    return sb2.ToString();
                 }
 
                 default:

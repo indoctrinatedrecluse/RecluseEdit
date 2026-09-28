@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using RecluseEdit.Extensions.AiChat.Models;
@@ -27,6 +28,11 @@ public record AiProviderDescriptor(
     string Description
 ) : IAiProvider
 {
+    private static readonly HttpClient ProbeClient = new()
+    {
+        Timeout = TimeSpan.FromSeconds(10)
+    };
+
     public AiProviderType ProviderType => Type;
     public AiAuthMode DefaultAuthMode { get; } = DefaultAuthMode;
     public bool RequiresAuthentication => DefaultAuthMode != AiAuthMode.LocalNoAuth;
@@ -56,6 +62,30 @@ public record AiProviderDescriptor(
         return $"{ep.TrimEnd('/')}/chat/completions";
     }
 
+    /// <summary>
+    /// Smart routing: resolves the best endpoint for the given API key.
+    /// If a custom endpoint is provided, it takes precedence.
+    /// For Google, native API keys (AIza…) use query-param auth;
+    /// OpenAI-style keys (sk-…) or bearer tokens use Authorization header.
+    /// </summary>
+    public string SmartResolveEndpoint(string apiKey, string? customEndpoint = null)
+    {
+        if (!string.IsNullOrWhiteSpace(customEndpoint))
+            return NormalizeEndpoint(customEndpoint);
+
+        var key = apiKey?.Trim() ?? string.Empty;
+
+        if (Type == AiProviderType.GoogleAntigravity)
+        {
+            if (key.StartsWith("AIza", StringComparison.OrdinalIgnoreCase))
+            {
+                return $"{DefaultEndpoint}?key={key}";
+            }
+        }
+
+        return DefaultEndpoint;
+    }
+
     public async Task<string> GenerateCompletionAsync(
         string prompt,
         string? systemPrompt = null,
@@ -66,6 +96,108 @@ public record AiProviderDescriptor(
         var settings = settingsService.CurrentSettings;
         var client = new AiChatApiClient();
         return await client.GenerateCompletionDirectAsync(settings, this, prompt, systemPrompt, onDeltaReceived, ct);
+    }
+
+    /// <summary>
+    /// Dynamically queries the provider's API for all available models for the given API key.
+    /// Returns null if model listing is not supported or the request fails.
+    /// </summary>
+    public async Task<List<string>?> ListModelsAsync(string apiKey, CancellationToken ct = default)
+    {
+        try
+        {
+            switch (Type)
+            {
+                case AiProviderType.GoogleAntigravity:
+                {
+                    var key = apiKey?.Trim();
+                    if (string.IsNullOrEmpty(key)) return null;
+                    var baseEp = "https://generativelanguage.googleapis.com/v1beta/models?key=";
+                    using var resp = await ProbeClient.GetAsync($"{baseEp}{key}", ct);
+                    if (!resp.IsSuccessStatusCode) return null;
+                    var json = await resp.Content.ReadAsStringAsync(ct);
+                    using var doc = JsonDocument.Parse(json);
+                    if (doc.RootElement.TryGetProperty("models", out var modelsElem) && modelsElem.ValueKind == JsonValueKind.Array)
+                    {
+                        var list = new List<string>();
+                        foreach (var m in modelsElem.EnumerateArray())
+                        {
+                            if (m.TryGetProperty("name", out var nameElem))
+                            {
+                                var name = nameElem.GetString();
+                                if (name != null && name.StartsWith("models/"))
+                                    name = name.Substring("models/".Length);
+                                if (!string.IsNullOrEmpty(name))
+                                    list.Add(name);
+                            }
+                        }
+                        return list;
+                    }
+                    return null;
+                }
+
+                case AiProviderType.DeepSeek:
+                {
+                    var key = apiKey?.Trim();
+                    if (string.IsNullOrEmpty(key)) return null;
+                    using var request = new HttpRequestMessage(HttpMethod.Get, "https://api.deepseek.com/v1/models");
+                    request.Headers.Add("Authorization", $"Bearer {key}");
+                    using var resp = await ProbeClient.SendAsync(request, ct);
+                    if (!resp.IsSuccessStatusCode) return null;
+                    var json = await resp.Content.ReadAsStringAsync(ct);
+                    using var doc = JsonDocument.Parse(json);
+                    if (doc.RootElement.TryGetProperty("data", out var dataElem) && dataElem.ValueKind == JsonValueKind.Array)
+                    {
+                        var list = new List<string>();
+                        foreach (var m in dataElem.EnumerateArray())
+                        {
+                            if (m.TryGetProperty("id", out var idElem))
+                            {
+                                var id = idElem.GetString();
+                                if (!string.IsNullOrEmpty(id))
+                                    list.Add(id);
+                            }
+                        }
+                        return list;
+                    }
+                    return null;
+                }
+
+                case AiProviderType.OpenAi:
+                {
+                    var key = apiKey?.Trim();
+                    if (string.IsNullOrEmpty(key)) return null;
+                    using var request = new HttpRequestMessage(HttpMethod.Get, "https://api.openai.com/v1/models");
+                    request.Headers.Add("Authorization", $"Bearer {key}");
+                    using var resp = await ProbeClient.SendAsync(request, ct);
+                    if (!resp.IsSuccessStatusCode) return null;
+                    var json = await resp.Content.ReadAsStringAsync(ct);
+                    using var doc = JsonDocument.Parse(json);
+                    if (doc.RootElement.TryGetProperty("data", out var dataElem) && dataElem.ValueKind == JsonValueKind.Array)
+                    {
+                        var list = new List<string>();
+                        foreach (var m in dataElem.EnumerateArray())
+                        {
+                            if (m.TryGetProperty("id", out var idElem))
+                            {
+                                var id = idElem.GetString();
+                                if (!string.IsNullOrEmpty(id))
+                                    list.Add(id);
+                            }
+                        }
+                        return list;
+                    }
+                    return null;
+                }
+
+                default:
+                    return null;
+            }
+        }
+        catch
+        {
+            return null;
+        }
     }
 }
 
@@ -87,9 +219,9 @@ public static class AiProviderRegistry
             AiProviderType.DeepSeek,
             "https://api.deepseek.com/chat/completions",
             "deepseek-chat",
-            ["deepseek-chat", "deepseek-reasoner"],
+            ["deepseek-chat", "deepseek-reasoner", "deepseek-v4-pro", "deepseek-v4-flash"],
             AiAuthMode.ApiKey,
-            "DeepSeek V3 & R1 reasoning models with standard API key."
+            "DeepSeek V3, R1, and V4 models with standard API key."
         ),
         new AiProviderDescriptor(
             "openai",
@@ -106,10 +238,11 @@ public static class AiProviderRegistry
             "Google Antigravity & Gemini",
             AiProviderType.GoogleAntigravity,
             "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-            "gemini-2.5-flash",
-            ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"],
+            "gemini-3.8-flash",
+            ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.1-pro",
+             "gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"],
             AiAuthMode.ApiKey,
-            "Gemini 2.5 via Google Account bearer token / Antigravity subscription or Gemini API key."
+            "Gemini 3.x & 2.x models via Google API key or account bearer token. Query models dynamically for your key."
         ),
         new AiProviderDescriptor(
             "anthropic",

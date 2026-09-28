@@ -582,29 +582,29 @@ public class AiProviderTests
         ctx.VirtualFiles["test.txt"] = "Hello world from virtual file";
 
         // Read file success
-        var readSuccess = await client.ExecuteToolAsync("read_file", "{\"path\":\"test.txt\"}", ctx, CancellationToken.None);
+        var readSuccess = await client.ExecuteToolAsync("read_file", "{\"path\":\"test.txt\"}", ctx, new AiChatSettings(), CancellationToken.None);
         Assert.AreEqual("Hello world from virtual file", readSuccess);
 
         // Read file missing path
-        var readMissing = await client.ExecuteToolAsync("read_file", "{}", ctx, CancellationToken.None);
+        var readMissing = await client.ExecuteToolAsync("read_file", "{}", ctx, new AiChatSettings(), CancellationToken.None);
         StringAssert.Contains(readMissing, "required");
 
         // Write file success
-        var writeSuccess = await client.ExecuteToolAsync("write_file", "{\"path\":\"new.txt\",\"content\":\"Brand new file content\"}", ctx, CancellationToken.None);
+        var writeSuccess = await client.ExecuteToolAsync("write_file", "{\"path\":\"new.txt\",\"content\":\"Brand new file content\"}", ctx, new AiChatSettings(), CancellationToken.None);
         StringAssert.Contains(writeSuccess, "successfully");
         Assert.AreEqual("Brand new file content", ctx.VirtualFiles["new.txt"]);
 
         // Write file missing path
-        var writeMissing = await client.ExecuteToolAsync("write_file", "{\"content\":\"test\"}", ctx, CancellationToken.None);
+        var writeMissing = await client.ExecuteToolAsync("write_file", "{\"content\":\"test\"}", ctx, new AiChatSettings(), CancellationToken.None);
         StringAssert.Contains(writeMissing, "required");
 
         // List files non-empty
-        var listRes = await client.ExecuteToolAsync("list_files", "{}", ctx, CancellationToken.None);
+        var listRes = await client.ExecuteToolAsync("list_files", "{}", ctx, new AiChatSettings(), CancellationToken.None);
         StringAssert.Contains(listRes, "test.txt");
         StringAssert.Contains(listRes, "new.txt");
 
         // Unknown tool
-        var unknown = await client.ExecuteToolAsync("unknown_tool_xyz", "{}", ctx, CancellationToken.None);
+        var unknown = await client.ExecuteToolAsync("unknown_tool_xyz", "{}", ctx, new AiChatSettings(), CancellationToken.None);
         StringAssert.Contains(unknown, "Unknown tool");
     }
 
@@ -618,13 +618,13 @@ public class AiProviderTests
         ctx.CommandApproved = true;
         ctx.CommandExitCode = 0;
         ctx.CommandStdout = "All unit tests passed.";
-        var cmdSuccess = await client.ExecuteToolAsync("execute_command", "{\"command\":\"dotnet test\"}", ctx, CancellationToken.None);
+        var cmdSuccess = await client.ExecuteToolAsync("execute_command", "{\"command\":\"dotnet test\"}", ctx, new AiChatSettings(), CancellationToken.None);
         StringAssert.Contains(cmdSuccess, "Exit Code: 0");
         StringAssert.Contains(cmdSuccess, "All unit tests passed.");
 
         // 2. User denies command
         ctx.CommandApproved = false;
-        var cmdDenied = await client.ExecuteToolAsync("execute_command", "{\"command\":\"rm -rf /\"}", ctx, CancellationToken.None);
+        var cmdDenied = await client.ExecuteToolAsync("execute_command", "{\"command\":\"rm -rf /\"}", ctx, new AiChatSettings(), CancellationToken.None);
         StringAssert.Contains(cmdDenied, "User confirmation denied");
     }
 
@@ -710,5 +710,57 @@ public class AiProviderTests
         var req = handler.CapturedRequests[0];
         Assert.AreEqual("Bearer", req.Headers.Authorization?.Scheme);
         Assert.AreEqual("gemini-api-key-test", req.Headers.Authorization?.Parameter);
+    }
+
+    /// <summary>
+    /// Ephemeral test: verifies smart routing uses query-param auth for Google AIza keys
+    /// and Bearer auth for sk- keys. This does not hit real APIs.
+    /// </summary>
+    [TestMethod]
+    public void AiProviderRegistry_SmartResolveEndpoint_GoogleApiKey()
+    {
+        // Google provider
+        var googleProvider = AiProviderRegistry.GetProvider("google_antigravity");
+
+        // AIza key → query param auth, no Bearer header
+        var endpointWithAIzaKey = googleProvider.SmartResolveEndpoint("AIza-sy fakeKey12345");
+        Assert.IsTrue(endpointWithAIzaKey.Contains("?key="));
+        Assert.IsFalse(endpointWithAIzaKey.Contains("Authorization"));
+
+        // sk- key → standard Bearer auth (default endpoint, no query param)
+        var endpointWithSkKey = googleProvider.SmartResolveEndpoint("sk-fake-openai-key");
+        Assert.IsFalse(endpointWithSkKey.Contains("?key="));
+        Assert.AreEqual(googleProvider.DefaultEndpoint, endpointWithSkKey);
+
+        // Custom endpoint overrides everything
+        var customEndpoint = googleProvider.SmartResolveEndpoint("AIza-anything", "https://my-proxy.example.com/v1/chat/completions");
+        Assert.AreEqual("https://my-proxy.example.com/v1/chat/completions", customEndpoint);
+    }
+
+    [TestMethod]
+    public void AiProviderRegistry_SmartResolveEndpoint_DeepSeek()
+    {
+        var dsProvider = AiProviderRegistry.GetProvider("deepseek");
+
+        // DeepSeek doesn't use query-param auth; always uses Bearer
+        var endpoint = dsProvider.SmartResolveEndpoint("sk-abc123");
+        Assert.AreEqual(dsProvider.DefaultEndpoint, endpoint);
+        Assert.IsFalse(endpoint.Contains("?key="));
+    }
+
+    [TestMethod]
+    public void AiProviderRegistry_ListModels_HasNewModels()
+    {
+        // Verify new Google models are present
+        var googleProvider = AiProviderRegistry.GetProvider("google_antigravity");
+        Assert.IsTrue(googleProvider.RecommendedModels.Contains("gemini-3.8-flash"));
+        Assert.IsTrue(googleProvider.RecommendedModels.Contains("gemini-3.7-flash"));
+        Assert.IsTrue(googleProvider.RecommendedModels.Contains("gemini-3.6-flash"));
+        Assert.IsTrue(googleProvider.RecommendedModels.Contains("gemini-3.1-pro"));
+
+        // Verify new DeepSeek V4 models are present
+        var dsProvider = AiProviderRegistry.GetProvider("deepseek");
+        Assert.IsTrue(dsProvider.RecommendedModels.Contains("deepseek-v4-pro"));
+        Assert.IsTrue(dsProvider.RecommendedModels.Contains("deepseek-v4-flash"));
     }
 }

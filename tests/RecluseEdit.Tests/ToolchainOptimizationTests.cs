@@ -91,7 +91,7 @@ public class ToolchainOptimizationTests
 
         Assert.IsFalse(cacheService.IsCacheValid(null));
 
-        var currentVersion = typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "6.1.0";
+        var currentVersion = typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "6.2.0";
         var expiredCache = new ToolchainCacheData
         {
             Version = currentVersion,
@@ -169,6 +169,6 @@ public class ToolchainOptimizationTests
     public void MainWindow_AssemblyVersion_MatchesReleaseVersion()
     {
         var version = typeof(MainWindow).Assembly.GetName().Version?.ToString(3);
-        Assert.AreEqual("6.1.0", version);
+        Assert.AreEqual("6.2.0", version);
     }
 }
