@@ -48,6 +48,9 @@ public class ExtensionManager : IExtensionHost
     public IReadOnlyList<string> Logs => _logs.AsReadOnly();
     public ToolchainManager ToolchainManager => _toolchainManager;
 
+    private readonly bool _isPaidLicense;
+    public bool IsPaidLicense => _isPaidLicense;
+
     public event Action? ExtensionsChanged;
     public event Action<ISidePanelProvider>? SidePanelRegistered;
     public event Action<string>? SidePanelRequested;
@@ -61,7 +64,8 @@ public class ExtensionManager : IExtensionHost
         ToolchainManager toolchainManager,
         IWorkspaceContext? workspaceContext = null,
         ThemeManager? themeManager = null,
-        Func<bool>? allExtensionsUnlocked = null)
+        Func<bool>? allExtensionsUnlocked = null,
+        Func<bool>? isPaidLicense = null)
     {
         _syntaxManager = syntaxManager;
         _autocompleteManager = autocompleteManager;
@@ -69,6 +73,7 @@ public class ExtensionManager : IExtensionHost
         _workspaceContext = workspaceContext ?? new WorkspaceContext(new WorkspaceManager(), new DocumentManager(syntaxManager));
         _themeManager = themeManager;
         _allExtensionsUnlocked = allExtensionsUnlocked ?? (() => true);
+        _isPaidLicense = isPaidLicense?.Invoke() ?? true;
     }
 
     public async Task InitializeAsync()

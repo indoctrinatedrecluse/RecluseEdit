@@ -21,6 +21,7 @@ public interface IExtensionHost
     void RegisterStatusBarProvider(IStatusBarProvider provider) {}
     void RegisterStatusBarItem(IStatusBarItem item) {}
     void RegisterAiProvider(IAiProvider provider) {}
+    bool IsPaidLicense { get => true; }
     IReadOnlyList<LanguageDefinition> GetRegisteredLanguages();
     IReadOnlyList<ISidePanelProvider> RegisteredSidePanels => [];
     IReadOnlyList<IDocumentFormatter> RegisteredFormatters => [];

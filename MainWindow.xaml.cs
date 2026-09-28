@@ -110,7 +110,8 @@ public partial class MainWindow : Window
         };
         _extensionManager = new ExtensionManager(
             _syntaxManager, _autocompleteManager, _toolchainManager, workspaceContext, _themeManager,
-            allExtensionsUnlocked: () => _licenseService.CurrentLicense.AllExtensionsUnlocked);
+            allExtensionsUnlocked: () => _licenseService.CurrentLicense.AllExtensionsUnlocked,
+            isPaidLicense: () => _licenseService.CurrentLicense.Tier != LicenseTier.Trial);
         _commandRegistry = new CommandRegistry();
 
         EditorHost.SyntaxManager = _syntaxManager;

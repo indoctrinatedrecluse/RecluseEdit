@@ -131,8 +131,8 @@ public sealed class LicenseService : IDisposable
         // ADM keys don't need username/password
         if (tier == LicenseTier.Admin)
         {
-            username = username.Length > 0 ? username : "admin";
-            password = null;
+            username = !string.IsNullOrEmpty(username) ? username : "admin";
+            password = string.Empty;
         }
         else
         {
@@ -151,7 +151,7 @@ public sealed class LicenseService : IDisposable
                 Hwid        = hwid,
                 MachineName = Environment.MachineName,
                 Platform    = "windows-amd64",
-                AppVersion  = "6.2.0"
+                AppVersion  = "6.2.1"
             };
 
             var response = await _http.PostAsJsonAsync($"{BaseUrl}/api/v1/license/activate", req);

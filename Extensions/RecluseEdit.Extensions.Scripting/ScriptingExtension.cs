@@ -120,8 +120,11 @@ public class ScriptingExtension : IExtension
         host.RegisterToolchainCheck(new PowerShellToolchainCheck());
         host.RegisterToolchainCheck(new BashToolchainCheck());
 
-        // 5. Register Side Panel
-        host.RegisterSidePanel(new RegexWorkbenchSidePanelProvider());
+        // 5. Register Side Panel (premium-only: requires paid license)
+        if (host.IsPaidLicense)
+        {
+            host.RegisterSidePanel(new RegexWorkbenchSidePanelProvider());
+        }
 
         host.Log("Scripting & Systems Language Pack initialized.");
         return Task.CompletedTask;
