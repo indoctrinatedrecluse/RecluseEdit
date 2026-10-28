@@ -75,9 +75,10 @@ public class TerminalSession : IDisposable
         {
             try
             {
+                var exePath = Shell.ExecutablePath.Trim('\"');
                 var commandLine = string.IsNullOrWhiteSpace(Shell.Arguments)
-                    ? $"\"{Shell.ExecutablePath}\""
-                    : $"\"{Shell.ExecutablePath}\" {Shell.Arguments}";
+                    ? $"\"{exePath}\""
+                    : $"\"{exePath}\" {Shell.Arguments}";
 
                 _conPtySession = ConPtySession.Start(commandLine, WorkingDirectory, initialCols, initialRows);
 
@@ -110,7 +111,7 @@ public class TerminalSession : IDisposable
     {
         var psi = new ProcessStartInfo
         {
-            FileName = Shell.ExecutablePath,
+            FileName = Shell.ExecutablePath.Trim('\"'),
             Arguments = Shell.Arguments,
             WorkingDirectory = WorkingDirectory,
             RedirectStandardInput = true,

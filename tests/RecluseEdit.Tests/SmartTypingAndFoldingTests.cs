@@ -142,6 +142,24 @@ public class SmartTypingAndFoldingTests
     }
 
     [TestMethod]
+    public void TestUniversalFolding_NormalizesFileNamesAndPaths()
+    {
+        var doc = new TextDocument
+        {
+            Text = "def calculate_sum(a, b):\n    result = a + b\n    return result\n\ndef main():\n    pass\n"
+        };
+
+        var strategy = new UniversalFoldingStrategy();
+        var foldingsFromFileName = strategy.CreateNewFoldings(doc, "main.py", out int error1).ToList();
+        var foldingsFromPath = strategy.CreateNewFoldings(doc, @"C:\scripts\app.py", out int error2).ToList();
+
+        Assert.AreEqual(-1, error1);
+        Assert.AreEqual(-1, error2);
+        Assert.IsGreaterThanOrEqualTo(1, foldingsFromFileName.Count);
+        Assert.AreEqual(foldingsFromFileName.Count, foldingsFromPath.Count);
+    }
+
+    [TestMethod]
     public void TestUniversalFolding_Regions()
     {
         var doc = new TextDocument

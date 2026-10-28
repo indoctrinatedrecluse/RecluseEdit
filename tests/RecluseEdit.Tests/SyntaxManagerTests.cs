@@ -38,6 +38,44 @@ public class SyntaxManagerTests
     }
 
     [TestMethod]
+    public void SyntaxManager_ResolvesExactFilenamesAndCompoundExtensions()
+    {
+        var manager = new SyntaxManager();
+        
+        manager.RegisterLanguage(new RecluseEdit.Sdk.Models.LanguageDefinition
+        {
+            Id = "laravel",
+            DisplayName = "Laravel Blade",
+            Extensions = [".blade.php", "artisan"]
+        });
+
+        manager.RegisterLanguage(new RecluseEdit.Sdk.Models.LanguageDefinition
+        {
+            Id = "ruby",
+            DisplayName = "Ruby",
+            Extensions = [".rb", "Gemfile", "Rakefile", ".html.erb"]
+        });
+
+        manager.RegisterLanguage(new RecluseEdit.Sdk.Models.LanguageDefinition
+        {
+            Id = "go",
+            DisplayName = "Go",
+            Extensions = [".go", "go.mod", "go.work", "go.sum"]
+        });
+
+        Assert.AreEqual("laravel", manager.GetLanguageForFile("artisan").Id);
+        Assert.AreEqual("laravel", manager.GetLanguageForFile(@"C:\projects\laravel-app\artisan").Id);
+        Assert.AreEqual("ruby", manager.GetLanguageForFile("Gemfile").Id);
+        Assert.AreEqual("ruby", manager.GetLanguageForFile("Rakefile").Id);
+        Assert.AreEqual("ruby", manager.GetLanguageForFile(@"/var/www/Gemfile").Id);
+        Assert.AreEqual("go", manager.GetLanguageForFile("go.mod").Id);
+        Assert.AreEqual("go", manager.GetLanguageForFile("go.sum").Id);
+
+        Assert.AreEqual("laravel", manager.GetLanguageForFile("welcome.blade.php").Id);
+        Assert.AreEqual("ruby", manager.GetLanguageForFile("index.html.erb").Id);
+    }
+
+    [TestMethod]
     public void BuiltInDefinitions_CanBeRetrieved()
     {
         var manager = new SyntaxManager();

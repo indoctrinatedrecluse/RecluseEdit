@@ -66,6 +66,7 @@ public partial class MainWindow : Window
     private bool _formatOnSave = false;
     private bool _isLivePreviewOpen = false;
     private bool _isChordCtrlK = false;
+    private DateTime _lastChordCtrlKTime = DateTime.MinValue;
     private bool _extensionsInitialized = false;
     private GridLength _lastPreviewWidth = new(1, GridUnitType.Star);
 
@@ -90,7 +91,7 @@ public partial class MainWindow : Window
         _fileWatcherService.FileReloaded += OnFileReloadedFromDisk;
         _fileWatcherService.FileConflictDetected += OnFileConflictDetected;
         _fileWatcherService.FileDeletedOnDisk += OnFileDeletedOnDisk;
-        var workspaceContext = new WorkspaceContext(_workspaceManager, _documentManager);
+        var workspaceContext = new WorkspaceContext(_workspaceManager, _documentManager, () => EditorHost.UnderlyingEditor.SelectedText);
         workspaceContext.OnOpenTerminal = (title, exe, args, workDir) =>
         {
             Dispatcher.Invoke(() =>
@@ -159,6 +160,7 @@ public partial class MainWindow : Window
 
         EditorHost.MarkdownPreviewRequested += () => ToggleLivePreview(true);
         EditorHost.FormatDocumentRequested += () => FormatActiveDocument();
+        EditorHost.AiCodeReviewRequested += () => PerformAiCodeReview();
 
         ProblemsPane.ProblemNavigated += (diag) => NavigateToProblem(diag);
         ProblemsPane.RefreshRequested += () => UpdateDiagnostics();
@@ -737,7 +739,10 @@ public partial class MainWindow : Window
     {
         var dlg = new OpenFileDialog
         {
-            Filter = "All Supported Files (*.html;*.css;*.js;*.ts;*.jsx;*.tsx;*.json;*.xml;*.xaml;*.cs;*.md;*.dart;*.php;*.rb;*.erb;*.py;*.jinja;*.blade.php;*.go;*.graphql;*.txt)|*.html;*.htm;*.xhtml;*.css;*.scss;*.less;*.js;*.mjs;*.cjs;*.ts;*.mts;*.cts;*.jsx;*.tsx;*.json;*.jsonc;*.xml;*.xaml;*.svg;*.config;*.csproj;*.props;*.targets;*.axaml;*.cs;*.md;*.markdown;*.dart;*.php;*.phtml;*.rb;*.rake;*.gemspec;*.ru;Gemfile;Rakefile;*.erb;*.html.erb;*.py;*.pyw;*.pyi;*.pyd;*.jinja;*.jinja2;*.j2;*.html.jinja;*.djhtml;*.blade.php;artisan;*.go;*.mod;*.work;go.mod;go.work;go.sum;*.gotmpl;*.gohtml;*.graphql;*.gql;*.txt;*.log|" +
+            Filter = "All Supported Files (*.html;*.css;*.js;*.ts;*.vue;*.svelte;*.astro;*.sql;*.http;*.rest;*.rs;*.toml;*.json;*.xml;*.xaml;*.cs;*.md;*.dart;*.php;*.rb;*.erb;*.py;*.jinja;*.blade.php;*.go;*.graphql;*.lua;*.ps1;*.sh;*.txt)|*.html;*.htm;*.xhtml;*.css;*.scss;*.less;*.js;*.mjs;*.cjs;*.ts;*.mts;*.cts;*.jsx;*.tsx;*.vue;*.svelte;*.astro;*.sql;*.http;*.rest;*.rs;*.toml;*.json;*.jsonc;*.xml;*.xaml;*.svg;*.config;*.csproj;*.props;*.targets;*.axaml;*.cs;*.md;*.markdown;*.dart;*.php;*.phtml;*.rb;*.rake;*.gemspec;*.ru;Gemfile;Rakefile;*.erb;*.html.erb;*.py;*.pyw;*.pyi;*.pyd;*.jinja;*.jinja2;*.j2;*.html.jinja;*.djhtml;*.blade.php;artisan;*.go;*.mod;*.work;go.mod;go.work;go.sum;*.gotmpl;*.gohtml;*.graphql;*.gql;*.lua;*.ps1;*.psm1;*.sh;*.bash;*.txt;*.log|" +
+                     "Frontend Components (*.vue;*.svelte;*.astro;*.jsx;*.tsx)|*.vue;*.svelte;*.astro;*.jsx;*.tsx|" +
+                     "Database & REST API (*.sql;*.http;*.rest;*.graphql)|*.sql;*.http;*.rest;*.graphql;*.gql|" +
+                     "Rust & Systems (*.rs;*.toml;*.lua;*.ps1;*.sh)|*.rs;*.toml;*.lua;*.ps1;*.psm1;*.sh;*.bash|" +
                      "Go Source & Modules (*.go;*.mod;*.work;go.mod)|*.go;*.mod;*.work;go.mod;go.work;go.sum;*.gotmpl;*.gohtml|" +
                      "Laravel Blade Templates (*.blade.php)|*.blade.php|" +
                      "Python & Web Templates (*.py;*.pyw;*.jinja;*.jinja2)|*.py;*.pyw;*.pyi;*.pyd;*.jinja;*.jinja2;*.j2;*.html.jinja;*.djhtml|" +
@@ -813,7 +818,17 @@ public partial class MainWindow : Window
         var dlg = new SaveFileDialog
         {
             FileName = doc.FileName.Replace(" *", ""),
-            Filter = "Go Source Files (*.go)|*.go|" +
+            Filter = "Vue Components (*.vue)|*.vue|" +
+                     "Svelte Components (*.svelte)|*.svelte|" +
+                     "Astro Components (*.astro)|*.astro|" +
+                     "SQL Files (*.sql)|*.sql|" +
+                     "HTTP / REST Files (*.http;*.rest)|*.http;*.rest|" +
+                     "Rust Source Files (*.rs)|*.rs|" +
+                     "TOML / Cargo Files (*.toml)|*.toml|" +
+                     "Lua Scripts (*.lua)|*.lua|" +
+                     "PowerShell Scripts (*.ps1)|*.ps1|" +
+                     "Bash / Shell Scripts (*.sh)|*.sh|" +
+                     "Go Source Files (*.go)|*.go|" +
                      "Go Module Files (go.mod;go.work)|*.mod;*.work;go.mod;go.work|" +
                      "Laravel Blade Templates (*.blade.php)|*.blade.php|" +
                      "Python Files (*.py)|*.py|" +
@@ -1573,12 +1588,14 @@ public partial class MainWindow : Window
         if (e.Key == Key.K && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
         {
             _isChordCtrlK = true;
+            _lastChordCtrlKTime = DateTime.UtcNow;
             return;
         }
 
         if (_isChordCtrlK)
         {
             _isChordCtrlK = false;
+            if (DateTime.UtcNow - _lastChordCtrlKTime > TimeSpan.FromSeconds(2.5)) return;
             if (e.Key == Key.Z)
             {
                 e.Handled = true;

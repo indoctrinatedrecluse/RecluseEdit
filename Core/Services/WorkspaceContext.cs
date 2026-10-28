@@ -12,11 +12,13 @@ public class WorkspaceContext : IWorkspaceContext
 {
     private readonly WorkspaceManager _workspaceManager;
     private readonly DocumentManager _documentManager;
+    private readonly Func<string?>? _getSelectedText;
 
-    public WorkspaceContext(WorkspaceManager workspaceManager, DocumentManager documentManager)
+    public WorkspaceContext(WorkspaceManager workspaceManager, DocumentManager documentManager, Func<string?>? getSelectedText = null)
     {
         _workspaceManager = workspaceManager;
         _documentManager = documentManager;
+        _getSelectedText = getSelectedText;
     }
 
     public string? WorkspaceRoot => _workspaceManager.RootPath ?? AppDomain.CurrentDomain.BaseDirectory;
@@ -25,7 +27,7 @@ public class WorkspaceContext : IWorkspaceContext
 
     public string? ActiveDocumentContent => _documentManager.ActiveDocument?.Document.Text;
 
-    public string? SelectedText => null;
+    public string? SelectedText => _getSelectedText?.Invoke();
 
     public void OpenFile(string path)
     {

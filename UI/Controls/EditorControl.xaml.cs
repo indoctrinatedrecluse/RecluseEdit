@@ -1008,6 +1008,7 @@ public partial class EditorControl : UserControl
 
     public event Action? MarkdownPreviewRequested;
     public event Action? FormatDocumentRequested;
+    public event Action? AiCodeReviewRequested;
 
     private void OnEditorContextMenuOpened(object sender, RoutedEventArgs e)
     {
@@ -1026,6 +1027,11 @@ public partial class EditorControl : UserControl
     private void OnFormatDocumentClick(object sender, RoutedEventArgs e)
     {
         FormatDocumentRequested?.Invoke();
+    }
+
+    private void OnAiCodeReviewClick(object sender, RoutedEventArgs e)
+    {
+        AiCodeReviewRequested?.Invoke();
     }
 
     private void OnInlineAiClick(object sender, RoutedEventArgs e)

@@ -225,17 +225,39 @@ public class SyntaxManager
             return PlainText;
         }
 
+        var fileName = Path.GetFileName(filePath);
         var ext = Path.GetExtension(filePath);
-        if (string.IsNullOrEmpty(ext))
+
+        // 1. Exact filename matches first (e.g. Gemfile, Rakefile, artisan, go.mod, go.work, go.sum)
+        if (!string.IsNullOrEmpty(fileName))
         {
-            return PlainText;
+            foreach (var lang in _languages)
+            {
+                if (lang.Extensions.Any(e => e.Equals(fileName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return lang;
+                }
+            }
+
+            // 2. Compound extension matches (e.g. .blade.php, .html.erb)
+            foreach (var lang in _languages)
+            {
+                if (lang.Extensions.Any(e => e.StartsWith(".") && e.Length > (ext?.Length ?? 0) && fileName.EndsWith(e, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return lang;
+                }
+            }
         }
 
-        foreach (var lang in _languages)
+        // 3. Standard file extension matches (e.g. .js, .html, .py)
+        if (!string.IsNullOrEmpty(ext))
         {
-            if (lang.Extensions.Any(e => e.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+            foreach (var lang in _languages)
             {
-                return lang;
+                if (lang.Extensions.Any(e => e.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return lang;
+                }
             }
         }
 

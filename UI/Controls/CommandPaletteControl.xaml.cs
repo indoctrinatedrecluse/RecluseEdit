@@ -59,6 +59,10 @@ public partial class CommandPaletteControl : UserControl
         {
             TxtModeHint.Text = "Go to Line";
         }
+        else if (text.StartsWith('@'))
+        {
+            TxtModeHint.Text = "Go to Symbol";
+        }
         else if (text.StartsWith('?'))
         {
             TxtModeHint.Text = "Palette Help";

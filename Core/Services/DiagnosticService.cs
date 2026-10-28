@@ -22,7 +22,7 @@ public class DiagnosticService
         var ext = Path.GetExtension(filePath)?.ToLowerInvariant() ?? string.Empty;
 
         // 1. JSON Diagnostics
-        if (lang == "json" || ext == ".json")
+        if (lang is "json" or "jsonc" || ext is ".json" or ".jsonc")
         {
             diagnostics.AddRange(AnalyzeJson(text, filePath));
         }
@@ -45,7 +45,12 @@ public class DiagnosticService
         var items = new List<DiagnosticItem>();
         try
         {
-            using var doc = JsonDocument.Parse(json);
+            var options = new JsonDocumentOptions
+            {
+                CommentHandling = JsonCommentHandling.Skip,
+                AllowTrailingCommas = true
+            };
+            using var doc = JsonDocument.Parse(json, options);
         }
         catch (JsonException ex)
         {

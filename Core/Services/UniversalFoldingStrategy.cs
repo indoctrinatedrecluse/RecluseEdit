@@ -35,6 +35,14 @@ public class UniversalFoldingStrategy
         }
 
         var lang = (languageId ?? "").ToLowerInvariant().Trim().TrimStart('.');
+        if (lang.Contains('.') || lang.Contains('/') || lang.Contains('\\'))
+        {
+            var ext = System.IO.Path.GetExtension(lang).TrimStart('.');
+            if (!string.IsNullOrEmpty(ext))
+            {
+                lang = ext;
+            }
+        }
         var foldings = new List<NewFolding>();
 
         // 1. XML / HTML tag folding delegation

@@ -18,6 +18,29 @@ public sealed class DiagnosticServiceTests
     }
 
     [TestMethod]
+    public void TestJsonWithCommentsAndTrailingCommasProducesNoDiagnostics()
+    {
+        var service = new DiagnosticService();
+        string jsonWithComments = """
+        {
+            // Single-line comment
+            "setting": "value",
+            /* Multi-line
+               comment */
+            "trailingCommaList": [
+                1,
+                2,
+            ],
+        }
+        """;
+        var diagnostics = service.AnalyzeDocument(jsonWithComments, "json", "tsconfig.json");
+        Assert.IsEmpty(diagnostics);
+
+        var jsoncDiagnostics = service.AnalyzeDocument(jsonWithComments, "jsonc", "settings.jsonc");
+        Assert.IsEmpty(jsoncDiagnostics);
+    }
+
+    [TestMethod]
     public void TestMalformedJsonReportsSyntaxError()
     {
         var service = new DiagnosticService();

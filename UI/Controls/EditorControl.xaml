@@ -38,6 +38,7 @@
                     <MenuItem x:Name="MenuMarkdownPreview" Header="📖 Open Live Markdown Preview (Split Pane)" InputGestureText="Ctrl+Shift+V" Click="OnMarkdownPreviewClick" Visibility="Collapsed" />
                     <Separator x:Name="SepMarkdownPreview" Visibility="Collapsed" />
                     <MenuItem Header="✨ Format Document" InputGestureText="Shift+Alt+F" Click="OnFormatDocumentClick" />
+                    <MenuItem Header="🔍 AI Code Review" InputGestureText="Ctrl+Shift+R" Click="OnAiCodeReviewClick" />
                     <MenuItem Header="🤖 Edit with AI (Inline Prompt)" InputGestureText="Ctrl+I" Click="OnInlineAiClick" />
                 </ContextMenu>
             </avalonedit:TextEditor.ContextMenu>
